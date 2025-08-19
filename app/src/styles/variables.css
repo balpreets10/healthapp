@@ -1,0 +1,355 @@
+/* src/styles/variables.css - Arctic Frost Theme as Base */
+
+/* ===== ARCTIC FROST THEME AS SINGLE DESIGN SYSTEM ===== */
+/* Merged from arctic-frost.css - cool blue design system with excellent contrast */
+
+:root {
+    /* ===== PRIMARY COLOR SYSTEM ===== */
+    /* Ocean blue - main brand color inspired by arctic ice */
+    --gd-color-primary: #4169e1;
+    --gd-color-primary-50: #f0f4ff;
+    --gd-color-primary-100: #e1efff;
+    --gd-color-primary-200: #c3dfff;
+    --gd-color-primary-300: #94c5ff;
+    --gd-color-primary-400: #5ba0f2;
+    --gd-color-primary-500: #4169e1;
+    --gd-color-primary-600: #3355cc;
+    --gd-color-primary-700: #2640b8;
+    --gd-color-primary-800: #1e338f;
+    --gd-color-primary-900: #1a2866;
+
+    /* ===== SECONDARY COLOR SYSTEM ===== */
+    /* Sky blue - complementary to primary, like frozen water */
+    --gd-color-secondary: #87ceeb;
+    --gd-color-secondary-50: #f8fcff;
+    --gd-color-secondary-100: #e6f7ff;
+    --gd-color-secondary-200: #b8e6ff;
+    --gd-color-secondary-300: #87ceeb;
+    --gd-color-secondary-400: #78c4e6;
+    --gd-color-secondary-500: #5fa8d1;
+    --gd-color-secondary-600: #4a8cb8;
+    --gd-color-secondary-700: #3d709e;
+    --gd-color-secondary-800: #2e5485;
+    --gd-color-secondary-900: #1f386b;
+
+    /* ===== ACCENT COLOR SYSTEM ===== */
+    /* Dark turquoise - like deep arctic waters */
+    --gd-color-accent: #00ced1;
+    --gd-color-accent-50: #f0feff;
+    --gd-color-accent-100: #ccfcff;
+    --gd-color-accent-200: #99f7ff;
+    --gd-color-accent-300: #66f2ff;
+    --gd-color-accent-400: #33edff;
+    --gd-color-accent-500: #00ced1;
+    --gd-color-accent-600: #00b8bb;
+    --gd-color-accent-700: #00a0a3;
+    --gd-color-accent-800: #00888b;
+    --gd-color-accent-900: #006b73;
+
+    /* ===== INTELLIGENT BACKGROUND SYSTEM ===== */
+    /* Light backgrounds with proper contrast ratios */
+    --gd-bg-primary: #f0f8ff;
+    --gd-bg-secondary: #e6f3ff;
+    --gd-bg-tertiary: #ddeeff;
+    --gd-bg-quaternary: #d4e9ff;
+    --gd-bg-elevated: #ffffff;
+    --gd-bg-overlay: rgba(26, 40, 184, 0.4);
+
+    /* Background variants based on primary colors */
+    --gd-bg-primary-subtle: var(--gd-color-primary-50);
+    --gd-bg-secondary-subtle: var(--gd-color-secondary-50);
+    --gd-bg-accent-subtle: var(--gd-color-accent-50);
+
+    /* ===== INTELLIGENT TEXT SYSTEM ===== */
+    /* Dark text for light backgrounds - ensures readability */
+    --gd-text-primary: #1a1a2e;
+    --gd-text-secondary: #2e4057;
+    --gd-text-tertiary: #3d5a80;
+    --gd-text-quaternary: #5c7a99;
+    --gd-text-disabled: #8fa4c4;
+    --gd-text-inverse: #ffffff;
+    --gd-text-muted: #5c7a99;
+
+    /* Text on colored backgrounds */
+    --gd-text-on-primary: #ffffff;
+    --gd-text-on-secondary: #ffffff;
+    --gd-text-on-accent: #ffffff;
+
+    /* ===== SEMANTIC COLORS ===== */
+    /* Status colors with proper contrast */
+    --gd-color-success: #059669;
+    --gd-color-success-light: #ecfdf5;
+    --gd-color-success-dark: #047857;
+
+    --gd-color-warning: #d97706;
+    --gd-color-warning-light: #fffbeb;
+    --gd-color-warning-dark: #b45309;
+
+    --gd-color-danger: #dc2626;
+    --gd-color-danger-light: #fef2f2;
+    --gd-color-danger-dark: #b91c1c;
+
+    --gd-color-info: var(--gd-color-primary-500);
+    --gd-color-info-light: var(--gd-color-primary-50);
+    --gd-color-info-dark: var(--gd-color-primary-700);
+
+    /* ===== BORDER SYSTEM ===== */
+    /* Consistent border colors with proper visibility */
+    --gd-border-light: rgba(65, 105, 225, 0.15);
+    --gd-border-medium: rgba(65, 105, 225, 0.25);
+    --gd-border-strong: rgba(65, 105, 225, 0.4);
+    --gd-border-primary: var(--gd-color-primary-300);
+    --gd-border-focus: var(--gd-color-primary-500);
+
+    /* ===== SURFACE COLORS ===== */
+    /* Layered surface system for depth */
+    --gd-surface-1: var(--gd-bg-primary);
+    --gd-surface-2: var(--gd-bg-secondary);
+    --gd-surface-3: var(--gd-bg-tertiary);
+    --gd-surface-4: var(--gd-bg-quaternary);
+    --gd-surface-raised: var(--gd-bg-elevated);
+    --gd-surface-overlay: var(--gd-bg-overlay);
+
+    /* ===== GRADIENTS ===== */
+    /* Arctic-inspired gradients */
+    --gd-gradient-primary: linear-gradient(135deg, #4169e1 0%, #87ceeb 50%, #00ced1 100%);
+    --gd-gradient-secondary: linear-gradient(135deg, #87ceeb 0%, #00ced1 100%);
+    --gd-gradient-accent: linear-gradient(135deg, #00ced1 0%, #4169e1 100%);
+    --gd-gradient-hero: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 50%, #4169e1 100%);
+    --gd-gradient-subtle: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 50%, #ddeeff 100%);
+
+    /* ===== SHADOWS ===== */
+    /* Subtle shadows for Arctic theme */
+    --gd-shadow-sm: 0 1px 2px 0 rgba(26, 40, 184, 0.08);
+    --gd-shadow-base: 0 1px 3px 0 rgba(26, 40, 184, 0.12), 0 1px 2px 0 rgba(26, 40, 184, 0.08);
+    --gd-shadow-md: 0 4px 6px -1px rgba(26, 40, 184, 0.12), 0 2px 4px -1px rgba(26, 40, 184, 0.08);
+    --gd-shadow-lg: 0 10px 15px -3px rgba(26, 40, 184, 0.12), 0 4px 6px -2px rgba(26, 40, 184, 0.06);
+    --gd-shadow-xl: 0 20px 25px -5px rgba(26, 40, 184, 0.12), 0 10px 10px -5px rgba(26, 40, 184, 0.05);
+    --gd-shadow-2xl: 0 25px 50px -12px rgba(26, 40, 184, 0.3);
+    --gd-shadow-inner: inset 0 2px 4px 0 rgba(26, 40, 184, 0.08);
+
+    /* Colored shadows for special elements */
+    --gd-shadow-primary: 0 4px 14px 0 rgba(65, 105, 225, 0.2);
+    --gd-shadow-secondary: 0 4px 14px 0 rgba(135, 206, 235, 0.2);
+    --gd-shadow-accent: 0 4px 14px 0 rgba(0, 206, 209, 0.2);
+
+    /* ===== TYPOGRAPHY ===== */
+    --gd-font-family-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --gd-font-family-mono: "JetBrains Mono", "Fira Code", Monaco, Consolas, monospace;
+
+    --gd-font-size-xxs: 0.35rem;
+    --gd-font-size-xs: 0.625rem;
+    --gd-font-size-sm: 0.75rem;
+    --gd-font-size-base: 0.875rem;
+    --gd-font-size-lg: 1rem;
+    --gd-font-size-xl: 1.125rem;
+    --gd-font-size-2xl: 1.25rem;
+    --gd-font-size-3xl: 1.5rem;
+    --gd-font-size-4xl: 1.875rem;
+    --gd-font-size-5xl: 2.25rem;
+    --gd-font-size-6xl: 3rem;
+
+    --gd-font-weight-light: 300;
+    --gd-font-weight-normal: 400;
+    --gd-font-weight-medium: 500;
+    --gd-font-weight-semibold: 600;
+    --gd-font-weight-bold: 700;
+    --gd-font-weight-black: 900;
+
+    --gd-line-height-tight: 1.25;
+    --gd-line-height-normal: 1.5;
+    --gd-line-height-relaxed: 1.625;
+    --gd-line-height-loose: 2;
+
+    /* ===== SPACING SYSTEM ===== */
+    --gd-space-0: 0;
+    --gd-space-px: 1px;
+    --gd-space-0_5: 0.1rem;
+    --gd-space-1: 0.2rem;
+    --gd-space-1_5: 0.3rem;
+    --gd-space-2: 0.4rem;
+    --gd-space-2_5: 0.5rem;
+    --gd-space-3: 0.6rem;
+    --gd-space-3_5: 0.7rem;
+    --gd-space-4: 0.8rem;
+    --gd-space-5: 1rem;
+    --gd-space-6: 1.2rem;
+    --gd-space-7: 1.4rem;
+    --gd-space-8: 1.6rem;
+    --gd-space-9: 1.8rem;
+    --gd-space-10: 2rem;
+    --gd-space-11: 2.2rem;
+    --gd-space-12: 2.4rem;
+    --gd-space-14: 2.8rem;
+    --gd-space-16: 3.2rem;
+    --gd-space-20: 4rem;
+    --gd-space-24: 4.8rem;
+    --gd-space-28: 5.6rem;
+    --gd-space-32: 6.4rem;
+
+    /* ===== BORDER RADIUS ===== */
+    --gd-radius-none: 0;
+    --gd-radius-sm: 0.125rem;
+    --gd-radius-base: 0.25rem;
+    --gd-radius-md: 0.375rem;
+    --gd-radius-lg: 0.5rem;
+    --gd-radius-xl: 0.75rem;
+    --gd-radius-2xl: 1rem;
+    --gd-radius-3xl: 1.5rem;
+    --gd-radius-full: 9999px;
+
+    /* ===== TRANSITIONS ===== */
+    --gd-transition-fast: all 0.15s ease;
+    --gd-transition-base: all 0.2s ease;
+    --gd-transition-slow: all 0.3s ease;
+    --gd-transition-slowest: all 0.5s ease;
+
+    --gd-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --gd-ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --gd-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --gd-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* ===== Z-INDEX SCALE ===== */
+    --gd-z-dropdown: 1000;
+    --gd-z-sticky: 1020;
+    --gd-z-fixed: 1030;
+    --gd-z-modal-backdrop: 1040;
+    --gd-z-modal: 1050;
+    --gd-z-popover: 1060;
+    --gd-z-tooltip: 1070;
+    --gd-z-toast: 1080;
+    --gd-z-preloader: 9999;
+
+    /* ===== LAYOUT ===== */
+    --gd-container-max-width: 1200px;
+    --gd-container-max-width-sm: 640px;
+    --gd-container-max-width-md: 768px;
+    --gd-container-max-width-lg: 1024px;
+    --gd-container-max-width-xl: 1280px;
+    --gd-container-padding: var(--gd-space-6);
+    --gd-section-padding: var(--gd-space-12) 0;
+    --gd-header-height: 3.5rem;
+
+    /* ===== BREAKPOINTS (for reference) ===== */
+    --gd-breakpoint-sm: 640px;
+    --gd-breakpoint-md: 768px;
+    --gd-breakpoint-lg: 1024px;
+    --gd-breakpoint-xl: 1280px;
+    --gd-breakpoint-2xl: 1536px;
+
+    /* ===== COMPONENT SPECIFIC VARIABLES ===== */
+
+    /* Navigation */
+    --gd-nav-height: var(--gd-header-height);
+    --gd-nav-bg: rgba(240, 248, 255, 0.95);
+    --gd-nav-bg-solid: var(--gd-bg-elevated);
+    --gd-nav-backdrop-blur: 20px;
+    --gd-nav-border: rgba(65, 105, 225, 0.2);
+    --gd-nav-shadow: var(--gd-shadow-lg);
+    --gd-nav-link-color: var(--gd-text-secondary);
+    --gd-nav-link-hover: var(--gd-text-primary);
+    --gd-nav-link-active: var(--gd-color-primary-600);
+
+    /* Buttons */
+    --gd-btn-padding-sm: var(--gd-space-2) var(--gd-space-4);
+    --gd-btn-padding-base: var(--gd-space-3) var(--gd-space-6);
+    --gd-btn-padding-lg: var(--gd-space-4) var(--gd-space-8);
+    --gd-btn-radius: var(--gd-radius-lg);
+    --gd-btn-font-weight: var(--gd-font-weight-semibold);
+    --gd-btn-transition: var(--gd-transition-base);
+
+    /* Cards */
+    --gd-card-bg: var(--gd-surface-raised);
+    --gd-card-border: var(--gd-border-light);
+    --gd-card-radius: var(--gd-radius-xl);
+    --gd-card-shadow: var(--gd-shadow-base);
+    --gd-card-shadow-hover: var(--gd-shadow-lg);
+    --gd-card-padding-sm: var(--gd-space-4);
+    --gd-card-padding-base: var(--gd-space-6);
+    --gd-card-padding-lg: var(--gd-space-8);
+
+    /* Forms */
+    --gd-input-bg: var(--gd-bg-elevated);
+    --gd-input-border: var(--gd-border-medium);
+    --gd-input-border-hover: var(--gd-border-strong);
+    --gd-input-border-focus: var(--gd-color-primary-500);
+    --gd-input-radius: var(--gd-radius-md);
+    --gd-input-padding-sm: var(--gd-space-2) var(--gd-space-3);
+    --gd-input-padding-base: var(--gd-space-3) var(--gd-space-4);
+    --gd-input-padding-lg: var(--gd-space-4) var(--gd-space-5);
+    --gd-input-shadow-focus: 0 0 0 3px rgba(65, 105, 225, 0.15);
+
+    /* Overlays & Modals */
+    --gd-overlay-bg: rgba(26, 40, 184, 0.4);
+    --gd-modal-bg: var(--gd-surface-raised);
+    --gd-modal-radius: var(--gd-radius-2xl);
+    --gd-modal-shadow: var(--gd-shadow-2xl);
+    --gd-backdrop-blur: 20px;
+
+    /* Tooltips */
+    --gd-tooltip-bg: var(--gd-text-primary);
+    --gd-tooltip-color: var(--gd-text-inverse);
+    --gd-tooltip-radius: var(--gd-radius-md);
+    --gd-tooltip-shadow: var(--gd-shadow-lg);
+
+    /* Loading & Progress */
+    --gd-loading-primary: var(--gd-color-primary-500);
+    --gd-loading-secondary: var(--gd-color-primary-200);
+    --gd-progress-bg: var(--gd-color-primary-100);
+    --gd-progress-fill: var(--gd-color-primary-500);
+}
+
+/* ===== UTILITY CLASSES ===== */
+.gd-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.gd-no-scroll {
+    overflow: hidden;
+}
+
+.gd-visually-hidden {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --gd-transition-fast: none;
+        --gd-transition-base: none;
+        --gd-transition-slow: none;
+        --gd-transition-slowest: none;
+    }
+
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===== HIGH CONTRAST SUPPORT ===== */
+@media (prefers-contrast: high) {
+    :root {
+        --gd-border-light: rgba(65, 105, 225, 0.4);
+        --gd-border-medium: rgba(65, 105, 225, 0.6);
+        --gd-border-strong: rgba(65, 105, 225, 0.8);
+        --gd-text-primary: #000000;
+        --gd-text-secondary: #1a1a1a;
+    }
+}
