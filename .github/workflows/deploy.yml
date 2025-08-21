@@ -6,12 +6,13 @@ on:
   pull_request:
     branches: [main]
     types: [closed]
+  workflow_dispatch:
 
 jobs:
   deploy:
     name: 🔨 Build and Deploy
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main') || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: 📥 Checkout Repository
