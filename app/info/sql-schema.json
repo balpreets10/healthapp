@@ -1,5 +1,80 @@
 [
   {
+    "table_name": "foods",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "calories_per_100g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "carbohydrates_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "protein_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "fats_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "free_sugar_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "fiber_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "sodium_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "calcium_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "iron_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "vitamin_c_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "folate_mcg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "foods",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
     "table_name": "health_journal_entries",
     "column_name": "id",
     "data_type": "uuid"

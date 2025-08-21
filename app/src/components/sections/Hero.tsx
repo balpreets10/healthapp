@@ -267,140 +267,154 @@ const Hero: React.FC<HeroProps> = ({
                                 </p>
                             </div>
 
-                            <div className="hero__meals-visualization">
-                                {/* Unified Pie Chart for Macros */}
-                                <div className="hero__macro-pie-chart">
-                                    <svg className="hero__pie-svg" width="200" height="200" viewBox="0 0 42 42">
-                                        {/* Background circle */}
-                                        <circle
-                                            className="hero__pie-bg"
-                                            cx="21"
-                                            cy="21"
-                                            r="15.91549430918954"
-                                            fill="transparent"
-                                            stroke="#e2e8f0"
-                                            strokeWidth="3"
-                                        />
-
-                                        {(() => {
-                                            const total = nutritionSummary.protein + nutritionSummary.carbs + nutritionSummary.fat;
-                                            if (total === 0) return null;
-
-                                            const proteinPercentage = (nutritionSummary.protein / total) * 100;
-                                            const carbsPercentage = (nutritionSummary.carbs / total) * 100;
-                                            const fatPercentage = (nutritionSummary.fat / total) * 100;
-
-                                            let cumulativePercentage = 0;
-
-                                            const segments = [];
-
-                                            // Protein segment
-                                            if (proteinPercentage > 0) {
-                                                segments.push(
-                                                    <circle
-                                                        key="protein"
-                                                        className="hero__pie-segment hero__pie-segment--protein"
-                                                        cx="21"
-                                                        cy="21"
-                                                        r="15.91549430918954"
-                                                        fill="transparent"
-                                                        stroke="#10b981"
-                                                        strokeWidth="3"
-                                                        strokeDasharray={`${proteinPercentage} ${100 - proteinPercentage}`}
-                                                        strokeDashoffset={25 - cumulativePercentage}
-                                                        transform="rotate(-90 21 21)"
-                                                    />
-                                                );
-                                                cumulativePercentage += proteinPercentage;
-                                            }
-
-                                            // Carbs segment
-                                            if (carbsPercentage > 0) {
-                                                segments.push(
-                                                    <circle
-                                                        key="carbs"
-                                                        className="hero__pie-segment hero__pie-segment--carbs"
-                                                        cx="21"
-                                                        cy="21"
-                                                        r="15.91549430918954"
-                                                        fill="transparent"
-                                                        stroke="#f59e0b"
-                                                        strokeWidth="3"
-                                                        strokeDasharray={`${carbsPercentage} ${100 - carbsPercentage}`}
-                                                        strokeDashoffset={25 - cumulativePercentage}
-                                                        transform="rotate(-90 21 21)"
-                                                    />
-                                                );
-                                                cumulativePercentage += carbsPercentage;
-                                            }
-
-                                            // Fat segment
-                                            if (fatPercentage > 0) {
-                                                segments.push(
-                                                    <circle
-                                                        key="fat"
-                                                        className="hero__pie-segment hero__pie-segment--fat"
-                                                        cx="21"
-                                                        cy="21"
-                                                        r="15.91549430918954"
-                                                        fill="transparent"
-                                                        stroke="#ec4899"
-                                                        strokeWidth="3"
-                                                        strokeDasharray={`${fatPercentage} ${100 - fatPercentage}`}
-                                                        strokeDashoffset={25 - cumulativePercentage}
-                                                        transform="rotate(-90 21 21)"
-                                                    />
-                                                );
-                                            }
-
-                                            return segments;
-                                        })()}
-
-                                        {/* Center content */}
-                                        <text x="21" y="18" textAnchor="middle" className="hero__pie-calories">
-                                            {nutritionSummary.calories}
-                                        </text>
-                                        <text x="21" y="23" textAnchor="middle" className="hero__pie-calories-label">
-                                            calories
-                                        </text>
-                                        <text x="21" y="28" textAnchor="middle" className="hero__pie-target">
-                                            of {nutritionSummary.goalCalories}
-                                        </text>
-                                    </svg>
-
-                                    {/* Legend */}
-                                    <div className="hero__macro-legend">
-                                        <div className="hero__legend-item hero__legend-item--protein">
-                                            <span className="hero__legend-color"></span>
-                                            <span className="hero__legend-label">Protein</span>
-                                            <span className="hero__legend-value">{nutritionSummary.protein}g</span>
+                            <div className="hero__nutrition-dashboard">
+                                {/* Main Calorie Progress Section */}
+                                <div className="hero__calorie-progress-section">
+                                    <div className="hero__calorie-status">
+                                        <div className="hero__calorie-current">
+                                            <span className="hero__calorie-number">{nutritionSummary.calories}</span>
+                                            <span className="hero__calorie-unit">cal</span>
                                         </div>
-                                        <div className="hero__legend-item hero__legend-item--carbs">
-                                            <span className="hero__legend-color"></span>
-                                            <span className="hero__legend-label">Carbs</span>
-                                            <span className="hero__legend-value">{nutritionSummary.carbs}g</span>
-                                        </div>
-                                        <div className="hero__legend-item hero__legend-item--fat">
-                                            <span className="hero__legend-color"></span>
-                                            <span className="hero__legend-label">Fat</span>
-                                            <span className="hero__legend-value">{nutritionSummary.fat}g</span>
+                                        <div className="hero__calorie-divider">of</div>
+                                        <div className="hero__calorie-target">
+                                            <span className="hero__calorie-number">{nutritionSummary.goalCalories}</span>
+                                            <span className="hero__calorie-unit">cal</span>
                                         </div>
                                     </div>
                                     
-                                    {/* Calorie Recommendation moved here */}
-                                    {calorieData.recommendation && (
-                                        <div className={`hero__calorie-recommendation hero__calorie-recommendation--${calorieData.recommendation.type}`}>
-                                            <span className="hero__recommendation-icon">
-                                                {calorieData.recommendation.type === 'loss' && '📉'}
-                                                {calorieData.recommendation.type === 'gain' && '📈'}
-                                                {calorieData.recommendation.type === 'maintain' && '⚖️'}
-                                            </span>
-                                            <span className="hero__recommendation-text">
-                                                {calorieData.recommendation.message}
-                                            </span>
+                                    {/* Enhanced Progress Bar */}
+                                    <div className="hero__progress-container">
+                                        <div className="hero__progress-bar">
+                                            <div 
+                                                className={`hero__progress-fill ${
+                                                    nutritionSummary.calories > nutritionSummary.goalCalories ? 'hero__progress-fill--over' : ''
+                                                }`}
+                                                style={{ 
+                                                    width: `${Math.min((nutritionSummary.calories / nutritionSummary.goalCalories) * 100, 100)}%` 
+                                                }}
+                                            ></div>
+                                            {nutritionSummary.calories > nutritionSummary.goalCalories && (
+                                                <div 
+                                                    className="hero__progress-overflow"
+                                                    style={{ 
+                                                        width: `${Math.min(((nutritionSummary.calories - nutritionSummary.goalCalories) / nutritionSummary.goalCalories) * 100, 50)}%` 
+                                                    }}
+                                                ></div>
+                                            )}
                                         </div>
-                                    )}
+                                        <div className="hero__progress-labels">
+                                            <span className="hero__progress-label hero__progress-label--start">0</span>
+                                            <span className="hero__progress-label hero__progress-label--target">Target</span>
+                                            {nutritionSummary.calories > nutritionSummary.goalCalories && (
+                                                <span className="hero__progress-label hero__progress-label--over">+{nutritionSummary.calories - nutritionSummary.goalCalories}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Calorie Status Message */}
+                                    <div className={`hero__calorie-status-message ${
+                                        nutritionSummary.calories < nutritionSummary.goalCalories * 0.8 ? 'hero__calorie-status--low' :
+                                        nutritionSummary.calories > nutritionSummary.goalCalories * 1.1 ? 'hero__calorie-status--high' :
+                                        'hero__calorie-status--good'
+                                    }`}>
+                                        {nutritionSummary.calories < nutritionSummary.goalCalories * 0.8 && (
+                                            <>
+                                                <span className="hero__status-icon">🟡</span>
+                                                <span>Need {nutritionSummary.goalCalories - nutritionSummary.calories} more calories</span>
+                                            </>
+                                        )}
+                                        {nutritionSummary.calories > nutritionSummary.goalCalories * 1.1 && (
+                                            <>
+                                                <span className="hero__status-icon">🔴</span>
+                                                <span>{nutritionSummary.calories - nutritionSummary.goalCalories} calories over target</span>
+                                            </>
+                                        )}
+                                        {nutritionSummary.calories >= nutritionSummary.goalCalories * 0.8 && 
+                                         nutritionSummary.calories <= nutritionSummary.goalCalories * 1.1 && (
+                                            <>
+                                                <span className="hero__status-icon">🟢</span>
+                                                <span>On track with your calorie goals!</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {/* Smart Macro Cards */}
+                                <div className="hero__macro-cards">
+                                    <div className="hero__macro-card hero__macro-card--protein">
+                                        <div className="hero__macro-header">
+                                            <span className="hero__macro-icon">💪</span>
+                                            <span className="hero__macro-name">Protein</span>
+                                        </div>
+                                        <div className="hero__macro-values">
+                                            <span className="hero__macro-current">{nutritionSummary.protein}g</span>
+                                            <span className="hero__macro-target">/ {nutritionSummary.goalProtein}g</span>
+                                        </div>
+                                        <div className="hero__macro-progress">
+                                            <div 
+                                                className="hero__macro-progress-bar hero__macro-progress-bar--protein"
+                                                style={{ width: `${Math.min((nutritionSummary.protein / nutritionSummary.goalProtein) * 100, 100)}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="hero__macro-percentage">
+                                            {Math.round((nutritionSummary.protein / nutritionSummary.goalProtein) * 100)}%
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="hero__macro-card hero__macro-card--carbs">
+                                        <div className="hero__macro-header">
+                                            <span className="hero__macro-icon">🍞</span>
+                                            <span className="hero__macro-name">Carbs</span>
+                                        </div>
+                                        <div className="hero__macro-values">
+                                            <span className="hero__macro-current">{nutritionSummary.carbs}g</span>
+                                            <span className="hero__macro-target">/ {nutritionSummary.goalCarbs}g</span>
+                                        </div>
+                                        <div className="hero__macro-progress">
+                                            <div 
+                                                className="hero__macro-progress-bar hero__macro-progress-bar--carbs"
+                                                style={{ width: `${Math.min((nutritionSummary.carbs / nutritionSummary.goalCarbs) * 100, 100)}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="hero__macro-percentage">
+                                            {Math.round((nutritionSummary.carbs / nutritionSummary.goalCarbs) * 100)}%
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="hero__macro-card hero__macro-card--fat">
+                                        <div className="hero__macro-header">
+                                            <span className="hero__macro-icon">🥑</span>
+                                            <span className="hero__macro-name">Fat</span>
+                                        </div>
+                                        <div className="hero__macro-values">
+                                            <span className="hero__macro-current">{nutritionSummary.fat}g</span>
+                                            <span className="hero__macro-target">/ {nutritionSummary.goalFat}g</span>
+                                        </div>
+                                        <div className="hero__macro-progress">
+                                            <div 
+                                                className="hero__macro-progress-bar hero__macro-progress-bar--fat"
+                                                style={{ width: `${Math.min((nutritionSummary.fat / nutritionSummary.goalFat) * 100, 100)}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="hero__macro-percentage">
+                                            {Math.round((nutritionSummary.fat / nutritionSummary.goalFat) * 100)}%
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Goal Recommendation */}
+                                {calorieData.recommendation && (
+                                    <div className={`hero__goal-recommendation hero__goal-recommendation--${calorieData.recommendation.type}`}>
+                                        <span className="hero__recommendation-icon">
+                                            {calorieData.recommendation.type === 'loss' && '📉'}
+                                            {calorieData.recommendation.type === 'gain' && '📈'}
+                                            {calorieData.recommendation.type === 'maintain' && '⚖️'}
+                                        </span>
+                                        <span className="hero__recommendation-text">
+                                            {calorieData.recommendation.message}
+                                        </span>
+                                    </div>
+                                )}
 
                                 {/* Today's Meals List */}
                                 <div className="hero__meals-list">
@@ -437,7 +451,6 @@ const Hero: React.FC<HeroProps> = ({
                                 </div>
                             </div>
 
-                            {/* Metabolic & Calorie Tracking Section */}
                             {calorieData.hasProfile ? (
                                 <div className="hero__calorie-tracking">
                                     {/* Innovative Metabolic Dashboard */}

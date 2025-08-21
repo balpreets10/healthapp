@@ -220,42 +220,6 @@
     border-radius: 3px;
 }
 
-.hero__calorie-recommendation {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: var(--gd-radius-lg);
-    padding: var(--gd-space-4);
-    display: flex;
-    align-items: center;
-    gap: var(--gd-space-3, 0.75rem);
-}
-
-.hero__calorie-recommendation--loss {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    border-color: #f87171;
-}
-
-.hero__calorie-recommendation--gain {
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-    border-color: #4ade80;
-}
-
-.hero__calorie-recommendation--maintain {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    border-color: #fbbf24;
-}
-
-.hero__recommendation-icon {
-    font-size: var(--gd-font-size-xl, 1.25rem);
-    flex-shrink: 0;
-}
-
-.hero__recommendation-text {
-    font-size: var(--gd-font-size-sm, 0.875rem);
-    color: var(--gd-text-primary, #1e293b);
-    font-weight: var(--gd-font-weight-medium, 500);
-    line-height: 1.4;
-}
 
 .hero__setup-profile {
     background: white;
@@ -296,145 +260,326 @@
     box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
 }
 
-.hero__meals-visualization {
+.hero__nutrition-dashboard {
     background: white;
     border-radius: var(--gd-radius-xl);
     padding: var(--gd-space-6);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
     border: 1px solid #e2e8f0;
+    margin-bottom: var(--gd-space-6);
 }
 
-/* Macro Pie Chart */
-.hero__macro-pie-chart {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--gd-space-6, 1.5rem);
+/* ===== NEW NUTRITION DASHBOARD STYLES ===== */
+
+/* Calorie Progress Section */
+.hero__calorie-progress-section {
     margin-bottom: var(--gd-space-8, 2rem);
 }
 
-.hero__pie-svg {
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
-    transition: transform 0.2s ease;
-    animation: pieChartPulse 2s ease-in-out infinite;
+.hero__calorie-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gd-space-4, 1rem);
+    margin-bottom: var(--gd-space-4, 1rem);
 }
 
-.hero__pie-svg:hover {
-    transform: scale(1.05);
-    animation-play-state: paused;
+.hero__calorie-current,
+.hero__calorie-target {
+    display: flex;
+    align-items: baseline;
+    gap: var(--gd-space-1, 0.25rem);
 }
 
-@keyframes pieChartPulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.02);
-    }
-}
-
-.hero__pie-bg {
-    opacity: 0.3;
-}
-
-.hero__pie-segment {
-    stroke-linecap: round;
-    transition: all 0.6s ease-in-out;
-    animation: drawSegment 1.5s ease-in-out forwards;
-    stroke-dasharray: 0 100;
-}
-
-@keyframes drawSegment {
-    to {
-        stroke-dasharray: var(--segment-length, 25) calc(100 - var(--segment-length, 75));
-    }
-}
-
-.hero__pie-segment--protein {
-    stroke: #10b981;
-}
-
-.hero__pie-segment--carbs {
-    stroke: #f59e0b;
-}
-
-.hero__pie-segment--fat {
-    stroke: #ec4899;
-}
-
-.hero__pie-calories {
-    font-size: var(--gd-font-size-xs, 1.25rem);
+.hero__calorie-current .hero__calorie-number {
+    font-size: 2.5rem;
     font-weight: var(--gd-font-weight-bold, 700);
-    fill: var(--gd-text-primary, #1e293b);
+    color: #10b981;
+    line-height: 1;
 }
 
-.hero__pie-calories-label {
-    font-size: var(--gd-font-size-xxs, .4rem);
-    fill: var(--gd-text-secondary, #64748b);
+.hero__calorie-target .hero__calorie-number {
+    font-size: 1.75rem;
+    font-weight: var(--gd-font-weight-semibold, 600);
+    color: var(--gd-text-secondary, #64748b);
+    line-height: 1;
+}
+
+.hero__calorie-unit {
+    font-size: 1rem;
+    font-weight: var(--gd-font-weight-medium, 500);
+    color: var(--gd-text-tertiary, #94a3b8);
+    margin-bottom: 0.25rem;
+}
+
+.hero__calorie-divider {
+    font-size: 1.125rem;
+    color: var(--gd-text-secondary, #64748b);
+    font-weight: var(--gd-font-weight-medium, 500);
+    margin: 0 var(--gd-space-2, 0.5rem);
+}
+
+/* Enhanced Progress Bar */
+.hero__progress-container {
+    margin-bottom: var(--gd-space-4, 1rem);
+}
+
+.hero__progress-bar {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    background: linear-gradient(90deg, #f1f5f9, #e2e8f0);
+    border-radius: 6px;
+    overflow: visible;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hero__progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 6px;
+    transition: width 0.8s ease-out;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.hero__progress-fill--over {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.hero__progress-overflow {
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    height: 16px;
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    border-radius: 8px;
+    transition: width 0.8s ease-out;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    border: 2px solid white;
+}
+
+.hero__progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--gd-space-2, 0.5rem);
+    position: relative;
+}
+
+.hero__progress-label {
+    font-size: var(--gd-font-size-xs, 0.75rem);
+    color: var(--gd-text-tertiary, #94a3b8);
     font-weight: var(--gd-font-weight-medium, 500);
 }
 
-.hero__pie-target {
-    font-size: var(--gd-font-size-xxs, .35rem);
-    fill: var(--gd-text-tertiary, #94a3b8);
-    font-weight: var(--gd-font-weight-normal, 400);
+.hero__progress-label--target {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--gd-text-secondary, #64748b);
 }
 
-/* Macro Legend */
-.hero__macro-legend {
+.hero__progress-label--over {
+    color: #ef4444;
+    font-weight: var(--gd-font-weight-semibold, 600);
+}
+
+/* Calorie Status Messages */
+.hero__calorie-status-message {
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: var(--gd-space-6, 1.5rem);
-    flex-wrap: wrap;
+    gap: var(--gd-space-2, 0.5rem);
+    padding: var(--gd-space-3, 0.75rem);
+    border-radius: var(--gd-radius-lg);
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    font-weight: var(--gd-font-weight-medium, 500);
+    border: 1px solid;
 }
 
-.hero__legend-item {
+.hero__calorie-status--low {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.hero__calorie-status--good {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-color: #22c55e;
+    color: #166534;
+}
+
+.hero__calorie-status--high {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+.hero__status-icon {
+    font-size: var(--gd-font-size-base, 1rem);
+}
+
+/* Smart Macro Cards */
+.hero__macro-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--gd-space-4, 1rem);
+    margin-bottom: var(--gd-space-6, 1.5rem);
+}
+
+.hero__macro-card {
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    border: 1px solid #e2e8f0;
+    border-radius: var(--gd-radius-lg);
+    padding: var(--gd-space-4, 1rem);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero__macro-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    transition: opacity 0.3s ease;
+    opacity: 0.7;
+}
+
+.hero__macro-card--protein::before {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.hero__macro-card--carbs::before {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.hero__macro-card--fat::before {
+    background: linear-gradient(90deg, #ec4899, #be185d);
+}
+
+.hero__macro-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+}
+
+.hero__macro-card:hover::before {
+    opacity: 1;
+}
+
+.hero__macro-header {
     display: flex;
     align-items: center;
     gap: var(--gd-space-2, 0.5rem);
-    padding: var(--gd-space-2, 0.5rem) var(--gd-space-3, 0.75rem);
-    background: #f8fafc;
-    border-radius: var(--gd-radius-lg, 0.5rem);
-    border: 1px solid #e2e8f0;
-    transition: all 0.2s ease;
+    margin-bottom: var(--gd-space-3, 0.75rem);
 }
 
-.hero__legend-item:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    transform: translateY(-1px);
+.hero__macro-icon {
+    font-size: var(--gd-font-size-lg, 1.125rem);
 }
 
-.hero__legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
+.hero__macro-name {
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    font-weight: var(--gd-font-weight-semibold, 600);
+    color: var(--gd-text-primary, #1e293b);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-.hero__legend-item--protein .hero__legend-color {
-    background: #10b981;
+.hero__macro-values {
+    display: flex;
+    align-items: baseline;
+    gap: var(--gd-space-1, 0.25rem);
+    margin-bottom: var(--gd-space-3, 0.75rem);
 }
 
-.hero__legend-item--carbs .hero__legend-color {
-    background: #f59e0b;
+.hero__macro-current {
+    font-size: var(--gd-font-size-xl, 1.25rem);
+    font-weight: var(--gd-font-weight-bold, 700);
+    color: var(--gd-text-primary, #1e293b);
 }
 
-.hero__legend-item--fat .hero__legend-color {
-    background: #ec4899;
-}
-
-.hero__legend-label {
+.hero__macro-target {
     font-size: var(--gd-font-size-sm, 0.875rem);
     color: var(--gd-text-secondary, #64748b);
     font-weight: var(--gd-font-weight-medium, 500);
 }
 
-.hero__legend-value {
-    font-size: var(--gd-font-size-sm, 0.875rem);
-    color: var(--gd-text-primary, #1e293b);
+.hero__macro-progress {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: var(--gd-space-2, 0.5rem);
+}
+
+.hero__macro-progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease-out;
+}
+
+.hero__macro-progress-bar--protein {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.hero__macro-progress-bar--carbs {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.hero__macro-progress-bar--fat {
+    background: linear-gradient(90deg, #ec4899, #be185d);
+}
+
+.hero__macro-percentage {
+    font-size: var(--gd-font-size-xs, 0.75rem);
+    color: var(--gd-text-tertiary, #94a3b8);
     font-weight: var(--gd-font-weight-semibold, 600);
-    margin-left: auto;
+    text-align: right;
+}
+
+/* Goal Recommendation */
+.hero__goal-recommendation {
+    display: flex;
+    align-items: center;
+    gap: var(--gd-space-3, 0.75rem);
+    padding: var(--gd-space-4, 1rem);
+    border-radius: var(--gd-radius-lg);
+    border: 1px solid;
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    font-weight: var(--gd-font-weight-medium, 500);
+}
+
+.hero__goal-recommendation--loss {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border-color: #f87171;
+    color: #991b1b;
+}
+
+.hero__goal-recommendation--gain {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-color: #4ade80;
+    color: #166534;
+}
+
+.hero__goal-recommendation--maintain {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-color: #fbbf24;
+    color: #92400e;
+}
+
+.hero__recommendation-icon {
+    font-size: var(--gd-font-size-xl, 1.25rem);
+    flex-shrink: 0;
+}
+
+.hero__recommendation-text {
+    line-height: 1.4;
 }
 
 /* Meals List */
@@ -581,8 +726,21 @@
         font-size: var(--gd-font-size-base, 1rem);
     }
 
-    .hero__meals-visualization {
-        padding: var(--gd-space-6, 1.5rem);
+    .hero__nutrition-dashboard {
+        padding: var(--gd-space-4, 1rem);
+    }
+    
+    .hero__calorie-current .hero__calorie-number {
+        font-size: 2rem;
+    }
+    
+    .hero__calorie-target .hero__calorie-number {
+        font-size: 1.5rem;
+    }
+    
+    .hero__macro-cards {
+        grid-template-columns: 1fr;
+        gap: var(--gd-space-3, 0.75rem);
     }
 
     .hero__meals-grid {
@@ -639,8 +797,29 @@
         font-size: var(--gd-font-size-xs, 0.75rem);
     }
 
-    .hero__meals-visualization {
-        padding: var(--gd-space-4, 1rem);
+    .hero__nutrition-dashboard {
+        padding: var(--gd-space-3, 0.75rem);
+    }
+    
+    .hero__calorie-current .hero__calorie-number {
+        font-size: 1.75rem;
+    }
+    
+    .hero__calorie-target .hero__calorie-number {
+        font-size: 1.25rem;
+    }
+    
+    .hero__calorie-status {
+        flex-direction: column;
+        gap: var(--gd-space-2, 0.5rem);
+    }
+    
+    .hero__macro-card {
+        padding: var(--gd-space-3, 0.75rem);
+    }
+    
+    .hero__macro-current {
+        font-size: var(--gd-font-size-lg, 1.125rem);
     }
 }
 

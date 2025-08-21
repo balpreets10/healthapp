@@ -1,6 +1,26 @@
 [
     {
         "schemaname": "public",
+        "tablename": "foods",
+        "policyname": "Allow service_role to manage foods",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.role() = 'service_role'::text)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "foods",
+        "policyname": "Allow authenticated users to read foods",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.role() = 'authenticated'::text)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
         "tablename": "user_roles",
         "policyname": "Authenticated users can have roles",
         "permissive": "PERMISSIVE",
