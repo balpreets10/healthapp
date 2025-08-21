@@ -267,9 +267,9 @@ class AuthManager {
         }
 
         try {
-            const { data, error } = await SupabaseService.signInWithGoogle();
+            const { data, error } = await SupabaseService.signInWithGooglePopup();
             if (error) {
-                this.showNotification('Google sign in failed. Please try again.', 'error');
+                this.showNotification(error.message || 'Google sign in failed. Please try again.', 'error');
                 throw error;
             }
 

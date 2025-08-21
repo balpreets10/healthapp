@@ -1,0 +1,257 @@
+[
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "user_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "date",
+    "data_type": "date"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "mood",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "energy_level",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "sleep_hours",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "sleep_quality",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "water_intake_ml",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "exercise_minutes",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "exercise_type",
+    "data_type": "text"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "symptoms",
+    "data_type": "ARRAY"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "medications",
+    "data_type": "ARRAY"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "weight_kg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "notes",
+    "data_type": "text"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "photos",
+    "data_type": "ARRAY"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "health_journal_entries",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "user_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "meal_type",
+    "data_type": "text"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "meal_name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "date",
+    "data_type": "date"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "time",
+    "data_type": "time without time zone"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "foods",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "total_calories",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "total_protein_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "total_carbs_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "total_fat_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "total_fiber_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "total_sugar_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "total_sodium_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "notes",
+    "data_type": "text"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "meals",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "user_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "full_name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "avatar_url",
+    "data_type": "text"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "date_of_birth",
+    "data_type": "date"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "height_cm",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "weight_kg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "activity_level",
+    "data_type": "text"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "health_goals",
+    "data_type": "ARRAY"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "dietary_restrictions",
+    "data_type": "ARRAY"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "user_roles",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "user_roles",
+    "column_name": "user_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "user_roles",
+    "column_name": "role",
+    "data_type": "text"
+  },
+  {
+    "table_name": "user_roles",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "user_roles",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  }
+]

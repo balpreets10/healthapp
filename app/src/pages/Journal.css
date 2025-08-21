@@ -1,0 +1,380 @@
+.journal {
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    min-height: 100vh;
+}
+
+.journal__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.journal__header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.journal__title {
+    font-size: 2.5rem;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.journal__date {
+    font-size: 1.1rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.journal__section-title {
+    font-size: 1.5rem;
+    color: #334155;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+/* Nutrition Overview */
+.journal__nutrition-overview {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.journal__nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.journal__nutrition-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.journal__nutrition-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.journal__nutrition-card--calories {
+    border-color: #fbbf24;
+    background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 5%, #f8fafc 5%);
+}
+
+.journal__nutrition-card--protein {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fee2e2 0%, #ef4444 5%, #f8fafc 5%);
+}
+
+.journal__nutrition-card--carbs {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #d1fae5 0%, #10b981 5%, #f8fafc 5%);
+}
+
+.journal__nutrition-card--fat {
+    border-color: #8b5cf6;
+    background: linear-gradient(135deg, #ede9fe 0%, #8b5cf6 5%, #f8fafc 5%);
+}
+
+.journal__nutrition-icon {
+    font-size: 2rem;
+    background: white;
+    padding: 0.75rem;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.journal__nutrition-content {
+    flex: 1;
+}
+
+.journal__nutrition-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.journal__nutrition-label {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.journal__progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.journal__progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+.journal__progress-fill--calories {
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+.journal__progress-fill--protein {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.journal__progress-fill--carbs {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.journal__progress-fill--fat {
+    background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+/* Meal Timeline */
+.journal__meals-timeline {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.journal__meal-section {
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.journal__meal-section:last-child {
+    margin-bottom: 0;
+}
+
+.journal__meal-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.journal__meal-type {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.journal__meal-icon {
+    font-size: 1.5rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.journal__meal-title {
+    font-size: 1.25rem;
+    color: #334155;
+    margin: 0;
+    font-weight: 600;
+}
+
+.journal__meal-summary {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.journal__meal-count {
+    padding: 0.25rem 0.75rem;
+    background: #e2e8f0;
+    border-radius: 20px;
+}
+
+.journal__meal-calories {
+    padding: 0.25rem 0.75rem;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.journal__meal-items {
+    padding: 1rem 0;
+}
+
+.journal__meal-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem;
+    border-left: 4px solid #e2e8f0;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.journal__meal-item:hover {
+    border-left-color: #3b82f6;
+    background: #f8fafc;
+}
+
+.journal__meal-item:last-child {
+    margin-bottom: 0;
+}
+
+.journal__meal-time {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 600;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    background: #f1f5f9;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    min-width: 80px;
+    text-align: center;
+    height: fit-content;
+}
+
+.journal__meal-details {
+    flex: 1;
+}
+
+.journal__meal-name {
+    font-size: 1.1rem;
+    color: #1e293b;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.journal__meal-nutrition {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.journal__nutrition-item {
+    font-size: 0.875rem;
+    color: #64748b;
+    background: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    font-weight: 500;
+}
+
+/* Quick Stats */
+.journal__quick-stats {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.journal__stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.journal__stat-card {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.journal__stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
+}
+
+.journal__stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.journal__stat-label {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .journal {
+        padding: 1rem 0;
+    }
+
+    .journal__container {
+        padding: 0 1rem;
+    }
+
+    .journal__title {
+        font-size: 2rem;
+    }
+
+    .journal__nutrition-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .journal__nutrition-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+
+    .journal__meal-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .journal__meal-item {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .journal__meal-time {
+        align-self: flex-start;
+    }
+
+    .journal__meal-nutrition {
+        gap: 0.5rem;
+    }
+
+    .journal__stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .journal__stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .journal__meal-nutrition {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -159,6 +159,10 @@
     padding: var(--gd-space-4, 1rem) 0;
   }
 
+  .app__main {
+    padding-top: 0px;
+  }
+
   .app__footer-links {
     flex-direction: column;
     align-items: flex-start;
@@ -213,10 +217,6 @@
 /* Theme transition class */
 .theme-transition {
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.app-loaded {
-  /* Add any post-load styling here */
 }
 
 /* Responsive Design */

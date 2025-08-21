@@ -134,6 +134,168 @@
     font-weight: var(--gd-font-weight-medium, 500);
 }
 
+/* ===== CALORIE TRACKING STYLES ===== */
+.hero__calorie-tracking {
+    background: white;
+    border-radius: var(--gd-radius-xl);
+    padding: var(--gd-space-6);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    margin-bottom: var(--gd-space-6, 1.5rem);
+}
+
+.hero__calorie-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--gd-space-4, 1rem);
+    margin-bottom: var(--gd-space-6, 1.5rem);
+}
+
+.hero__calorie-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--gd-radius-lg);
+    padding: var(--gd-space-4);
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.hero__calorie-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.hero__calorie-card--target {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.hero__calorie-card--current {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.hero__calorie-card--progress {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.hero__calorie-label {
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    color: var(--gd-text-secondary, #64748b);
+    font-weight: var(--gd-font-weight-medium, 500);
+    margin-bottom: var(--gd-space-1, 0.25rem);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.hero__calorie-value {
+    font-size: var(--gd-font-size-2xl, 1.5rem);
+    font-weight: var(--gd-font-weight-bold, 700);
+    color: var(--gd-text-primary, #1e293b);
+    margin-bottom: var(--gd-space-1, 0.25rem);
+}
+
+.hero__calorie-subtext {
+    font-size: var(--gd-font-size-xs, 0.75rem);
+    color: var(--gd-text-tertiary, #94a3b8);
+    font-weight: var(--gd-font-weight-medium, 500);
+}
+
+.hero__calorie-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: var(--gd-space-2, 0.5rem);
+}
+
+.hero__calorie-progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    transition: width 0.6s ease-in-out;
+    border-radius: 3px;
+}
+
+.hero__calorie-recommendation {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--gd-radius-lg);
+    padding: var(--gd-space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--gd-space-3, 0.75rem);
+}
+
+.hero__calorie-recommendation--loss {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-color: #f87171;
+}
+
+.hero__calorie-recommendation--gain {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #4ade80;
+}
+
+.hero__calorie-recommendation--maintain {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #fbbf24;
+}
+
+.hero__recommendation-icon {
+    font-size: var(--gd-font-size-xl, 1.25rem);
+    flex-shrink: 0;
+}
+
+.hero__recommendation-text {
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    color: var(--gd-text-primary, #1e293b);
+    font-weight: var(--gd-font-weight-medium, 500);
+    line-height: 1.4;
+}
+
+.hero__setup-profile {
+    background: white;
+    border-radius: var(--gd-radius-xl);
+    padding: var(--gd-space-8);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    text-align: center;
+    margin-bottom: var(--gd-space-6, 1.5rem);
+}
+
+.hero__setup-icon {
+    font-size: 3rem;
+    margin-bottom: var(--gd-space-4, 1rem);
+}
+
+.hero__setup-message {
+    font-size: var(--gd-font-size-base, 1rem);
+    color: var(--gd-text-secondary, #64748b);
+    margin-bottom: var(--gd-space-6, 1.5rem);
+    line-height: 1.5;
+}
+
+.hero__setup-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: var(--gd-radius-lg);
+    padding: var(--gd-space-3, 0.75rem) var(--gd-space-6, 1.5rem);
+    font-size: var(--gd-font-size-base, 1rem);
+    font-weight: var(--gd-font-weight-semibold, 600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hero__setup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+}
+
 .hero__meals-visualization {
     background: white;
     border-radius: var(--gd-radius-xl);
@@ -154,10 +316,21 @@
 .hero__pie-svg {
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
     transition: transform 0.2s ease;
+    animation: pieChartPulse 2s ease-in-out infinite;
 }
 
 .hero__pie-svg:hover {
-    transform: scale(1.02);
+    transform: scale(1.05);
+    animation-play-state: paused;
+}
+
+@keyframes pieChartPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
 }
 
 .hero__pie-bg {
@@ -167,6 +340,14 @@
 .hero__pie-segment {
     stroke-linecap: round;
     transition: all 0.6s ease-in-out;
+    animation: drawSegment 1.5s ease-in-out forwards;
+    stroke-dasharray: 0 100;
+}
+
+@keyframes drawSegment {
+    to {
+        stroke-dasharray: var(--segment-length, 25) calc(100 - var(--segment-length, 75));
+    }
 }
 
 .hero__pie-segment--protein {
@@ -189,9 +370,14 @@
 
 .hero__pie-calories-label {
     font-size: var(--gd-font-size-xxs, .4rem);
-    /* fill: var(--gd-text-secondary, #64748b); */
-    /* line-height: var(--gd-line-height-tight); */
-    /* font-weight: var(--gd-font-weight-semibold, 500); */
+    fill: var(--gd-text-secondary, #64748b);
+    font-weight: var(--gd-font-weight-medium, 500);
+}
+
+.hero__pie-target {
+    font-size: var(--gd-font-size-xxs, .35rem);
+    fill: var(--gd-text-tertiary, #94a3b8);
+    font-weight: var(--gd-font-weight-normal, 400);
 }
 
 /* Macro Legend */
@@ -267,8 +453,8 @@
 
 .hero__meals-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--gd-space-4, 1rem);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--gd-space-3, 0.75rem);
 }
 
 .hero__meal-card {
@@ -277,6 +463,10 @@
     border-radius: var(--gd-radius-md);
     padding: var(--gd-space-3);
     transition: all 0.2s ease;
+}
+
+.hero__meal-card--compact {
+    padding: var(--gd-space-2, 0.5rem);
 }
 
 .hero__meal-card:hover {
@@ -317,9 +507,13 @@
 }
 
 .hero__meal-calories {
-    font-size: var(--gd-font-size-sm, 0.875rem);
-    color: var(--gd-text-secondary, #64748b);
-    font-weight: var(--gd-font-weight-medium, 500);
+    font-size: var(--gd-font-size-xs, 0.75rem);
+    color: var(--gd-color-primary-600, #2563eb);
+    font-weight: var(--gd-font-weight-semibold, 600);
+    background: rgba(37, 99, 235, 0.1);
+    padding: 2px 6px;
+    border-radius: var(--gd-radius-sm, 0.25rem);
+    white-space: nowrap;
 }
 
 .hero__no-meals {
@@ -399,6 +593,20 @@
         padding: var(--gd-space-3, 0.75rem) var(--gd-space-6, 1.5rem);
         font-size: var(--gd-font-size-base, 1rem);
     }
+
+    .hero__calorie-overview {
+        grid-template-columns: 1fr;
+        gap: var(--gd-space-3, 0.75rem);
+    }
+
+    .hero__calorie-tracking,
+    .hero__setup-profile {
+        padding: var(--gd-space-4, 1rem);
+    }
+
+    .hero__calorie-value {
+        font-size: var(--gd-font-size-xl, 1.25rem);
+    }
 }
 
 @media (max-width: 480px) {
@@ -475,5 +683,388 @@
 
     .hero__circle-progress {
         stroke-width: 4;
+    }
+
+    .hero__metabolic-card {
+        border-width: 2px;
+    }
+}
+
+/* ===== BMR AND TDEE METABOLIC CARDS ===== */
+.hero__metabolic-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--gd-space-4, 1rem);
+    margin-bottom: var(--gd-space-6, 1.5rem);
+}
+
+.hero__metabolic-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: var(--gd-radius-xl);
+    padding: var(--gd-space-6);
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero__metabolic-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.hero__metabolic-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    border-color: #cbd5e1;
+}
+
+.hero__metabolic-card:hover::before {
+    opacity: 1;
+}
+
+.hero__metabolic-card--bmr::before {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.hero__metabolic-card--tdee::before {
+    background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+.hero__metabolic-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--gd-space-3, 0.75rem);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.hero__metabolic-label {
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    color: var(--gd-text-secondary, #64748b);
+    font-weight: var(--gd-font-weight-semibold, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--gd-space-2, 0.5rem);
+}
+
+.hero__metabolic-value {
+    font-size: var(--gd-font-size-2xl, 1.5rem);
+    font-weight: var(--gd-font-weight-bold, 700);
+    color: var(--gd-color-primary-900, #1e3a8a);
+    margin-bottom: var(--gd-space-1, 0.25rem);
+    line-height: 1;
+}
+
+.hero__metabolic-subtext {
+    font-size: var(--gd-font-size-xs, 0.75rem);
+    color: var(--gd-text-tertiary, #94a3b8);
+    font-weight: var(--gd-font-weight-medium, 500);
+}
+
+/* Responsive adjustments for metabolic cards */
+@media (max-width: 768px) {
+    .hero__metabolic-overview {
+        grid-template-columns: 1fr;
+        gap: var(--gd-space-3, 0.75rem);
+    }
+
+    .hero__metabolic-card {
+        padding: var(--gd-space-4, 1rem);
+    }
+
+    .hero__metabolic-value {
+        font-size: var(--gd-font-size-xl, 1.25rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .hero__metabolic-icon {
+        font-size: 2rem;
+    }
+}
+
+/* ===== INNOVATIVE METABOLIC DASHBOARD ===== */
+.hero__metabolic-dashboard {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: var(--gd-radius-xl);
+    padding: var(--gd-space-6);
+    margin-bottom: var(--gd-space-6, 1.5rem);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero__metabolic-dashboard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6);
+    background-size: 200% 100%;
+    animation: gradientShift 6s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.hero__metabolic-header {
+    text-align: center;
+    margin-bottom: var(--gd-space-6, 1.5rem);
+}
+
+.hero__metabolic-title {
+    font-size: var(--gd-font-size-lg, 1.125rem);
+    font-weight: var(--gd-font-weight-bold, 700);
+    color: var(--gd-text-primary, #1e293b);
+    margin: 0 0 var(--gd-space-1, 0.25rem) 0;
+}
+
+.hero__metabolic-subtitle {
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    color: var(--gd-text-secondary, #64748b);
+    margin: 0;
+    font-weight: var(--gd-font-weight-medium, 500);
+}
+
+/* Energy Flow Visualization */
+.hero__energy-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gd-space-8, 2rem);
+    margin-bottom: var(--gd-space-6, 1.5rem);
+    padding: var(--gd-space-4, 1rem);
+}
+
+.hero__energy-node {
+    position: relative;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hero__energy-node:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hero__energy-node--bmr {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.hero__energy-node--tdee {
+    border-color: #8b5cf6;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.hero__energy-pulse {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    animation: energyPulse 2s ease-in-out infinite;
+}
+
+.hero__energy-pulse--delayed {
+    animation-delay: 1s;
+}
+
+.hero__energy-node--bmr .hero__energy-pulse {
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.hero__energy-node--tdee .hero__energy-pulse {
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+@keyframes energyPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+.hero__energy-icon {
+    font-size: 1.5rem;
+    margin-bottom: var(--gd-space-1, 0.25rem);
+}
+
+.hero__energy-label {
+    font-size: var(--gd-font-size-xs, 0.75rem);
+    color: var(--gd-text-secondary, #64748b);
+    font-weight: var(--gd-font-weight-semibold, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--gd-space-1, 0.25rem);
+}
+
+.hero__energy-value {
+    font-size: var(--gd-font-size-lg, 1.125rem);
+    font-weight: var(--gd-font-weight-bold, 700);
+    color: var(--gd-text-primary, #1e293b);
+    line-height: 1;
+}
+
+.hero__energy-arrow {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+}
+
+.hero__energy-line {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #ef4444, #8b5cf6);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero__energy-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+    animation: energyFlow 2s ease-in-out infinite;
+}
+
+@keyframes energyFlow {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.hero__energy-tip {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid #8b5cf6;
+    margin-left: 52px;
+    margin-top: -2px;
+}
+
+.hero__energy-multiplier {
+    font-size: var(--gd-font-size-xs, 0.75rem);
+    color: var(--gd-text-secondary, #64748b);
+    font-weight: var(--gd-font-weight-medium, 500);
+    margin-top: var(--gd-space-1, 0.25rem);
+    background: rgba(139, 92, 246, 0.1);
+    padding: 2px 6px;
+    border-radius: var(--gd-radius-sm, 0.25rem);
+}
+
+/* Metabolic Insights */
+.hero__metabolic-insights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--gd-space-3, 0.75rem);
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: var(--gd-radius-lg);
+    padding: var(--gd-space-4, 1rem);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.hero__insight-item {
+    display: flex;
+    align-items: center;
+    gap: var(--gd-space-2, 0.5rem);
+    padding: var(--gd-space-2, 0.5rem);
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: var(--gd-radius-md);
+    transition: all 0.2s ease;
+}
+
+.hero__insight-item:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hero__insight-icon {
+    font-size: var(--gd-font-size-base, 1rem);
+    flex-shrink: 0;
+}
+
+.hero__insight-text {
+    font-size: var(--gd-font-size-sm, 0.875rem);
+    color: var(--gd-text-primary, #1e293b);
+    font-weight: var(--gd-font-weight-medium, 500);
+}
+
+/* Responsive Design for Metabolic Dashboard */
+@media (max-width: 768px) {
+    .hero__energy-flow {
+        flex-direction: column;
+        gap: var(--gd-space-4, 1rem);
+    }
+
+    .hero__energy-node {
+        width: 100px;
+        height: 100px;
+    }
+
+    .hero__energy-value {
+        font-size: var(--gd-font-size-base, 1rem);
+    }
+
+    .hero__energy-arrow {
+        transform: rotate(90deg);
+        margin: var(--gd-space-2, 0.5rem) 0;
+    }
+
+    .hero__metabolic-insights {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero__energy-node {
+        width: 80px;
+        height: 80px;
+    }
+
+    .hero__energy-icon {
+        font-size: 1.25rem;
+    }
+
+    .hero__energy-value {
+        font-size: var(--gd-font-size-sm, 0.875rem);
+    }
+
+    .hero__metabolic-dashboard {
+        padding: var(--gd-space-4, 1rem);
     }
 }

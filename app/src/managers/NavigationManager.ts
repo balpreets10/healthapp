@@ -48,6 +48,15 @@ class NavigationManager implements INavigationManager {
                     disabled: false,
                     requiresAuth: true,
                     ariaLabel: 'Navigate to Health Journal'
+                },
+                {
+                    id: 'profile',
+                    label: 'Profile',
+                    href: '/profile',
+                    position: 3,
+                    disabled: false,
+                    requiresAuth: true,
+                    ariaLabel: 'Navigate to Profile'
                 }
             ],
             animationDuration: 300,

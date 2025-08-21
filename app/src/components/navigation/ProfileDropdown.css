@@ -12,20 +12,22 @@
 /* Mobile bottom navigation adjustments */
 @media (max-width: 768px) {
     .profile-dropdown__menu {
-        bottom: 100%;
+        position: fixed;
+        bottom: calc(var(--gd-nav-height) + var(--gd-space-2));
         top: auto;
-        margin-top: 0;
-        margin-bottom: var(--gd-space-2);
         left: 50%;
         right: auto;
         transform: translateX(-50%);
-        min-width: 260px;
+        margin: 0;
+        min-width: 280px;
+        max-width: calc(100vw - var(--gd-space-4));
+        z-index: calc(var(--gd-z-fixed) + 10);
     }
 
     @keyframes profile-dropdown-enter {
         from {
             opacity: 0;
-            transform: translateX(-50%) translateY(8px) scale(0.95);
+            transform: translateX(-50%) translateY(16px) scale(0.9);
         }
         to {
             opacity: 1;

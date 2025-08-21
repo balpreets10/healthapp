@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ModernNavigation from './components/navigation/ModernNavigation';
 import Preloader from './components/ui/Preloader';
 import Hero from './components/sections/Hero';
 import AddMeals from './pages/AddMeals';
+import Profile from './pages/Profile';
+import Journal from './pages/Journal';
+import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { useAuthNavigation, useNavigationEvents } from './hooks/useNavigation';
 import { useAuth } from './hooks/useAuth';
-import AuthManager from './managers/AuthManager';
 import ScrollManager from './managers/ScrollManager';
 import PerformanceManager from './managers/PerformanceManager';
 import { appConfig, devHelpers } from './config/AppConfig';
@@ -19,10 +21,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigation = useAuthNavigation(auth.isAuthenticated, auth.loading);
   const { isAuthenticated } = auth;
   const { actions: navActions } = navigation;
+  const location = useLocation();
 
   const handleNavigate = (sectionId: string) => {
     navActions.navigate(sectionId);
   };
+
+  // Only show footer on home page
+  const showFooter = location.pathname === '/';
 
   return (
     <div className="app">
@@ -39,25 +45,27 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {children}
       </main>
 
-      {/* Compact Footer */}
-      <footer className="app__footer">
-        <div className="app__footer-content">
-          <div className="app__footer-main">
-            <div className="app__footer-brand">
-              <strong>{appConfig.name}</strong>
-              <span>Your health journey starts here</span>
+      {/* Compact Footer - only on home page */}
+      {showFooter && (
+        <footer className="app__footer">
+          <div className="app__footer-content">
+            <div className="app__footer-main">
+              <div className="app__footer-brand">
+                <strong>{appConfig.name}</strong>
+                <span>Your health journey starts here</span>
+              </div>
+            </div>
+            <div className="app__footer-bottom">
+              <span>&copy; 2025 {appConfig.name}</span>
+              {appConfig.debug.enabled && (
+                <span className="app__footer-version">
+                  v{appConfig.version}
+                </span>
+              )}
             </div>
           </div>
-          <div className="app__footer-bottom">
-            <span>&copy; 2025 {appConfig.name}</span>
-            {appConfig.debug.enabled && (
-              <span className="app__footer-version">
-                v{appConfig.version}
-              </span>
-            )}
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };
@@ -66,26 +74,35 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const HomePage: React.FC = () => {
   const auth = useAuth();
   const navigation = useAuthNavigation(auth.isAuthenticated, auth.loading);
-  const { isAuthenticated } = auth;
+  const { isAuthenticated, authLoading } = auth;
   const { actions: navActions } = navigation;
 
   const handleNavigate = (sectionId: string) => {
     navActions.navigate(sectionId);
   };
 
-  const handleSignIn = () => {
-    // Trigger Google sign in
-    const authManager = AuthManager.getInstance();
-    authManager.signInWithGoogle();
+  const handleSignIn = async () => {
+    // Use the auth hook's Google sign in method
+    await auth.signInWithGoogle();
   };
+
+  // Show loading state during authentication
+  const primaryCtaText = authLoading 
+    ? "Signing in..." 
+    : isAuthenticated 
+      ? "Go to Add Meals" 
+      : "Sign In with Google";
 
   return (
     <section id="home" className="app__section">
       <Hero
         title={`Welcome to ${appConfig.name}`}
         subtitle="Track your health and nutrition journey with ease"
-        primaryCtaText={isAuthenticated ? "Go to Add Meals" : "Sign In with Google"}
-        onPrimaryCtaClick={() => isAuthenticated ? handleNavigate('add-meals') : handleSignIn()}
+        primaryCtaText={primaryCtaText}
+        onPrimaryCtaClick={() => {
+          if (authLoading) return; // Prevent clicks during loading
+          return isAuthenticated ? handleNavigate('add-meals') : handleSignIn();
+        }}
       />
     </section>
   );
@@ -98,8 +115,8 @@ function App() {
   const auth = useAuth();
   const navigation = useAuthNavigation(auth.isAuthenticated, auth.loading);
 
-  // Extract values after hooks are called
-  const { isAuthenticated, loading: authLoading } = auth;
+  // Extract values after hooks are called  
+  const { isAuthenticated, loading, authLoading } = auth;
   const { state: navState } = navigation;
 
   // Initialize managers once
@@ -169,7 +186,8 @@ function App() {
   };
 
   // Early return after all hooks are called
-  if (isLoading) {
+  // Don't show preloader if user is in the middle of authentication
+  if (isLoading && !authLoading) {
     return (
       <Preloader
         onComplete={handlePreloaderComplete}
@@ -186,6 +204,9 @@ function App() {
           {/* Home Route */}
           <Route path="/" element={<HomePage />} />
 
+          {/* Auth Callback Route - for OAuth popup handling */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
+
           {/* Protected Add Meals Route */}
           <Route
             path="/add-meals"
@@ -196,19 +217,22 @@ function App() {
             }
           />
 
-          {/* Journal Route - Placeholder for future implementation */}
+          {/* Profile Route */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Journal Route */}
           <Route
             path="/journal"
             element={
               <ProtectedRoute>
-                <section id="journal" className="app__section">
-                  <div className="app__container">
-                    <div className="section-placeholder">
-                      <h2>📝 Health Journal Section</h2>
-                      <p>This section will be implemented with health journal functionality.</p>
-                    </div>
-                  </div>
-                </section>
+                <Journal />
               </ProtectedRoute>
             }
           />

@@ -2,7 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const isProduction = mode === 'production'
+  
+  // Set NODE_ENV properly
+  process.env.NODE_ENV = isProduction ? 'production' : 'development'
+  
+  return {
   plugins: [react()],
 
   // Path aliases
@@ -18,25 +24,30 @@ export default defineConfig({
     },
   },
 
-  // Environment variables - simplified for development
+  // Environment variables - mode-specific
   define: {
-    __APP_ENV__: JSON.stringify('development'),
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0-dev'),
+    __APP_ENV__: JSON.stringify(mode),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
   },
 
-  // ESBuild configuration - development optimized
+  // Load environment-specific .env file
+  envDir: '.',
+  envPrefix: 'VITE_',
+
+  // ESBuild configuration - mode optimized
   esbuild: {
-    drop: [], // Keep console and debugger statements in development
-    legalComments: 'inline',
+    drop: isProduction ? ['console', 'debugger'] : [],
+    legalComments: isProduction ? 'none' : 'inline',
   },
 
-  // Build configuration - optimized for development/prototype
+  // Build configuration - mode optimized
   build: {
-    outDir: 'dist',
+    outDir: isProduction ? 'builds/prod' : 'builds/dev',
     assetsDir: 'assets',
-    sourcemap: true, // Always include source maps for debugging
-    minify: false, // No minification for easier debugging
+    sourcemap: !isProduction,
+    minify: isProduction ? 'terser' : false,
     target: 'es2015',
 
     rollupOptions: {
@@ -81,9 +92,9 @@ export default defineConfig({
       },
     },
 
-    // Development build settings
-    reportCompressedSize: false, // Skip compression reporting for faster builds
-    chunkSizeWarningLimit: 2000, // Higher limit since we're not optimizing for production
+    // Build settings based on mode
+    reportCompressedSize: isProduction,
+    chunkSizeWarningLimit: isProduction ? 1000 : 2000,
   },
 
   // Development server
@@ -103,11 +114,12 @@ export default defineConfig({
     open: true,
   },
 
-  // CSS configuration - development optimized
+  // CSS configuration - mode optimized
   css: {
-    devSourcemap: true, // Always include CSS source maps
+    devSourcemap: !isProduction,
     modules: {
       localsConvention: 'camelCase',
     },
   },
+}
 })

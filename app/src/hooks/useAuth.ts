@@ -10,6 +10,7 @@ interface AuthState {
     loading: boolean;
     isAuthenticated: boolean;
     isAdmin: boolean;
+    authLoading: boolean;
 }
 
 interface AuthResult {
@@ -23,12 +24,43 @@ export const useAuth = () => {
     const mountedRef = useRef(true);
     const notificationManagerRef = useRef(NotificationManager.getInstance());
 
+    // Function to check profile setup and redirect if incomplete
+    const checkProfileSetupAndRedirect = async (userId: string) => {
+        try {
+            const { data: profile } = await SupabaseService.getUserProfile(userId);
+            
+            // Check if essential profile data is missing
+            const isSetupIncomplete = !profile || 
+                !profile.height_cm || 
+                !profile.weight_kg || 
+                !profile.activity_level;
+
+            if (isSetupIncomplete) {
+                // Only redirect if not already on profile page
+                if (window.location.pathname !== '/profile') {
+                    setTimeout(() => {
+                        window.location.href = '/profile';
+                    }, 1000); // Small delay to let the welcome notification show
+                }
+            }
+        } catch (error) {
+            console.error('Error checking profile setup:', error);
+            // On error, redirect to profile to be safe
+            if (window.location.pathname !== '/profile') {
+                setTimeout(() => {
+                    window.location.href = '/profile';
+                }, 1000);
+            }
+        }
+    };
+
     const [authState, setAuthState] = useState<AuthState>({
         user: null,
         session: null,
         loading: true,
         isAuthenticated: false,
-        isAdmin: false
+        isAdmin: false,
+        authLoading: false
     });
 
     // Initialize auth state
@@ -47,7 +79,8 @@ export const useAuth = () => {
                             session,
                             loading: false,
                             isAuthenticated: true,
-                            isAdmin: adminStatus
+                            isAdmin: adminStatus,
+                            authLoading: false
                         });
                     } else {
                         setAuthState({
@@ -55,7 +88,8 @@ export const useAuth = () => {
                             session: null,
                             loading: false,
                             isAuthenticated: false,
-                            isAdmin: false
+                            isAdmin: false,
+                            authLoading: false
                         });
                     }
                 }
@@ -67,7 +101,8 @@ export const useAuth = () => {
                         session: null,
                         loading: false,
                         isAuthenticated: false,
-                        isAdmin: false
+                        isAdmin: false,
+                        authLoading: false
                     });
                 }
             }
@@ -99,21 +134,29 @@ export const useAuth = () => {
                             session,
                             loading: false,
                             isAuthenticated: true,
-                            isAdmin: adminStatus
+                            isAdmin: adminStatus,
+                            authLoading: false // Clear auth loading on successful sign in
                         });
 
-                        // Show welcome notification for sign in events
+                        // Show welcome notification for sign in events (only if not from a service signup)
                         if (event === 'SIGNED_IN') {
                             const userName = session.user.user_metadata?.full_name ||
                                 session.user.user_metadata?.name ||
                                 session.user.email?.split('@')[0] ||
                                 'User';
 
-                            notificationManagerRef.current.show(
-                                `Welcome back, ${userName}!`,
-                                'success',
-                                3000
-                            );
+                            // Only show notification if this is a Google sign in (to avoid duplicate with service layer)
+                            const provider = session.user.app_metadata?.provider;
+                            if (provider === 'google') {
+                                notificationManagerRef.current.show(
+                                    `Welcome back, ${userName}!`,
+                                    'success',
+                                    3000
+                                );
+                            }
+
+                            // Check if profile setup is complete and redirect if needed
+                            checkProfileSetupAndRedirect(session.user.id);
                         }
                     }
                 } else {
@@ -123,7 +166,8 @@ export const useAuth = () => {
                             session: null,
                             loading: false,
                             isAuthenticated: false,
-                            isAdmin: false
+                            isAdmin: false,
+                            authLoading: false
                         });
 
                         // Show sign out notification
@@ -143,15 +187,32 @@ export const useAuth = () => {
         return unsubscribe;
     }, []); // FIXED: Empty dependency array for stable effect
 
-    // Google OAuth sign in
+    // Google OAuth sign in with popup
     const signInWithGoogle = useCallback(async (): Promise<AuthResult> => {
         try {
-            console.log('Starting Google OAuth sign in...');
+            console.log('Starting Google OAuth popup sign in...');
+            
+            // Set loading state
+            if (mountedRef.current) {
+                setAuthState(prevState => ({
+                    ...prevState,
+                    authLoading: true
+                }));
+            }
 
-            const { data, error } = await SupabaseService.signInWithGoogle();
+            const { data, error } = await SupabaseService.signInWithGooglePopup();
 
             if (error) {
-                console.error('Google OAuth error:', error);
+                console.error('Google OAuth popup error:', error);
+                
+                // Clear loading state only on error
+                if (mountedRef.current) {
+                    setAuthState(prevState => ({
+                        ...prevState,
+                        authLoading: false
+                    }));
+                }
+                
                 notificationManagerRef.current.show(
                     error.message || 'Google sign in failed',
                     'error',
@@ -160,12 +221,33 @@ export const useAuth = () => {
                 return { success: false, error };
             }
 
-            // OAuth redirect will handle the rest
-            console.log('Google OAuth redirect initiated');
-            return { success: true, data };
+            if (data) {
+                console.log('Google OAuth popup initiated successfully');
+                // Don't clear loading here - let auth state change handle it
+                // The loading will be cleared when SIGNED_IN event fires
+                return { success: true, data };
+            }
+
+            // Clear loading state if no data and no error (cancelled)
+            if (mountedRef.current) {
+                setAuthState(prevState => ({
+                    ...prevState,
+                    authLoading: false
+                }));
+            }
+            return { success: false, error: { message: 'Authentication was cancelled' } };
 
         } catch (error: any) {
-            console.error('Google sign in error:', error);
+            console.error('Google popup sign in error:', error);
+            
+            // Clear loading state on exception
+            if (mountedRef.current) {
+                setAuthState(prevState => ({
+                    ...prevState,
+                    authLoading: false
+                }));
+            }
+            
             const errorMessage = error?.message || 'Google sign in failed';
             notificationManagerRef.current.show(errorMessage, 'error', 5000);
             return { success: false, error: { message: errorMessage } };

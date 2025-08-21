@@ -7,6 +7,12 @@ interface AuthResponse {
     error?: AuthError | null;
 }
 
+interface GoogleAuthResponse {
+    data?: any;
+    error?: AuthError | null;
+    loading?: boolean;
+}
+
 interface SessionResponse {
     session: Session | null;
     error?: AuthError | null;
@@ -37,20 +43,18 @@ class SupabaseService {
 
         console.log('SupabaseService initialized');
         console.log('URL:', config.supabase.url);
-        console.log('Redirect URL will be:', window.location.origin);
+        console.log('Redirect URL will be:', config.supabase.auth.redirectTo);
     }
 
-    // ===== GOOGLE OAUTH ===== //
+    // ===== GOOGLE OAUTH WITH POPUP ===== //
     async signInWithGoogle(): Promise<AuthResponse> {
         try {
-            const redirectUrl = `${window.location.origin}/auth/callback`;
-
-            console.log('Initiating Google OAuth with redirect URL:', redirectUrl);
+            console.log('Initiating Google OAuth...');
 
             const { data, error } = await this.client.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: redirectUrl,
+                    redirectTo: `${window.location.origin}/auth/callback`,
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
@@ -64,11 +68,75 @@ class SupabaseService {
                 return { data, error };
             }
 
-            console.log('Google OAuth initiated successfully:', data);
+            console.log('Google OAuth initiated successfully');
             return { data, error };
 
         } catch (err) {
             console.error('Google sign-in failed:', err);
+            const error = err as AuthError;
+            return { data: null, error };
+        }
+    }
+
+    // ===== GOOGLE OAUTH WITH POPUP (Safe implementation) ===== //
+    async signInWithGooglePopup(): Promise<AuthResponse> {
+        try {
+            console.log('Initiating Google OAuth via popup...');
+
+            // Use the standard Supabase OAuth flow which handles COOP correctly
+            const { data, error } = await this.client.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                    scopes: 'openid email profile'
+                }
+            });
+
+            if (error) {
+                console.error('Google OAuth popup error:', error);
+                return { data, error };
+            }
+
+            console.log('Google OAuth popup initiated successfully');
+            return { data, error };
+
+        } catch (err) {
+            console.error('Google popup sign-in failed:', err);
+            const error = err as AuthError;
+            return { data: null, error };
+        }
+    }
+
+    // ===== POPUP CALLBACK HANDLER ===== //
+    private async handlePopupCallback(): Promise<AuthResponse> {
+        try {
+            // Wait a moment for the session to be established
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const { data, error } = await this.client.auth.getSession();
+            
+            if (error) {
+                return { data: null, error };
+            }
+            
+            if (data.session) {
+                return { data: data.session, error: null };
+            }
+            
+            return { 
+                data: null, 
+                error: { 
+                    message: 'No session found after authentication',
+                    name: 'NoSession',
+                    status: 401
+                } as AuthError 
+            };
+        } catch (err) {
+            console.error('Popup callback handling failed:', err);
             const error = err as AuthError;
             return { data: null, error };
         }
@@ -105,7 +173,7 @@ class SupabaseService {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`,
+                    emailRedirectTo: config.supabase.auth.redirectTo,
                     data: {
                         email_verify: true
                     }
@@ -192,7 +260,7 @@ class SupabaseService {
     async resetPassword(email: string): Promise<AuthResponse> {
         try {
             const { data, error } = await this.client.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/auth/reset-password`
+                redirectTo: `${config.app.baseUrl}/auth/reset-password`
             });
             return { data, error };
         } catch (err) {
@@ -222,7 +290,7 @@ class SupabaseService {
                 type: 'signup',
                 email,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                    emailRedirectTo: config.supabase.auth.redirectTo
                 }
             });
             return { data, error };
@@ -345,7 +413,76 @@ class SupabaseService {
     }
 
     // ===== USER PROFILE MANAGEMENT ===== //
-    async updateUserProfile(updates: {
+    async getUserProfile(userId: string): Promise<{ data: any; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            return { data, error };
+        } catch (err) {
+            console.error('Get user profile failed:', err);
+            return { data: null, error: err };
+        }
+    }
+
+    async updateUserProfile(userId: string, updates: {
+        height_cm?: number;
+        weight_kg?: number;
+        target_weight_kg?: number;
+        target_duration?: number;
+        target_duration_unit?: string;
+        goal_weight_kg?: number;
+        activity_level?: string;
+        health_goals?: string[];
+        full_name?: string;
+        avatar_url?: string;
+        [key: string]: any;
+    }): Promise<{ data?: any; error?: any }> {
+        try {
+            // First check if profile exists
+            const { data: existingProfile } = await this.client
+                .from('user_profiles')
+                .select('id')
+                .eq('user_id', userId)
+                .single();
+
+            if (existingProfile) {
+                // Profile exists, update it
+                const { data, error } = await this.client
+                    .from('user_profiles')
+                    .update({
+                        ...updates,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('user_id', userId)
+                    .select()
+                    .single();
+
+                return { data, error };
+            } else {
+                // Profile doesn't exist, insert new one
+                const { data, error } = await this.client
+                    .from('user_profiles')
+                    .insert({
+                        user_id: userId,
+                        ...updates,
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                return { data, error };
+            }
+        } catch (err) {
+            console.error('Profile update failed:', err);
+            return { data: null, error: err };
+        }
+    }
+
+    async updateUserMetadata(updates: {
         full_name?: string;
         avatar_url?: string;
         [key: string]: any;
@@ -356,7 +493,7 @@ class SupabaseService {
             });
             return { data, error };
         } catch (err) {
-            console.error('Profile update failed:', err);
+            console.error('User metadata update failed:', err);
             const error = err as AuthError;
             return { data: null, error };
         }
@@ -435,12 +572,41 @@ class SupabaseService {
 
             if (data.session) {
                 console.log('OAuth callback successful, user signed in:', data.session.user.email);
+                
+                // If this is in a popup, send message to parent
+                if (window.opener && window.opener !== window) {
+                    window.opener.postMessage({
+                        type: 'SUPABASE_AUTH_SUCCESS',
+                        session: data.session
+                    }, window.location.origin);
+                    window.close();
+                }
+                
                 return { success: true };
             } else {
+                // If this is in a popup, send error message to parent
+                if (window.opener && window.opener !== window) {
+                    window.opener.postMessage({
+                        type: 'SUPABASE_AUTH_ERROR',
+                        error: { message: 'No session found after OAuth callback' }
+                    }, window.location.origin);
+                    window.close();
+                }
+                
                 return { success: false, error: 'No session found after OAuth callback' };
             }
         } catch (err) {
             console.error('OAuth callback handling failed:', err);
+            
+            // If this is in a popup, send error message to parent
+            if (window.opener && window.opener !== window) {
+                window.opener.postMessage({
+                    type: 'SUPABASE_AUTH_ERROR',
+                    error: { message: 'Failed to handle OAuth callback' }
+                }, window.location.origin);
+                window.close();
+            }
+            
             return { success: false, error: 'Failed to handle OAuth callback' };
         }
     }

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import NavigationManager from '../../managers/NavigationManager';
-import ProfileDropdown from './ProfileDropdown';
 import { useAuth } from '../../hooks/useAuth';
 import { prefersReducedMotion } from '../../utils/helpers';
 import './ModernNavigation.css';
@@ -33,7 +32,7 @@ const ModernNavigation: React.FC<ModernNavigationProps> = ({
     const managerRef = useRef<NavigationManager>();
 
     // Get auth state
-    const { isAuthenticated, loading: authLoading, signInWithGoogle } = useAuth();
+    const { isAuthenticated, loading: authLoading } = useAuth();
 
     onNavigateRef.current = onNavigate;
 
@@ -80,29 +79,10 @@ const ModernNavigation: React.FC<ModernNavigationProps> = ({
             manager.updateAuthState(isAuthenticated);
         }
 
-        // Listen for auth prompts
-        const handleAuthRequired = () => {
-            console.log('🔐 Authentication required - user can use Google signin in ProfileDropdown');
-        };
-
-        const handleGoogleSigninRequested = async () => {
-            console.log('🔑 Google signin requested from auth prompt');
-            try {
-                await signInWithGoogle();
-            } catch (error) {
-                console.error('Google signin failed:', error);
-            }
-        };
-
-        document.addEventListener('navigation:auth-required', handleAuthRequired);
-        document.addEventListener('navigation:google-signin-requested', handleGoogleSigninRequested);
-
         return () => {
             unsubscribe();
-            document.removeEventListener('navigation:auth-required', handleAuthRequired);
-            document.removeEventListener('navigation:google-signin-requested', handleGoogleSigninRequested);
         };
-    }, [isAuthenticated, authLoading, signInWithGoogle]);
+    }, [isAuthenticated, authLoading]);
 
 
 
@@ -219,11 +199,11 @@ const ModernNavigation: React.FC<ModernNavigationProps> = ({
                             </li>
                         );
                     })}
-                    
-                    {/* Profile as a nav item */}
-                    <li className="modern-nav__item modern-nav__item--profile">
+
+                    {/* Profile as a nav item
+                    <li className={`modern-nav__item modern-nav__item--profile ${navState.activeItem === 'profile' ? 'modern-nav__item--active' : ''}`}>
                         <ProfileDropdown />
-                    </li>
+                    </li> */}
                 </ul>
 
                 {/* Right side - empty for balance */}

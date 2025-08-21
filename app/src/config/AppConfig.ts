@@ -5,9 +5,9 @@
 
 export interface AppConfig {
     // Environment
-    env: 'development';
-    isDevelopment: true;
-    isProduction: false;
+    env: 'development' | 'production';
+    isDevelopment: boolean;
+    isProduction: boolean;
 
     // App Info
     name: string;
@@ -72,23 +72,45 @@ const getNumericEnvVar = (key: string, defaultValue = 0): number => {
 };
 
 /**
- * Application configuration instance
- * Always configured for development environment
+ * Get current environment from build-time variables
  */
-export const appConfig: AppConfig = {
-    // Environment - always development
-    env: 'development',
-    isDevelopment: true,
-    isProduction: false,
+const getCurrentEnv = (): 'development' | 'production' => {
+    // Check NODE_ENV first (more reliable for Vite builds)
+    const nodeEnv = import.meta.env.NODE_ENV;
+    if (nodeEnv === 'production') return 'production';
+    if (nodeEnv === 'development') return 'development';
+    
+    // Fallback to Vite's mode
+    const viteMode = import.meta.env.MODE;
+    if (viteMode === 'production') return 'production';
+    
+    // Default fallback to development
+    return 'development';
+};
+
+/**
+ * Application configuration instance
+ * Environment-aware configuration
+ */
+export const appConfig: AppConfig = (() => {
+    const env = getCurrentEnv();
+    const isDev = env === 'development';
+    const isProd = env === 'production';
+    
+    return {
+    // Environment - dynamic based on build mode
+    env,
+    isDevelopment: isDev,
+    isProduction: isProd,
 
     // App Info
     name: getEnvVar('VITE_APP_NAME', 'Health Tracker Prototype'),
-    version: getEnvVar('VITE_APP_VERSION', '1.0.0-dev'),
+    version: getEnvVar('VITE_APP_VERSION', isProd ? '1.0.0' : '1.0.0-dev'),
     description: getEnvVar('VITE_APP_DESCRIPTION', 'Health and nutrition tracking prototype'),
 
     // API Configuration
     api: {
-        baseUrl: getEnvVar('VITE_API_BASE_URL', 'http://localhost:3001/api'),
+        baseUrl: getEnvVar('VITE_API_BASE_URL', isProd ? '/api' : 'http://localhost:3001/api'),
         timeout: getNumericEnvVar('VITE_API_TIMEOUT', 10000),
     },
 
@@ -98,19 +120,20 @@ export const appConfig: AppConfig = {
         anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY'),
     },
 
-    // Development Features - all enabled
+    // Development Features - environment dependent
     debug: {
-        enabled: getBooleanEnvVar('VITE_DEBUG_MODE', true),
-        showPanel: getBooleanEnvVar('VITE_ENABLE_DEBUG_PANEL', true),
-        enableLogging: getBooleanEnvVar('VITE_ENABLE_LOGGING', true),
-        enablePerformanceMonitoring: getBooleanEnvVar('VITE_ENABLE_PERFORMANCE_MONITORING', true),
+        enabled: getBooleanEnvVar('VITE_DEBUG_MODE', isDev),
+        showPanel: getBooleanEnvVar('VITE_ENABLE_DEBUG_PANEL', isDev),
+        enableLogging: getBooleanEnvVar('VITE_ENABLE_LOGGING', isDev),
+        enablePerformanceMonitoring: getBooleanEnvVar('VITE_ENABLE_PERFORMANCE_MONITORING', isDev),
     },
 
-    // Feature Flags - experimental features enabled in development
+    // Feature Flags - experimental features enabled in development only
     features: {
-        experimentalFeatures: getBooleanEnvVar('VITE_ENABLE_EXPERIMENTAL_FEATURES', true),
+        experimentalFeatures: getBooleanEnvVar('VITE_ENABLE_EXPERIMENTAL_FEATURES', isDev),
     },
-};
+    };
+})();
 
 /**
  * Validate required configuration

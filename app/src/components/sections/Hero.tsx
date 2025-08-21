@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useContentManager } from '../../hooks/useContentManager';
 import { useAuth } from '../../hooks/useAuth';
+import { useCalorieTracker } from '../../hooks/useCalorieTracker';
 import './Hero.css';
 
 interface HeroProps {
@@ -16,29 +17,6 @@ interface HeroProps {
     autoScroll?: boolean;
 }
 
-interface MealData {
-    id: string;
-    name: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    time: string;
-}
-
-interface Achievement {
-    number: string;
-    label: string;
-    icon: string;
-    ariaLabel?: string;
-}
-
-interface Technology {
-    name: string;
-    icon: string;
-    ariaLabel?: string;
-}
 
 interface MousePosition {
     x: number;
@@ -81,42 +59,9 @@ const Hero: React.FC<HeroProps> = ({
     // Hooks
     const { setCurrentSection } = useContentManager();
     const { isAuthenticated, user } = useAuth();
+    const { calorieData, todaysMeals } = useCalorieTracker();
 
-    // Sample meal data for visualization when signed in
-    const todaysMeals: MealData[] = useMemo(() => [
-        {
-            id: '1',
-            name: 'Oatmeal with Berries',
-            calories: 320,
-            protein: 12,
-            carbs: 58,
-            fat: 6,
-            mealType: 'breakfast',
-            time: '8:00 AM'
-        },
-        {
-            id: '2',
-            name: 'Grilled Chicken Salad',
-            calories: 450,
-            protein: 35,
-            carbs: 25,
-            fat: 18,
-            mealType: 'lunch',
-            time: '12:30 PM'
-        },
-        {
-            id: '3',
-            name: 'Greek Yogurt',
-            calories: 150,
-            protein: 15,
-            carbs: 12,
-            fat: 5,
-            mealType: 'snack',
-            time: '3:15 PM'
-        }
-    ], []);
-
-    // Calculate nutrition summary
+    // Calculate nutrition summary from real data
     const nutritionSummary = useMemo(() => {
         const totals = todaysMeals.reduce(
             (acc, meal) => ({
@@ -129,12 +74,12 @@ const Hero: React.FC<HeroProps> = ({
         );
         return {
             ...totals,
-            goalCalories: 2000,
-            goalProtein: 150,
-            goalCarbs: 250,
-            goalFat: 65
+            goalCalories: calorieData.targetCalories,
+            goalProtein: Math.round(calorieData.targetCalories * 0.3 / 4), // 30% of calories from protein
+            goalCarbs: Math.round(calorieData.targetCalories * 0.45 / 4), // 45% of calories from carbs
+            goalFat: Math.round(calorieData.targetCalories * 0.25 / 9) // 25% of calories from fat
         };
-    }, [todaysMeals]);
+    }, [todaysMeals, calorieData.targetCalories]);
 
     // Generate particles data
     const particlesData: ParticleData[] = useMemo(() => {
@@ -412,11 +357,14 @@ const Hero: React.FC<HeroProps> = ({
                                         })()}
 
                                         {/* Center content */}
-                                        <text x="21" y="22" textAnchor="middle" className="hero__pie-calories">
+                                        <text x="21" y="18" textAnchor="middle" className="hero__pie-calories">
                                             {nutritionSummary.calories}
                                         </text>
-                                        <text x="21" y="29" textAnchor="middle" className="hero__pie-calories-label">
+                                        <text x="21" y="23" textAnchor="middle" className="hero__pie-calories-label">
                                             calories
+                                        </text>
+                                        <text x="21" y="28" textAnchor="middle" className="hero__pie-target">
+                                            of {nutritionSummary.goalCalories}
                                         </text>
                                     </svg>
 
@@ -438,6 +386,20 @@ const Hero: React.FC<HeroProps> = ({
                                             <span className="hero__legend-value">{nutritionSummary.fat}g</span>
                                         </div>
                                     </div>
+                                    
+                                    {/* Calorie Recommendation moved here */}
+                                    {calorieData.recommendation && (
+                                        <div className={`hero__calorie-recommendation hero__calorie-recommendation--${calorieData.recommendation.type}`}>
+                                            <span className="hero__recommendation-icon">
+                                                {calorieData.recommendation.type === 'loss' && '📉'}
+                                                {calorieData.recommendation.type === 'gain' && '📈'}
+                                                {calorieData.recommendation.type === 'maintain' && '⚖️'}
+                                            </span>
+                                            <span className="hero__recommendation-text">
+                                                {calorieData.recommendation.message}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Today's Meals List */}
@@ -446,7 +408,7 @@ const Hero: React.FC<HeroProps> = ({
                                     {todaysMeals.length > 0 ? (
                                         <div className="hero__meals-grid">
                                             {todaysMeals.map((meal, index) => (
-                                                <div key={meal.id} className="hero__meal-card">
+                                                <div key={meal.id} className="hero__meal-card hero__meal-card--compact">
                                                     <div className="hero__meal-header">
                                                         <span className="hero__meal-type">
                                                             {meal.mealType === 'breakfast' && '🌅'}
@@ -455,10 +417,9 @@ const Hero: React.FC<HeroProps> = ({
                                                             {meal.mealType === 'snack' && '🍿'}
                                                             {meal.mealType}
                                                         </span>
-                                                        <span className="hero__meal-time">{meal.time}</span>
+                                                        <span className="hero__meal-calories">{meal.calories} cal</span>
                                                     </div>
                                                     <div className="hero__meal-name">{meal.name}</div>
-                                                    <div className="hero__meal-calories">{meal.calories} cal</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -475,6 +436,105 @@ const Hero: React.FC<HeroProps> = ({
                                     )}
                                 </div>
                             </div>
+
+                            {/* Metabolic & Calorie Tracking Section */}
+                            {calorieData.hasProfile ? (
+                                <div className="hero__calorie-tracking">
+                                    {/* Innovative Metabolic Dashboard */}
+                                    <div className="hero__metabolic-dashboard">
+                                        <div className="hero__metabolic-header">
+                                            <h4 className="hero__metabolic-title">📊 Your Metabolic Profile</h4>
+                                            <p className="hero__metabolic-subtitle">Understanding your body's energy needs</p>
+                                        </div>
+                                        
+                                        <div className="hero__metabolic-visual">
+                                            {/* Interactive Energy Flow */}
+                                            <div className="hero__energy-flow">
+                                                <div className="hero__energy-node hero__energy-node--bmr">
+                                                    <div className="hero__energy-pulse"></div>
+                                                    <div className="hero__energy-icon">🔥</div>
+                                                    <div className="hero__energy-label">BMR</div>
+                                                    <div className="hero__energy-value">{Math.round(calorieData.calculation?.bmr || 0)}</div>
+                                                </div>
+                                                
+                                                <div className="hero__energy-arrow">
+                                                    <div className="hero__energy-line"></div>
+                                                    <div className="hero__energy-tip"></div>
+                                                    <span className="hero__energy-multiplier">x {(calorieData.calculation?.tdee / calorieData.calculation?.bmr).toFixed(2) || '1.0'}</span>
+                                                </div>
+                                                
+                                                <div className="hero__energy-node hero__energy-node--tdee">
+                                                    <div className="hero__energy-pulse hero__energy-pulse--delayed"></div>
+                                                    <div className="hero__energy-icon">⚡</div>
+                                                    <div className="hero__energy-label">TDEE</div>
+                                                    <div className="hero__energy-value">{Math.round(calorieData.calculation?.tdee || 0)}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Metabolic Insights */}
+                                            <div className="hero__metabolic-insights">
+                                                <div className="hero__insight-item">
+                                                    <span className="hero__insight-icon">🛌</span>
+                                                    <span className="hero__insight-text">At rest: {Math.round(calorieData.calculation?.bmr || 0)} cal/day</span>
+                                                </div>
+                                                <div className="hero__insight-item">
+                                                    <span className="hero__insight-icon">🏃‍♂️</span>
+                                                    <span className="hero__insight-text">Active: +{Math.round((calorieData.calculation?.tdee || 0) - (calorieData.calculation?.bmr || 0))} cal/day</span>
+                                                </div>
+                                                <div className="hero__insight-item">
+                                                    <span className="hero__insight-icon">🎯</span>
+                                                    <span className="hero__insight-text">Target: {calorieData.targetCalories} cal/day</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="hero__calorie-overview">
+                                        <div className="hero__calorie-card hero__calorie-card--target">
+                                            <div className="hero__calorie-label">Target Calories</div>
+                                            <div className="hero__calorie-value">{calorieData.targetCalories.toLocaleString()}</div>
+                                            <div className="hero__calorie-subtext">
+                                                {calorieData.recommendation?.weeklyGoal}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="hero__calorie-card hero__calorie-card--current">
+                                            <div className="hero__calorie-label">Current Intake</div>
+                                            <div className="hero__calorie-value">{calorieData.currentCalories.toLocaleString()}</div>
+                                            <div className="hero__calorie-subtext">
+                                                {calorieData.remainingCalories > 0 
+                                                    ? `${calorieData.remainingCalories} remaining`
+                                                    : `${Math.abs(calorieData.remainingCalories)} over`
+                                                }
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="hero__calorie-card hero__calorie-card--progress">
+                                            <div className="hero__calorie-label">Progress</div>
+                                            <div className="hero__calorie-value">{calorieData.percentageConsumed}%</div>
+                                            <div className="hero__calorie-progress-bar">
+                                                <div 
+                                                    className="hero__calorie-progress-fill"
+                                                    style={{ width: `${Math.min(calorieData.percentageConsumed, 100)}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="hero__setup-profile">
+                                    <div className="hero__setup-icon">⚙️</div>
+                                    <p className="hero__setup-message">
+                                        Complete your profile to see personalized calorie targets
+                                    </p>
+                                    <button
+                                        className="hero__setup-btn"
+                                        onClick={() => window.location.href = '/profile'}
+                                    >
+                                        Setup Profile
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

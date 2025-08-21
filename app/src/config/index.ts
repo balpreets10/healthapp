@@ -8,14 +8,15 @@ export const config = {
             persistSession: true,
             detectSessionInUrl: true,
             flowType: 'pkce',
-            redirectTo: `${window.location.origin}/auth/callback`
+            redirectTo: import.meta.env.VITE_OAUTH_REDIRECT_URL || `${window.location.origin}/auth/callback`
         }
     },
 
     app: {
         name: import.meta.env.VITE_APP_NAME || 'Health Tracker',
         version: import.meta.env.VITE_APP_VERSION || '1.0.0',
-        baseUrl: window.location.origin
+        baseUrl: import.meta.env.VITE_APP_URL || window.location.origin,
+        domain: import.meta.env.VITE_APP_DOMAIN || window.location.host
     },
 
     api: {
