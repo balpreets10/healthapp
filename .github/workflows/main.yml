@@ -1,1 +1,52 @@
+name: 🚀 Deploy Health App
 
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  deploy:
+    name: 🔨 Build and Deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: 📦 Install Dependencies
+        run: npm ci
+        
+      - name: 🔍 Run Linting
+        run: npm run lint
+        
+      - name: 🏗️ Build Application
+        run: npm run build
+        
+      - name: 🌐 Deploy to GoDaddy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ./
+          clean: true
+          clean-exclude: |
+            .htaccess
+            .well-known/**
+            error_log
+            
+      - name: ✅ Deployment Success
+        run: |
+          echo "🎉 Successfully deployed to health.gamingdronzz.com!"
+          echo "🌐 Visit: https://health.gamingdronzz.com"
