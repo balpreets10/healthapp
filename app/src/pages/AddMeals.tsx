@@ -4,6 +4,7 @@ import { useCalorieTracker } from '../hooks/useCalorieTracker';
 import { useAuth } from '../hooks/useAuth';
 import SupabaseService from '../services/SupabaseService';
 import { calculateCaloriesFromMacros } from '../utils/nutritionCalculations';
+import { getLocalDateString, getLocalTimeString } from '../utils/dateUtils';
 import './AddMeals.css';
 
 interface MealEntry {
@@ -127,7 +128,7 @@ const AddMeals: React.FC = () => {
 
             setIsSearching(true);
             try {
-                const { data, error } = await SupabaseService.searchFoodsAndCustomMeals(user.id, query.trim(), 5);
+                const { data, error } = await SupabaseService.searchFoodsAndCustomMeals(user.id, query.trim(), 10);
                 
                 if (error) {
                     console.error('Search error:', error);
@@ -213,8 +214,8 @@ const AddMeals: React.FC = () => {
 
         try {
             const currentDate = new Date();
-            const dateStr = currentDate.toISOString().split('T')[0];
-            const timeStr = currentDate.toTimeString().split(' ')[0].substring(0, 5);
+            const dateStr = getLocalDateString(currentDate);
+            const timeStr = getLocalTimeString(currentDate);
 
             // Convert from per 100g to actual serving (assuming 100g serving for now)
             const calories = Math.round(searchResult.calories_per_100g);
@@ -329,8 +330,8 @@ const AddMeals: React.FC = () => {
 
             // Prepare meal data for meals table
             const currentDate = new Date();
-            const dateStr = currentDate.toISOString().split('T')[0];
-            const timeStr = customMealForm.time || currentDate.toTimeString().split(' ')[0].substring(0, 5);
+            const dateStr = getLocalDateString(currentDate);
+            const timeStr = customMealForm.time || getLocalTimeString(currentDate);
 
             const mealData = {
                 user_id: user.id,
@@ -492,31 +493,39 @@ const AddMeals: React.FC = () => {
                                         <span>Searching...</span>
                                     </div>
                                 ) : searchResults.length > 0 ? (
-                                    searchResults.map((result) => (
-                                        <div
-                                            key={`${result.source}-${result.id}`}
-                                            className="add-meals__autocomplete-item"
-                                            onClick={() => addMealFromSearch(result)}
-                                        >
-                                            <div className="add-meals__autocomplete-item-content">
-                                                <div className="add-meals__autocomplete-item-header">
-                                                    <span className="add-meals__autocomplete-item-name">{result.name}</span>
-                                                    <span className="add-meals__autocomplete-item-source">
-                                                        {result.source === 'custom_meals' ? '👤 Custom' : '🍎 Standard'}
-                                                    </span>
+                                    <>
+                                        {searchResults.slice(0, 5).map((result) => (
+                                            <div
+                                                key={`${result.source}-${result.id}`}
+                                                className="add-meals__autocomplete-item"
+                                                onClick={() => addMealFromSearch(result)}
+                                            >
+                                                <div className="add-meals__autocomplete-item-content">
+                                                    <div className="add-meals__autocomplete-item-header">
+                                                        <span className="add-meals__autocomplete-item-name">{result.name}</span>
+                                                        <span className="add-meals__autocomplete-item-source">
+                                                            {result.source === 'custom_meals' ? '👤 Custom' : '🍎 Standard'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="add-meals__autocomplete-item-nutrition">
+                                                        <span>{Math.round(result.calories_per_100g)} cal</span>
+                                                        <span>{result.protein_g}g protein</span>
+                                                        <span>{result.carbohydrates_g}g carbs</span>
+                                                        <span>{result.fats_g}g fat</span>
+                                                    </div>
                                                 </div>
-                                                <div className="add-meals__autocomplete-item-nutrition">
-                                                    <span>{Math.round(result.calories_per_100g)} cal</span>
-                                                    <span>{result.protein_g}g protein</span>
-                                                    <span>{result.carbohydrates_g}g carbs</span>
-                                                    <span>{result.fats_g}g fat</span>
-                                                </div>
+                                                <button className="add-meals__autocomplete-add-btn">
+                                                    +
+                                                </button>
                                             </div>
-                                            <button className="add-meals__autocomplete-add-btn">
-                                                +
-                                            </button>
-                                        </div>
-                                    ))
+                                        ))}
+                                        {searchResults.length > 5 && (
+                                            <div className="add-meals__autocomplete-show-all">
+                                                <span>Show all results</span>
+                                                <span className="add-meals__autocomplete-arrow">▼</span>
+                                            </div>
+                                        )}
+                                    </>
                                 ) : autocompleteQuery.length >= 2 ? (
                                     <div className="add-meals__autocomplete-empty">
                                         <span>No foods found for "{autocompleteQuery}"</span>
@@ -538,13 +547,19 @@ const AddMeals: React.FC = () => {
                 <div className="add-meals__quick-actions">
                     <button
                         className="add-meals__quick-btn add-meals__quick-btn--primary"
-                        onClick={() => setShowQuickAdd(!showQuickAdd)}
+                        onClick={() => {
+                            setShowQuickAdd(!showQuickAdd);
+                            if (!showQuickAdd) setShowCustomEntry(false);
+                        }}
                     >
                         🍎 Quick Add Food
                     </button>
                     <button 
                         className="add-meals__quick-btn"
-                        onClick={() => setShowCustomEntry(!showCustomEntry)}
+                        onClick={() => {
+                            setShowCustomEntry(!showCustomEntry);
+                            if (!showCustomEntry) setShowQuickAdd(false);
+                        }}
                     >
                         📊 Custom Entry
                     </button>
@@ -767,27 +782,29 @@ const AddMeals: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="add-meals__form-row">
-                                <div className="add-meals__form-group add-meals__form-group--half">
-                                    <label className="add-meals__form-label">
-                                        Calories * 
-                                        <span className="add-meals__form-label-note">
-                                            (auto-calculated from macros)
-                                        </span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        className="add-meals__form-input add-meals__form-input--auto-calculated"
-                                        value={customMealForm.calories}
-                                        onChange={(e) => setCustomMealForm(prev => ({...prev, calories: e.target.value}))}
-                                        placeholder="Enter macros to auto-calculate"
-                                        min="0"
-                                        step="1"
-                                        required
-                                    />
-                                </div>
+                            {/* Primary Nutrition - Calories */}
+                            <div className="add-meals__form-group">
+                                <label className="add-meals__form-label">
+                                    Calories *
+                                    <span className="add-meals__form-label-note">
+                                        (auto-calculated from macros)
+                                    </span>
+                                </label>
+                                <input
+                                    type="number"
+                                    className="add-meals__form-input add-meals__form-input--auto-calculated"
+                                    value={customMealForm.calories}
+                                    onChange={(e) => setCustomMealForm(prev => ({...prev, calories: e.target.value}))}
+                                    placeholder="Enter macros to auto-calculate"
+                                    min="0"
+                                    step="1"
+                                    required
+                                />
+                            </div>
 
-                                <div className="add-meals__form-group add-meals__form-group--half">
+                            {/* Main Macronutrients - Mobile optimized grid */}
+                            <div className="add-meals__nutrition-inputs">
+                                <div className="add-meals__form-group">
                                     <label className="add-meals__form-label">Protein (g)</label>
                                     <input
                                         type="number"
@@ -799,10 +816,8 @@ const AddMeals: React.FC = () => {
                                         step="0.1"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="add-meals__form-row">
-                                <div className="add-meals__form-group add-meals__form-group--half">
+                                <div className="add-meals__form-group">
                                     <label className="add-meals__form-label">Carbs (g)</label>
                                     <input
                                         type="number"
@@ -815,7 +830,7 @@ const AddMeals: React.FC = () => {
                                     />
                                 </div>
 
-                                <div className="add-meals__form-group add-meals__form-group--half">
+                                <div className="add-meals__form-group">
                                     <label className="add-meals__form-label">Fat (g)</label>
                                     <input
                                         type="number"
@@ -827,10 +842,8 @@ const AddMeals: React.FC = () => {
                                         step="0.1"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="add-meals__form-row">
-                                <div className="add-meals__form-group add-meals__form-group--half">
+                                <div className="add-meals__form-group">
                                     <label className="add-meals__form-label">Fiber (g)</label>
                                     <input
                                         type="number"
@@ -843,7 +856,7 @@ const AddMeals: React.FC = () => {
                                     />
                                 </div>
 
-                                <div className="add-meals__form-group add-meals__form-group--half">
+                                <div className="add-meals__form-group">
                                     <label className="add-meals__form-label">Sugar (g)</label>
                                     <input
                                         type="number"
@@ -958,6 +971,7 @@ const AddMeals: React.FC = () => {
                                             onClick={() => {
                                                 setSelectedMealType(mealType);
                                                 setShowQuickAdd(true);
+                                                setShowCustomEntry(false);
                                             }}
                                         >
                                             + Add {mealType}

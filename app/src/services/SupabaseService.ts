@@ -1,6 +1,7 @@
 // services/SupabaseService.ts - Fixed Google OAuth configuration
 import { createClient, SupabaseClient, Session, User, AuthError, AuthChangeEvent } from '@supabase/supabase-js';
 import { config } from '../config';
+import { getTodayDateString } from '../utils/dateUtils';
 
 interface AuthResponse {
     data?: any;
@@ -584,13 +585,13 @@ class SupabaseService {
     // ===== MEALS MANAGEMENT ===== //
     async getTodaysMeals(userId: string): Promise<{ data: any[]; error?: any }> {
         try {
-            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            const todayDateString = getTodayDateString();
             
             const { data, error } = await this.client
                 .from('meals')
                 .select('*')
                 .eq('user_id', userId)
-                .eq('date', today)
+                .eq('date', todayDateString)
                 .order('time', { ascending: true });
 
             return { data: data || [], error };
@@ -765,7 +766,7 @@ class SupabaseService {
                 .from('custom_meals')
                 .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
                 .eq('submitted_by', userId)
-                .eq('status', 'approved')
+                .or('status.eq.approved,status.eq.pending')
                 .ilike('name', `%${query}%`)
                 .limit(limit)
                 .order('name', { ascending: true });

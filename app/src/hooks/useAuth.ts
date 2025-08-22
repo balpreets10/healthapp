@@ -24,10 +24,24 @@ export const useAuth = () => {
     const mountedRef = useRef(true);
     const notificationManagerRef = useRef(NotificationManager.getInstance());
 
+    // Clean up legacy localStorage profile data
+    const cleanupLegacyProfileData = (userId: string) => {
+        try {
+            const legacyKey = `profile_extra_${userId}`;
+            localStorage.removeItem(legacyKey);
+            console.log('Cleaned up legacy profile data from localStorage');
+        } catch (error) {
+            console.warn('Failed to clean up legacy profile data:', error);
+        }
+    };
+
     // Function to check profile setup and redirect if incomplete
     const checkProfileSetupAndRedirect = async (userId: string) => {
         try {
             const { data: profile } = await SupabaseService.getUserProfile(userId);
+            
+            // Clean up any legacy localStorage profile data
+            cleanupLegacyProfileData(userId);
             
             // Check if essential profile data is missing
             const isSetupIncomplete = !profile || 
@@ -74,6 +88,10 @@ export const useAuth = () => {
                 if (mountedRef.current) {
                     if (session?.user) {
                         const adminStatus = await SupabaseService.isAdmin(session.user.id);
+                        
+                        // Clean up any legacy localStorage profile data on initial load
+                        cleanupLegacyProfileData(session.user.id);
+                        
                         setAuthState({
                             user: session.user,
                             session,

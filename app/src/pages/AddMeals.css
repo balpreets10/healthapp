@@ -551,6 +551,28 @@
     user-select: none;
 }
 
+/* Nutrition inputs grid - Desktop styling */
+.add-meals__nutrition-inputs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gd-space-4);
+    margin-bottom: var(--gd-space-4);
+}
+
+.add-meals__nutrition-inputs .add-meals__form-group {
+    margin-bottom: 0;
+}
+
+/* Auto-calculated input styling */
+.add-meals__form-input--auto-calculated {
+    background: var(--gd-bg-secondary);
+    border-color: var(--gd-color-primary-300);
+}
+
+.add-meals__form-input--auto-calculated:focus {
+    background: var(--gd-input-bg);
+}
+
 .add-meals__message {
     padding: var(--gd-space-3);
     border-radius: var(--gd-radius-md);
@@ -633,56 +655,127 @@
 @media (max-width: 768px) {
     .add-meals__custom-entry-panel {
         padding: var(--gd-card-padding-base);
+        margin: 0 var(--gd-space-2) var(--gd-space-8) var(--gd-space-2);
     }
     
     .add-meals__custom-form {
-        gap: var(--gd-space-3);
+        gap: var(--gd-space-4);
+        max-width: none;
     }
     
     .add-meals__form-row {
         flex-direction: column;
         gap: var(--gd-space-3);
+        align-items: stretch;
     }
     
     .add-meals__form-group--half {
         flex: none;
+        width: 100%;
     }
     
     .add-meals__form-input,
     .add-meals__form-select {
-        height: 42px;
-        padding: var(--gd-space-2) var(--gd-space-3);
+        height: 48px;
+        padding: var(--gd-space-3) var(--gd-space-4);
+        font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: var(--gd-radius-lg);
+        border-width: 2px;
     }
     
     .add-meals__form-textarea {
-        min-height: 80px;
-        padding: var(--gd-space-2) var(--gd-space-3);
+        min-height: 100px;
+        padding: var(--gd-space-3) var(--gd-space-4);
+        font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: var(--gd-radius-lg);
+        border-width: 2px;
+    }
+    
+    .add-meals__form-label {
+        font-size: var(--gd-font-size-base);
+        margin-bottom: var(--gd-space-2);
+    }
+    
+    .add-meals__form-label-note {
+        display: block;
+        font-size: var(--gd-font-size-xs);
+        font-weight: var(--gd-font-weight-normal);
+        color: var(--gd-text-tertiary);
+        margin-top: var(--gd-space-1);
     }
     
     .add-meals__form-actions {
-        margin-top: var(--gd-space-4);
-        padding-top: var(--gd-space-4);
+        margin-top: var(--gd-space-6);
+        padding-top: var(--gd-space-6);
     }
     
     .add-meals__add-meal-btn--primary {
         width: 100%;
-        padding: var(--gd-space-3) var(--gd-space-6);
+        padding: var(--gd-space-4) var(--gd-space-6);
+        font-size: var(--gd-font-size-lg);
+        height: 52px;
+    }
+    
+    /* Optimize specific input groupings for mobile */
+    .add-meals__form-group {
+        margin-bottom: var(--gd-space-1);
+    }
+    
+    /* Better spacing for nutrition inputs on mobile */
+    .add-meals__nutrition-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--gd-space-3);
+        margin-bottom: var(--gd-space-4);
+    }
+    
+    .add-meals__nutrition-inputs .add-meals__form-group {
+        margin-bottom: 0;
     }
 }
 
 @media (max-width: 480px) {
     .add-meals__custom-entry-panel {
         padding: var(--gd-card-padding-sm);
+        margin: 0 var(--gd-space-1) var(--gd-space-6) var(--gd-space-1);
+    }
+    
+    .add-meals__custom-form {
+        gap: var(--gd-space-3);
     }
     
     .add-meals__form-input,
     .add-meals__form-select,
     .add-meals__form-textarea {
-        font-size: var(--gd-font-size-sm);
+        font-size: 16px; /* Keep at 16px to prevent zoom */
+        height: 44px;
+        padding: var(--gd-space-2) var(--gd-space-3);
+    }
+    
+    .add-meals__form-textarea {
+        min-height: 90px;
     }
     
     .add-meals__form-checkbox-label {
         padding: var(--gd-space-2);
+        flex-direction: row;
+        gap: var(--gd-space-2);
+    }
+    
+    .add-meals__form-label {
+        font-size: var(--gd-font-size-sm);
+        margin-bottom: var(--gd-space-1);
+    }
+    
+    .add-meals__add-meal-btn--primary {
+        height: 48px;
+        font-size: var(--gd-font-size-base);
+    }
+    
+    /* Single column layout for very small screens */
+    .add-meals__nutrition-inputs {
+        grid-template-columns: 1fr;
+        gap: var(--gd-space-2);
     }
 }
 
@@ -834,6 +927,30 @@
     .add-meals__foods-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
+    
+    /* Tablet-friendly custom form */
+    .add-meals__custom-form {
+        max-width: 600px;
+    }
+    
+    .add-meals__nutrition-inputs {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--gd-space-3);
+    }
+}
+
+/* Medium tablet screens */
+@media (max-width: 820px) and (min-width: 769px) {
+    .add-meals__nutrition-inputs {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--gd-space-3);
+    }
+    
+    .add-meals__form-input,
+    .add-meals__form-select {
+        height: 46px;
+        font-size: 15px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -869,20 +986,37 @@
         grid-template-columns: 1fr;
     }
 
+    /* Mobile-optimized meal-type-section */
+    .add-meals__meal-type-section {
+        padding: var(--gd-card-padding-sm);
+        margin-bottom: var(--gd-space-4);
+    }
+
     .add-meals__meal-type-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: var(--gd-space-2);
+        margin-bottom: var(--gd-space-3);
+        padding-bottom: var(--gd-space-2);
+    }
+
+    .add-meals__meal-list {
         gap: var(--gd-space-2);
     }
 
     .add-meals__meal-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--gd-space-3);
+        gap: var(--gd-space-2);
+        padding: var(--gd-space-3);
     }
 
     .add-meals__remove-btn {
         align-self: flex-end;
+    }
+
+    .add-meals__empty-meal-type {
+        padding: var(--gd-space-6) var(--gd-space-4);
     }
 
     .add-meals__meal-type-selector {
@@ -929,8 +1063,41 @@
         padding: var(--gd-card-padding-base);
     }
 
+    /* Extra compact meal-type-section for very small screens */
     .add-meals__meal-type-section {
-        padding: var(--gd-card-padding-sm);
+        padding: var(--gd-space-3);
+        margin-bottom: var(--gd-space-3);
+    }
+
+    .add-meals__meal-type-header {
+        margin-bottom: var(--gd-space-2);
+        padding-bottom: var(--gd-space-1);
+    }
+
+    .add-meals__meal-type-title {
+        font-size: var(--gd-font-size-base);
+    }
+
+    .add-meals__meal-type-calories {
+        font-size: var(--gd-font-size-xs);
+        padding: var(--gd-space-1) var(--gd-space-2);
+    }
+
+    .add-meals__meal-item {
+        padding: var(--gd-space-2);
+        gap: var(--gd-space-1);
+    }
+
+    .add-meals__meal-name {
+        font-size: var(--gd-font-size-sm);
+    }
+
+    .add-meals__meal-nutrition {
+        font-size: var(--gd-font-size-xs);
+    }
+
+    .add-meals__empty-meal-type {
+        padding: var(--gd-space-4) var(--gd-space-3);
     }
 }
 
@@ -1178,4 +1345,34 @@
         height: 28px;
         font-size: var(--gd-font-size-base);
     }
+}
+
+/* ===== SHOW ALL DROPDOWN ITEM ===== */
+.add-meals__autocomplete-show-all {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--gd-space-3) var(--gd-space-4);
+    border-top: 1px solid var(--gd-border-light);
+    background: var(--gd-color-gray-50);
+    color: var(--gd-text-secondary);
+    font-size: var(--gd-font-size-sm);
+    font-weight: var(--gd-font-weight-medium);
+    cursor: pointer;
+    transition: var(--gd-transition-base);
+}
+
+.add-meals__autocomplete-show-all:hover {
+    background: var(--gd-color-gray-100);
+    color: var(--gd-text-primary);
+}
+
+.add-meals__autocomplete-arrow {
+    font-size: var(--gd-font-size-xs);
+    color: var(--gd-text-tertiary);
+    transition: var(--gd-transition-base);
+}
+
+.add-meals__autocomplete-show-all:hover .add-meals__autocomplete-arrow {
+    color: var(--gd-text-secondary);
 }

@@ -64,27 +64,17 @@ export const useCalorieTracker = () => {
         try {
             const { data } = await SupabaseService.getUserProfile(user.id);
             
-            let additionalData = { target_weight_kg: 0, target_duration: 0, target_duration_unit: 'weeks' as const, orientation: '' };
-            try {
-                const stored = localStorage.getItem(`profile_extra_${user.id}`);
-                if (stored) {
-                    additionalData = JSON.parse(stored);
-                }
-            } catch (e) {
-                console.warn('Failed to load additional profile data:', e);
-            }
-
-            if (data && data.height_cm && data.weight_kg && additionalData.target_weight_kg && additionalData.target_duration) {
+            if (data && data.height_cm && data.weight_kg && data.target_weight_kg && data.target_duration && data.age && data.gender) {
                 const userProfile: UserProfile = {
                     height_cm: data.height_cm,
                     weight_kg: data.weight_kg,
-                    target_weight_kg: additionalData.target_weight_kg,
-                    target_duration: additionalData.target_duration,
-                    target_duration_unit: additionalData.target_duration_unit,
+                    target_weight_kg: data.target_weight_kg,
+                    target_duration: data.target_duration,
+                    target_duration_unit: data.target_duration_unit || 'weeks',
                     activity_level: data.activity_level || 'moderate',
-                    age: 30, 
-                    gender: 'male',
-                    orientation: additionalData.orientation || ''
+                    age: data.age,
+                    gender: data.gender,
+                    orientation: data.orientation || ''
                 };
                 
                 setProfile(userProfile);

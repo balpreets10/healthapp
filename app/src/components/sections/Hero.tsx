@@ -352,7 +352,7 @@ const Hero: React.FC<HeroProps> = ({
                                             <span className="hero__macro-name">Protein</span>
                                         </div>
                                         <div className="hero__macro-values">
-                                            <span className="hero__macro-current">{nutritionSummary.protein}g</span>
+                                            <span className="hero__macro-current">{Math.round(nutritionSummary.protein)}g</span>
                                             <span className="hero__macro-target">/ {nutritionSummary.goalProtein}g</span>
                                         </div>
                                         <div className="hero__macro-progress">
@@ -372,7 +372,7 @@ const Hero: React.FC<HeroProps> = ({
                                             <span className="hero__macro-name">Carbs</span>
                                         </div>
                                         <div className="hero__macro-values">
-                                            <span className="hero__macro-current">{nutritionSummary.carbs}g</span>
+                                            <span className="hero__macro-current">{Math.round(nutritionSummary.carbs)}g</span>
                                             <span className="hero__macro-target">/ {nutritionSummary.goalCarbs}g</span>
                                         </div>
                                         <div className="hero__macro-progress">
@@ -392,7 +392,7 @@ const Hero: React.FC<HeroProps> = ({
                                             <span className="hero__macro-name">Fat</span>
                                         </div>
                                         <div className="hero__macro-values">
-                                            <span className="hero__macro-current">{nutritionSummary.fat}g</span>
+                                            <span className="hero__macro-current">{Math.round(nutritionSummary.fat)}g</span>
                                             <span className="hero__macro-target">/ {nutritionSummary.goalFat}g</span>
                                         </div>
                                         <div className="hero__macro-progress">

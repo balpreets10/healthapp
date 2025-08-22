@@ -28,6 +28,12 @@ Mandatory ending for ALL responses:
 - Always offer the clear option
 - Format: "📊 Conversation stats: [X] words, [Y] tokens used. Run `/clear` to optimize? [Y/n]"
 
+### Query Optimization Tracking
+- When conversations exceed 3000 tokens, automatically log to `query-optimization/query-journal.md`
+- Follow rules defined in `query-optimization/query-optimizations.md` for when to log queries
+- Include: date, word count, token estimate, original query, optimization suggestions
+- Focus on how the query could have been more efficient or broken down
+
 This applies to:
 - Simple questions and answers
 - Complex tasks
