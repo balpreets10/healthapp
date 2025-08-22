@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import fs from 'fs'
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
@@ -9,7 +10,22 @@ export default defineConfig(({ mode }) => {
   process.env.NODE_ENV = isProduction ? 'production' : 'development'
   
   return {
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Plugin to copy .htaccess file to build directory
+    {
+      name: 'copy-htaccess',
+      closeBundle() {
+        const sourcePath = path.resolve(__dirname, 'public/.htaccess')
+        const targetPath = path.resolve(__dirname, isProduction ? 'builds/prod/.htaccess' : 'builds/dev/.htaccess')
+        
+        if (fs.existsSync(sourcePath)) {
+          fs.copyFileSync(sourcePath, targetPath)
+          console.log(`✓ Copied .htaccess to ${isProduction ? 'production' : 'development'} build`)
+        }
+      }
+    }
+  ],
 
   // Path aliases
   resolve: {
@@ -68,27 +84,27 @@ export default defineConfig(({ mode }) => {
           }
         },
 
-        // Simple asset naming for development
+        // Asset naming with cache busting hashes
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name?.split('.') || [];
           const ext = info[info.length - 1];
 
           if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name || '')) {
-            return `assets/images/[name][extname]`;
+            return isProduction ? `assets/images/[name]-[hash][extname]` : `assets/images/[name][extname]`;
           }
           if (/\.(css)$/i.test(assetInfo.name || '')) {
-            return `assets/css/[name][extname]`;
+            return isProduction ? `assets/css/[name]-[hash][extname]` : `assets/css/[name][extname]`;
           }
           if (/\.(woff|woff2|eot|ttf|otf)$/i.test(assetInfo.name || '')) {
-            return `assets/fonts/[name][extname]`;
+            return isProduction ? `assets/fonts/[name]-[hash][extname]` : `assets/fonts/[name][extname]`;
           }
 
-          return `assets/[name][extname]`;
+          return isProduction ? `assets/[name]-[hash][extname]` : `assets/[name][extname]`;
         },
 
-        // Simple chunk naming for development
-        chunkFileNames: 'assets/js/[name].js',
-        entryFileNames: 'assets/js/[name].js',
+        // Chunk naming with cache busting hashes
+        chunkFileNames: isProduction ? 'assets/js/[name]-[hash].js' : 'assets/js/[name].js',
+        entryFileNames: isProduction ? 'assets/js/[name]-[hash].js' : 'assets/js/[name].js',
       },
     },
 

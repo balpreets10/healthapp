@@ -50,6 +50,19 @@ RewriteRule . /index.html [L]
     # Remove any GoDaddy injected headers
     Header unset X-GoDaddy-Site-Type
     Header unset X-GoDaddy-Site-Verified
+    
+    # Cache Control Headers for better cache busting
+    # No cache for HTML files (index.html should always be fresh)
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # Long cache for versioned assets (files with hashes in production)
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|otf)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
 </IfModule>
 
 # Browser Caching
@@ -59,7 +72,7 @@ RewriteRule . /index.html [L]
     # HTML files (no cache for SPA)
     ExpiresByType text/html "access plus 0 seconds"
     
-    # CSS and JavaScript files
+    # CSS and JavaScript files with versioning/hashes can be cached for 1 year
     ExpiresByType text/css "access plus 1 year"
     ExpiresByType application/javascript "access plus 1 year"
     ExpiresByType text/javascript "access plus 1 year"
