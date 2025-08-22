@@ -144,7 +144,17 @@ export const validateConfig = (): void => {
         'VITE_SUPABASE_ANON_KEY',
     ];
 
-    const missingFields = requiredFields.filter(field => !getEnvVar(field));
+    // In production builds, environment variables are processed at build time and embedded
+    // So we check the actual values in appConfig instead of the environment variables
+    const missingFields: string[] = [];
+    
+    if (!appConfig.supabase.url) {
+        missingFields.push('VITE_SUPABASE_URL');
+    }
+    
+    if (!appConfig.supabase.anonKey) {
+        missingFields.push('VITE_SUPABASE_ANON_KEY');
+    }
 
     if (missingFields.length > 0) {
         console.error('Missing required environment variables:', missingFields);
