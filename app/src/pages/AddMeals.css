@@ -15,6 +15,25 @@
     padding: 0 var(--gd-container-padding);
 }
 
+/* ===== LOADING AND EMPTY STATES ===== */
+.add-meals__loading-state,
+.add-meals__empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--gd-space-8);
+    text-align: center;
+    color: var(--gd-text-secondary);
+    font-style: italic;
+    grid-column: 1 / -1;
+    min-height: 120px;
+}
+
+.add-meals__loading-state span,
+.add-meals__empty-state span {
+    font-size: var(--gd-font-size-sm);
+}
+
 
 /* ===== QUICK ACTIONS ===== */
 .add-meals__quick-actions {

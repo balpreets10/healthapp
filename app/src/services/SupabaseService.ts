@@ -808,6 +808,139 @@ class SupabaseService {
         }
     }
 
+    // ===== QUICK FOODS BASED ON USER HISTORY ===== //
+    async getUserMostUsedMeals(userId: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+        try {
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+            const ninetyDaysAgoString = ninetyDaysAgo.toISOString().split('T')[0];
+
+            const { data, error } = await this.client
+                .from('meals')
+                .select('meal_name, total_calories, total_protein_g, total_carbs_g, total_fat_g')
+                .eq('user_id', userId)
+                .gte('date', ninetyDaysAgoString)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                return { data: [], error };
+            }
+
+            if (!data || data.length === 0) {
+                return { data: [], error: null };
+            }
+
+            // Count frequency of each meal name and aggregate nutrition
+            const mealFrequency = new Map();
+            
+            data.forEach(meal => {
+                const mealName = meal.meal_name.toLowerCase();
+                if (mealFrequency.has(mealName)) {
+                    const existing = mealFrequency.get(mealName);
+                    existing.count += 1;
+                    // Keep track of latest nutrition values
+                    existing.calories = meal.total_calories;
+                    existing.protein = meal.total_protein_g;
+                    existing.carbs = meal.total_carbs_g;
+                    existing.fat = meal.total_fat_g;
+                } else {
+                    mealFrequency.set(mealName, {
+                        name: meal.meal_name,
+                        count: 1,
+                        calories: meal.total_calories,
+                        protein: meal.total_protein_g,
+                        carbs: meal.total_carbs_g,
+                        fat: meal.total_fat_g
+                    });
+                }
+            });
+
+            // Sort by frequency and get top meals
+            const sortedMeals = Array.from(mealFrequency.values())
+                .sort((a, b) => b.count - a.count)
+                .slice(0, limit)
+                .map(meal => ({
+                    name: meal.name,
+                    calories: Math.round(meal.calories || 0),
+                    protein: Math.round((meal.protein || 0) * 10) / 10,
+                    carbs: Math.round((meal.carbs || 0) * 10) / 10,
+                    fat: Math.round((meal.fat || 0) * 10) / 10
+                }));
+
+            return { data: sortedMeals, error: null };
+        } catch (err) {
+            console.error('Get user most used meals failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
+    async getRandomFoods(limit: number = 5): Promise<{ data: any[]; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('foods')
+                .select('name, calories_per_100g, protein_g, carbohydrates_g, fats_g')
+                .limit(50);
+
+            if (error) {
+                return { data: [], error };
+            }
+
+            if (!data || data.length === 0) {
+                // Fallback static foods if database has no foods
+                const fallbackFoods = [
+                    { name: 'Banana', calories: 89, protein: 1.1, carbs: 23, fat: 0.3 },
+                    { name: 'Chicken Breast', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
+                    { name: 'Brown Rice', calories: 123, protein: 2.6, carbs: 23, fat: 0.9 },
+                    { name: 'Greek Yogurt', calories: 59, protein: 10, carbs: 3.6, fat: 0.4 },
+                    { name: 'Almonds', calories: 579, protein: 21, carbs: 22, fat: 50 }
+                ];
+                return { data: fallbackFoods.slice(0, limit), error: null };
+            }
+
+            // Randomly select foods from the database
+            const shuffled = data.sort(() => 0.5 - Math.random());
+            const randomFoods = shuffled.slice(0, limit).map(food => ({
+                name: food.name,
+                calories: Math.round(food.calories_per_100g || 0),
+                protein: Math.round((food.protein_g || 0) * 10) / 10,
+                carbs: Math.round((food.carbohydrates_g || 0) * 10) / 10,
+                fat: Math.round((food.fats_g || 0) * 10) / 10
+            }));
+
+            return { data: randomFoods, error: null };
+        } catch (err) {
+            console.error('Get random foods failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
+    async getQuickFoods(userId: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+        try {
+            // First try to get user's most used meals
+            const { data: userMeals, error: userError } = await this.getUserMostUsedMeals(userId, limit);
+            
+            if (!userError && userMeals && userMeals.length >= limit) {
+                return { data: userMeals, error: null };
+            }
+
+            // If user doesn't have enough history, supplement with random foods
+            const remainingCount = limit - (userMeals?.length || 0);
+            const { data: randomFoods, error: randomError } = await this.getRandomFoods(remainingCount);
+
+            if (randomError) {
+                // If both fail, return user meals if any, otherwise empty
+                return { data: userMeals || [], error: randomError };
+            }
+
+            // Combine user meals and random foods
+            const combinedFoods = [...(userMeals || []), ...(randomFoods || [])];
+            return { data: combinedFoods.slice(0, limit), error: null };
+        } catch (err) {
+            console.error('Get quick foods failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
     // ===== OAUTH CALLBACK HANDLER ===== //
     async handleOAuthCallback(): Promise<{ success: boolean; error?: string }> {
         try {

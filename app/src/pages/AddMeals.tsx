@@ -63,6 +63,8 @@ const AddMeals: React.FC = () => {
     const [showCustomEntry, setShowCustomEntry] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+    const [quickAddFoods, setQuickAddFoods] = useState<QuickAddFood[]>([]);
+    const [isLoadingQuickFoods, setIsLoadingQuickFoods] = useState(false);
 
     // Autocomplete search state
     const [autocompleteQuery, setAutocompleteQuery] = useState('');
@@ -100,17 +102,44 @@ const AddMeals: React.FC = () => {
         goalFat: Math.round(calorieData.targetCalories * 0.25 / 9)    // 25% of calories from fat
     };
 
-    // Quick add foods for demo
-    const quickAddFoods: QuickAddFood[] = [
-        { name: 'Banana', calories: 105, protein: 1.3, carbs: 27, fat: 0.4 },
-        { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
-        { name: 'Brown Rice (1 cup)', calories: 216, protein: 5, carbs: 45, fat: 1.8 },
-        { name: 'Greek Yogurt', calories: 100, protein: 17, carbs: 6, fat: 0 },
-        { name: 'Almonds (28g)', calories: 164, protein: 6, carbs: 6, fat: 14 },
-        { name: 'Avocado (half)', calories: 160, protein: 2, carbs: 8.5, fat: 15 },
-        { name: 'Oatmeal (1 cup)', calories: 154, protein: 6, carbs: 28, fat: 3 },
-        { name: 'Apple', calories: 95, protein: 0.5, carbs: 25, fat: 0.3 }
-    ];
+    // Load quick foods on component mount
+    useEffect(() => {
+        const loadQuickFoods = async () => {
+            if (!user) return;
+            
+            setIsLoadingQuickFoods(true);
+            try {
+                const { data, error } = await SupabaseService.getQuickFoods(user.id, 8);
+                if (error) {
+                    console.error('Error loading quick foods:', error);
+                    // Fallback to static foods if service fails
+                    setQuickAddFoods([
+                        { name: 'Banana', calories: 105, protein: 1.3, carbs: 27, fat: 0.4 },
+                        { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
+                        { name: 'Brown Rice (1 cup)', calories: 216, protein: 5, carbs: 45, fat: 1.8 },
+                        { name: 'Greek Yogurt', calories: 100, protein: 17, carbs: 6, fat: 0 },
+                        { name: 'Almonds (28g)', calories: 164, protein: 6, carbs: 6, fat: 14 }
+                    ]);
+                } else {
+                    setQuickAddFoods(data || []);
+                }
+            } catch (error) {
+                console.error('Failed to load quick foods:', error);
+                // Fallback to static foods
+                setQuickAddFoods([
+                    { name: 'Banana', calories: 105, protein: 1.3, carbs: 27, fat: 0.4 },
+                    { name: 'Chicken Breast (100g)', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
+                    { name: 'Brown Rice (1 cup)', calories: 216, protein: 5, carbs: 45, fat: 1.8 },
+                    { name: 'Greek Yogurt', calories: 100, protein: 17, carbs: 6, fat: 0 },
+                    { name: 'Almonds (28g)', calories: 164, protein: 6, carbs: 6, fat: 14 }
+                ]);
+            } finally {
+                setIsLoadingQuickFoods(false);
+            }
+        };
+
+        loadQuickFoods();
+    }, [user]);
 
     // Set current section on mount
     useEffect(() => {
@@ -191,21 +220,79 @@ const AddMeals: React.FC = () => {
     }, [customMealForm.protein, customMealForm.carbs, customMealForm.fat, customMealForm.sugar]);
 
 
-    // Add meal function - TODO: Implement actual database insertion
+    // Add meal function
     const addMeal = async (food: QuickAddFood) => {
-        // TODO: Add meal to database via SupabaseService
-        console.log('Adding meal to database:', {
-            name: food.name,
-            calories: food.calories,
-            protein: food.protein,
-            carbs: food.carbs,
-            fat: food.fat,
-            mealType: selectedMealType
-        });
-        
-        // Refresh data after adding
-        await refreshData();
-        setShowQuickAdd(false);
+        if (!user) {
+            setSubmitMessage({ text: 'Please log in to add meals', type: 'error' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitMessage(null);
+
+        try {
+            const currentDate = new Date();
+            const dateStr = getLocalDateString(currentDate);
+            const timeStr = getLocalTimeString(currentDate);
+
+            const mealData = {
+                user_id: user.id,
+                meal_type: selectedMealType,
+                meal_name: food.name,
+                date: dateStr,
+                time: timeStr,
+                foods: {
+                    quick_add: {
+                        name: food.name,
+                        calories: food.calories,
+                        protein: food.protein,
+                        carbs: food.carbs,
+                        fat: food.fat
+                    }
+                },
+                total_calories: Math.round(food.calories),
+                total_protein_g: food.protein,
+                total_carbs_g: food.carbs,
+                total_fat_g: food.fat,
+                total_fiber_g: 0,
+                total_sugar_g: 0,
+                total_sodium_mg: 0
+            };
+
+            const { error } = await SupabaseService.addMeal(mealData);
+            
+            if (error) {
+                console.error('Error adding meal:', error);
+                setSubmitMessage({ text: 'Failed to add meal. Please try again.', type: 'error' });
+            } else {
+                setSubmitMessage({ text: `${food.name} added successfully!`, type: 'success' });
+                await refreshData();
+                
+                // Refresh quick foods to potentially update most used meals
+                if (user) {
+                    try {
+                        const { data } = await SupabaseService.getQuickFoods(user.id, 8);
+                        if (data) {
+                            setQuickAddFoods(data);
+                        }
+                    } catch (error) {
+                        console.error('Failed to refresh quick foods:', error);
+                    }
+                }
+                
+                setShowQuickAdd(false);
+
+                // Auto-hide success message after 3 seconds
+                setTimeout(() => {
+                    setSubmitMessage(null);
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error adding meal:', error);
+            setSubmitMessage({ text: 'An unexpected error occurred. Please try again.', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Add meal from search result
@@ -434,6 +521,18 @@ const AddMeals: React.FC = () => {
 
             // Refresh data to show the new meal
             await refreshData();
+
+            // Refresh quick foods to potentially update most used meals
+            if (user) {
+                try {
+                    const { data } = await SupabaseService.getQuickFoods(user.id, 8);
+                    if (data) {
+                        setQuickAddFoods(data);
+                    }
+                } catch (error) {
+                    console.error('Failed to refresh quick foods:', error);
+                }
+            }
 
             // Auto-hide success message after 3 seconds
             setTimeout(() => {
@@ -671,7 +770,14 @@ const AddMeals: React.FC = () => {
                 {showQuickAdd && (
                     <div className="add-meals__quick-add-panel">
                         <div className="add-meals__panel-header">
-                            <h3 className="add-meals__panel-title">Quick Add Foods</h3>
+                            <h3 className="add-meals__panel-title">
+                                {isLoadingQuickFoods ? 'Loading Foods...' : 'Quick Add Foods'}
+                                {!isLoadingQuickFoods && (
+                                    <span style={{fontSize: '0.8em', fontWeight: 'normal', opacity: 0.7}}>
+                                        {' • Based on your eating habits'}
+                                    </span>
+                                )}
+                            </h3>
                             <button
                                 className="add-meals__close-btn"
                                 onClick={() => setShowQuickAdd(false)}
@@ -705,23 +811,34 @@ const AddMeals: React.FC = () => {
                         </div>
 
                         <div className="add-meals__foods-grid">
-                            {filteredFoods.map((food, index) => (
-                                <div key={index} className="add-meals__food-card">
-                                    <div className="add-meals__food-info">
-                                        <h4 className="add-meals__food-name">{food.name}</h4>
-                                        <div className="add-meals__food-nutrition">
-                                            <span>{food.calories} cal</span>
-                                            <span>{food.protein}g protein</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        className="add-meals__add-food-btn"
-                                        onClick={() => addMeal(food)}
-                                    >
-                                        +
-                                    </button>
+                            {isLoadingQuickFoods ? (
+                                <div className="add-meals__loading-state">
+                                    <span>Loading personalized foods...</span>
                                 </div>
-                            ))}
+                            ) : filteredFoods.length > 0 ? (
+                                filteredFoods.map((food, index) => (
+                                    <div key={index} className="add-meals__food-card">
+                                        <div className="add-meals__food-info">
+                                            <h4 className="add-meals__food-name">{food.name}</h4>
+                                            <div className="add-meals__food-nutrition">
+                                                <span>{food.calories} cal</span>
+                                                <span>{food.protein}g protein</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            className="add-meals__add-food-btn"
+                                            onClick={() => addMeal(food)}
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? '...' : '+'}
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="add-meals__empty-state">
+                                    <span>No foods available</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
