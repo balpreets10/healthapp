@@ -261,12 +261,17 @@
 }
 
 .hero__nutrition-dashboard {
-    background: white;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-radius: var(--gd-radius-xl);
-    padding: var(--gd-space-6);
+    padding: var(--gd-space-8);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
     border: 1px solid #e2e8f0;
     margin-bottom: var(--gd-space-6);
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ===== NEW NUTRITION DASHBOARD STYLES ===== */
@@ -280,8 +285,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--gd-space-4, 1rem);
+    gap: var(--gd-space-3, 0.75rem);
     margin-bottom: var(--gd-space-4, 1rem);
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
 .hero__calorie-current,
@@ -292,21 +299,21 @@
 }
 
 .hero__calorie-current .hero__calorie-number {
-    font-size: 2.5rem;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
     font-weight: var(--gd-font-weight-bold, 700);
     color: #10b981;
     line-height: 1;
 }
 
 .hero__calorie-target .hero__calorie-number {
-    font-size: 1.75rem;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
     font-weight: var(--gd-font-weight-semibold, 600);
     color: var(--gd-text-secondary, #64748b);
     line-height: 1;
 }
 
 .hero__calorie-unit {
-    font-size: 1rem;
+    font-size: clamp(0.75rem, 2vw, 1rem);
     font-weight: var(--gd-font-weight-medium, 500);
     color: var(--gd-text-tertiary, #94a3b8);
     margin-bottom: 0.25rem;
@@ -321,15 +328,18 @@
 
 /* Enhanced Progress Bar */
 .hero__progress-container {
-    margin-bottom: var(--gd-space-4, 1rem);
+    margin-bottom: var(--gd-space-3, 0.75rem);
+    width: 60%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .hero__progress-bar {
     position: relative;
     width: 100%;
-    height: 12px;
+    height: 10px;
     background: linear-gradient(90deg, #f1f5f9, #e2e8f0);
-    border-radius: 6px;
+    border-radius: 5px;
     overflow: visible;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -547,8 +557,9 @@
 .hero__goal-recommendation {
     display: flex;
     align-items: center;
+    margin-top: var(--gd-space-22, 4.4rem);
     gap: var(--gd-space-3, 0.75rem);
-    padding: var(--gd-space-4, 1rem);
+    padding: var(--gd-space-3, 0.75rem);
     border-radius: var(--gd-radius-lg);
     border: 1px solid;
     font-size: var(--gd-font-size-sm, 0.875rem);
@@ -585,7 +596,7 @@
 /* Meals List */
 .hero__meals-list {
     border-top: 1px solid #e2e8f0;
-    padding-top: var(--gd-space-8, 2rem);
+    padding-top: var(--gd-space-4, 1rem);
 }
 
 .hero__meals-title {
@@ -729,15 +740,15 @@
     .hero__nutrition-dashboard {
         padding: var(--gd-space-4, 1rem);
     }
-    
+
     .hero__calorie-current .hero__calorie-number {
         font-size: 2rem;
     }
-    
+
     .hero__calorie-target .hero__calorie-number {
         font-size: 1.5rem;
     }
-    
+
     .hero__macro-cards {
         grid-template-columns: 1fr;
         gap: var(--gd-space-3, 0.75rem);
@@ -800,24 +811,26 @@
     .hero__nutrition-dashboard {
         padding: var(--gd-space-3, 0.75rem);
     }
-    
+
     .hero__calorie-current .hero__calorie-number {
         font-size: 1.75rem;
     }
-    
+
     .hero__calorie-target .hero__calorie-number {
         font-size: 1.25rem;
     }
-    
+
     .hero__calorie-status {
-        flex-direction: column;
+        flex-direction: row;
         gap: var(--gd-space-2, 0.5rem);
+        flex-wrap: wrap;
+        justify-content: center;
     }
-    
+
     .hero__macro-card {
         padding: var(--gd-space-3, 0.75rem);
     }
-    
+
     .hero__macro-current {
         font-size: var(--gd-font-size-lg, 1.125rem);
     }
@@ -995,8 +1008,15 @@
 }
 
 @keyframes gradientShift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 .hero__metabolic-header {
@@ -1023,7 +1043,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--gd-space-8, 2rem);
+    gap: var(--gd-space-4, 2rem);
     margin-bottom: var(--gd-space-6, 1.5rem);
     padding: var(--gd-space-4, 1rem);
 }
@@ -1086,6 +1106,7 @@
         transform: scale(1);
         opacity: 1;
     }
+
     100% {
         transform: scale(1.3);
         opacity: 0;
@@ -1141,8 +1162,13 @@
 }
 
 @keyframes energyFlow {
-    0% { left: -100%; }
-    100% { left: 100%; }
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
 }
 
 .hero__energy-tip {
@@ -1206,7 +1232,7 @@
 /* Responsive Design for Metabolic Dashboard */
 @media (max-width: 768px) {
     .hero__energy-flow {
-        flex-direction: column;
+        flex-direction: row;
         gap: var(--gd-space-4, 1rem);
     }
 
@@ -1220,7 +1246,7 @@
     }
 
     .hero__energy-arrow {
-        transform: rotate(90deg);
+        /* transform: rotate(90deg); */
         margin: var(--gd-space-2, 0.5rem) 0;
     }
 
@@ -1245,5 +1271,205 @@
 
     .hero__metabolic-dashboard {
         padding: var(--gd-space-4, 1rem);
+    }
+}
+
+/* ===== CIRCULAR NUTRITION VISUALIZATION ===== */
+.hero__nutrition-circles {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
+    height: 400px;
+    margin: 0 auto;
+}
+
+.hero__calorie-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gd-space-2);
+}
+
+.hero__central-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: var(--gd-text-primary, #1e293b);
+}
+
+.hero__calorie-main {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.hero__calorie-addition {
+    font-size: 1rem;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+
+.hero__calorie-total {
+    font-size: 1.2rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.hero__calorie-label {
+    color: var(--gd-color-primary-700, #1d4ed8);
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: var(--gd-space-2);
+}
+
+.hero__macro-circles {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.hero__macro-circle {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gd-space-1);
+}
+
+.hero__macro-circle--protein {
+    top: 10%;
+    left: 10%;
+    transform: translate(-50%, -50%);
+}
+
+.hero__macro-circle--carbs {
+    top: 10%;
+    right: 10%;
+    transform: translate(50%, -50%);
+}
+
+.hero__macro-circle--fat {
+    bottom: 10%;
+    left: 10%;
+    transform: translate(-50%, 50%);
+}
+
+.hero__macro-circle--fiber {
+    bottom: 10%;
+    right: 10%;
+    transform: translate(50%, 50%);
+}
+
+.hero__macro-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: var(--gd-text-primary, #1e293b);
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.hero__macro-current {
+    font-size: 1.1em;
+    font-weight: 700;
+    margin-bottom: 1px;
+}
+
+.hero__macro-addition {
+    font-size: 0.8em;
+    opacity: 0.7;
+    margin-bottom: 1px;
+}
+
+.hero__macro-total {
+    font-size: 0.9em;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.hero__macro-title {
+    color: var(--gd-text-primary, #1e293b);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: var(--gd-space-1);
+}
+
+.hero__macro-name {
+    color: var(--gd-text-primary, #1e293b);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* Responsive Design for Circular Layout */
+@media (max-width: 768px) {
+    .hero__nutrition-circles {
+        height: 350px;
+        max-width: 400px;
+    }
+
+    .hero__calorie-main {
+        font-size: 2rem;
+    }
+
+    .hero__calorie-label {
+        font-size: 1rem;
+    }
+
+    .hero__macro-title {
+        font-size: 1.2rem;
+    }
+
+    .hero__macro-name {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero__nutrition-circles {
+        height: 300px;
+        max-width: 320px;
+    }
+
+    .hero__calorie-main {
+        font-size: 1.5rem;
+    }
+
+    .hero__calorie-addition {
+        font-size: 0.9rem;
+    }
+
+    .hero__calorie-total {
+        font-size: 1rem;
+    }
+
+    .hero__calorie-label {
+        font-size: 0.9rem;
+    }
+
+    .hero__macro-title {
+        font-size: 1rem;
+    }
+
+    .hero__macro-name {
+        font-size: 0.7rem;
+    }
+
+    .hero__macro-content {
+        font-size: 0.7rem;
     }
 }

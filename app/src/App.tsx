@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ModernNavigation from './components/navigation/ModernNavigation';
 import Preloader from './components/ui/Preloader';
-import Hero from './components/sections/Hero';
+import Hero from './pages/Hero';
 import AddMeals from './pages/AddMeals';
 import Profile from './pages/Profile';
 import Journal from './pages/Journal';
@@ -87,10 +87,10 @@ const HomePage: React.FC = () => {
   };
 
   // Show loading state during authentication
-  const primaryCtaText = authLoading 
-    ? "Signing in..." 
-    : isAuthenticated 
-      ? "Go to Add Meals" 
+  const primaryCtaText = authLoading
+    ? "Signing in..."
+    : isAuthenticated
+      ? "Go to Add Meals"
       : "Sign In with Google";
 
   return (
@@ -173,7 +173,7 @@ function App() {
       if (appConfig.debug.enableLogging) {
         console.log('🔐 Google sign-in requested for:', item?.label);
       }
-      
+
       try {
         const result = await auth.signInWithGoogle();
         if (result.success && item) {

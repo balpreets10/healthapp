@@ -2754,27 +2754,27 @@ var require_js = __commonJS({
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__auth-content", children: [
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__auth-visual", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__health-icon", children: "🍎" }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 245,
+                lineNumber: 246,
                 columnNumber: 33
               }, globalThis) }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 244,
+                lineNumber: 245,
                 columnNumber: 29
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__auth-text", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h1", { className: "hero__title", children: title }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 249,
+                  lineNumber: 250,
                   columnNumber: 33
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "hero__subtitle", children: subtitle }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 250,
+                  lineNumber: 251,
                   columnNumber: 33
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "hero__description", children: description }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 251,
+                  lineNumber: 252,
                   columnNumber: 33
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__cta-group", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -2787,12 +2787,12 @@ var require_js = __commonJS({
                     children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__cta-icon", children: "🔑" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 260,
+                        lineNumber: 261,
                         columnNumber: 41
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__cta-text", children: primaryCtaText }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 261,
+                        lineNumber: 262,
                         columnNumber: 41
                       }, globalThis)
                     ]
@@ -2801,23 +2801,23 @@ var require_js = __commonJS({
                   true,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 254,
+                    lineNumber: 255,
                     columnNumber: 37
                   },
                   globalThis
                 ) }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 253,
+                  lineNumber: 254,
                   columnNumber: 33
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 248,
+                lineNumber: 249,
                 columnNumber: 29
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-              lineNumber: 243,
+              lineNumber: 244,
               columnNumber: 25
             }, globalThis)
           ) : (
@@ -2829,11 +2829,11 @@ var require_js = __commonJS({
                 "! 👋"
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 270,
+                lineNumber: 271,
                 columnNumber: 33
               }, globalThis) }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 269,
+                lineNumber: 270,
                 columnNumber: 29
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__nutrition-dashboard", children: [
@@ -2842,43 +2842,43 @@ var require_js = __commonJS({
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-current", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-number", children: nutritionSummary.calories }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 280,
+                        lineNumber: 281,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-unit", children: "cal" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 281,
+                        lineNumber: 282,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 279,
+                      lineNumber: 280,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-divider", children: "of" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 283,
+                      lineNumber: 284,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-target", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-number", children: nutritionSummary.goalCalories }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 285,
+                        lineNumber: 286,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-unit", children: "cal" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 286,
+                        lineNumber: 287,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 284,
+                      lineNumber: 285,
                       columnNumber: 41
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 278,
+                    lineNumber: 279,
                     columnNumber: 37
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__progress-container", children: [
@@ -2895,7 +2895,7 @@ var require_js = __commonJS({
                         false,
                         {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 293,
+                          lineNumber: 294,
                           columnNumber: 45
                         },
                         globalThis
@@ -2912,25 +2912,25 @@ var require_js = __commonJS({
                         false,
                         {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 302,
+                          lineNumber: 303,
                           columnNumber: 49
                         },
                         globalThis
                       )
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 292,
+                      lineNumber: 293,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__progress-labels", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__progress-label hero__progress-label--start", children: "0" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 311,
+                        lineNumber: 312,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__progress-label hero__progress-label--target", children: "Target" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 312,
+                        lineNumber: 313,
                         columnNumber: 45
                       }, globalThis),
                       nutritionSummary.calories > nutritionSummary.goalCalories && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__progress-label hero__progress-label--over", children: [
@@ -2938,24 +2938,24 @@ var require_js = __commonJS({
                         nutritionSummary.calories - nutritionSummary.goalCalories
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 314,
+                        lineNumber: 315,
                         columnNumber: 49
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 310,
+                      lineNumber: 311,
                       columnNumber: 41
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 291,
+                    lineNumber: 292,
                     columnNumber: 37
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: `hero__calorie-status-message ${nutritionSummary.calories < nutritionSummary.goalCalories * 0.8 ? "hero__calorie-status--low" : nutritionSummary.calories > nutritionSummary.goalCalories * 1.1 ? "hero__calorie-status--high" : "hero__calorie-status--good"}`, children: [
                     nutritionSummary.calories < nutritionSummary.goalCalories * 0.8 && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__status-icon", children: "🟡" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 327,
+                        lineNumber: 328,
                         columnNumber: 49
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
@@ -2964,18 +2964,18 @@ var require_js = __commonJS({
                         " more calories"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 328,
+                        lineNumber: 329,
                         columnNumber: 49
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 326,
+                      lineNumber: 327,
                       columnNumber: 45
                     }, globalThis),
                     nutritionSummary.calories > nutritionSummary.goalCalories * 1.1 && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__status-icon", children: "🔴" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 333,
+                        lineNumber: 334,
                         columnNumber: 49
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
@@ -2983,38 +2983,38 @@ var require_js = __commonJS({
                         " calories over target"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 334,
+                        lineNumber: 335,
                         columnNumber: 49
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 332,
+                      lineNumber: 333,
                       columnNumber: 45
                     }, globalThis),
                     nutritionSummary.calories >= nutritionSummary.goalCalories * 0.8 && nutritionSummary.calories <= nutritionSummary.goalCalories * 1.1 && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__status-icon", children: "🟢" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 340,
+                        lineNumber: 341,
                         columnNumber: 49
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: "On track with your calorie goals!" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 341,
+                        lineNumber: 342,
                         columnNumber: 49
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 339,
+                      lineNumber: 340,
                       columnNumber: 45
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 320,
+                    lineNumber: 321,
                     columnNumber: 37
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 277,
+                  lineNumber: 278,
                   columnNumber: 33
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-cards", children: [
@@ -3022,17 +3022,17 @@ var require_js = __commonJS({
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-header", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-icon", children: "💪" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 351,
+                        lineNumber: 352,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-name", children: "Protein" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 352,
+                        lineNumber: 353,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 350,
+                      lineNumber: 351,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-values", children: [
@@ -3041,7 +3041,7 @@ var require_js = __commonJS({
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 355,
+                        lineNumber: 356,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-target", children: [
@@ -3050,12 +3050,12 @@ var require_js = __commonJS({
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 356,
+                        lineNumber: 357,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 354,
+                      lineNumber: 355,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-progress", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3068,13 +3068,13 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 359,
+                        lineNumber: 360,
                         columnNumber: 45
                       },
                       globalThis
                     ) }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 358,
+                      lineNumber: 359,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-percentage", children: [
@@ -3082,29 +3082,29 @@ var require_js = __commonJS({
                       "%"
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 364,
+                      lineNumber: 365,
                       columnNumber: 41
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 349,
+                    lineNumber: 350,
                     columnNumber: 37
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-card hero__macro-card--carbs", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-header", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-icon", children: "🍞" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 371,
+                        lineNumber: 372,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-name", children: "Carbs" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 372,
+                        lineNumber: 373,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 370,
+                      lineNumber: 371,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-values", children: [
@@ -3113,7 +3113,7 @@ var require_js = __commonJS({
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 375,
+                        lineNumber: 376,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-target", children: [
@@ -3122,12 +3122,12 @@ var require_js = __commonJS({
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 376,
+                        lineNumber: 377,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 374,
+                      lineNumber: 375,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-progress", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3140,13 +3140,13 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 379,
+                        lineNumber: 380,
                         columnNumber: 45
                       },
                       globalThis
                     ) }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 378,
+                      lineNumber: 379,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-percentage", children: [
@@ -3154,29 +3154,29 @@ var require_js = __commonJS({
                       "%"
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 384,
+                      lineNumber: 385,
                       columnNumber: 41
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 369,
+                    lineNumber: 370,
                     columnNumber: 37
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-card hero__macro-card--fat", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-header", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-icon", children: "🥑" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 391,
+                        lineNumber: 392,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-name", children: "Fat" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 392,
+                        lineNumber: 393,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 390,
+                      lineNumber: 391,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-values", children: [
@@ -3185,7 +3185,7 @@ var require_js = __commonJS({
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 395,
+                        lineNumber: 396,
                         columnNumber: 45
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-target", children: [
@@ -3194,12 +3194,12 @@ var require_js = __commonJS({
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 396,
+                        lineNumber: 397,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 394,
+                      lineNumber: 395,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-progress", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3212,13 +3212,13 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 399,
+                        lineNumber: 400,
                         columnNumber: 45
                       },
                       globalThis
                     ) }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 398,
+                      lineNumber: 399,
                       columnNumber: 41
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-percentage", children: [
@@ -3226,17 +3226,17 @@ var require_js = __commonJS({
                       "%"
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 404,
+                      lineNumber: 405,
                       columnNumber: 41
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 389,
+                    lineNumber: 390,
                     columnNumber: 37
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 348,
+                  lineNumber: 349,
                   columnNumber: 33
                 }, globalThis),
                 calorieData.recommendation && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: `hero__goal-recommendation hero__goal-recommendation--${calorieData.recommendation.type}`, children: [
@@ -3246,23 +3246,23 @@ var require_js = __commonJS({
                     calorieData.recommendation.type === "maintain" && "⚖️"
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 413,
+                    lineNumber: 414,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__recommendation-text", children: calorieData.recommendation.message }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 418,
+                    lineNumber: 419,
                     columnNumber: 41
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 412,
+                  lineNumber: 413,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meals-list", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { className: "hero__meals-title", children: "Today's Meals" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 426,
+                    lineNumber: 427,
                     columnNumber: 37
                   }, globalThis),
                   todaysMeals.length > 0 ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meals-grid", children: todaysMeals.map((meal, index2) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meal-card hero__meal-card--compact", children: [
@@ -3275,7 +3275,7 @@ var require_js = __commonJS({
                         meal.mealType
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 432,
+                        lineNumber: 433,
                         columnNumber: 57
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__meal-calories", children: [
@@ -3283,31 +3283,31 @@ var require_js = __commonJS({
                         " cal"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 439,
+                        lineNumber: 440,
                         columnNumber: 57
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 431,
+                      lineNumber: 432,
                       columnNumber: 53
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meal-name", children: meal.name }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 441,
+                      lineNumber: 442,
                       columnNumber: 53
                     }, globalThis)
                   ] }, meal.id, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 430,
+                    lineNumber: 431,
                     columnNumber: 49
                   }, globalThis)) }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 428,
+                    lineNumber: 429,
                     columnNumber: 41
                   }, globalThis) : /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__no-meals", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { children: "No meals tracked today yet" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 447,
+                      lineNumber: 448,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3321,24 +3321,24 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 448,
+                        lineNumber: 449,
                         columnNumber: 45
                       },
                       globalThis
                     )
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 446,
+                    lineNumber: 447,
                     columnNumber: 41
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 425,
+                  lineNumber: 426,
                   columnNumber: 33
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 275,
+                lineNumber: 276,
                 columnNumber: 29
               }, globalThis),
               calorieData.hasProfile ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-tracking", children: [
@@ -3346,17 +3346,17 @@ var require_js = __commonJS({
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__metabolic-header", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h4", { className: "hero__metabolic-title", children: "📊 Your Metabolic Profile" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 464,
+                      lineNumber: 465,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "hero__metabolic-subtitle", children: "Understanding your body's energy needs" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 465,
+                      lineNumber: 466,
                       columnNumber: 45
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 463,
+                    lineNumber: 464,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__metabolic-visual", children: [
@@ -3364,38 +3364,38 @@ var require_js = __commonJS({
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-node hero__energy-node--bmr", children: [
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-pulse" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 472,
+                          lineNumber: 473,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-icon", children: "🔥" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 473,
+                          lineNumber: 474,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-label", children: "BMR" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 474,
+                          lineNumber: 475,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-value", children: Math.round(((_c = calorieData.calculation) == null ? void 0 : _c.bmr) || 0) }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 475,
+                          lineNumber: 476,
                           columnNumber: 53
                         }, globalThis)
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 471,
+                        lineNumber: 472,
                         columnNumber: 49
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-arrow", children: [
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-line" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 479,
+                          lineNumber: 480,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-tip" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 480,
+                          lineNumber: 481,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__energy-multiplier", children: [
@@ -3403,50 +3403,50 @@ var require_js = __commonJS({
                           ((_d = calorieData.calculation) == null ? void 0 : _d.tdee) && ((_e = calorieData.calculation) == null ? void 0 : _e.bmr) ? (calorieData.calculation.tdee / calorieData.calculation.bmr).toFixed(2) : "1.0"
                         ] }, void 0, true, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 481,
+                          lineNumber: 482,
                           columnNumber: 53
                         }, globalThis)
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 478,
+                        lineNumber: 479,
                         columnNumber: 49
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-node hero__energy-node--tdee", children: [
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-pulse hero__energy-pulse--delayed" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 485,
+                          lineNumber: 486,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-icon", children: "⚡" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 486,
+                          lineNumber: 487,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-label", children: "TDEE" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 487,
+                          lineNumber: 488,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-value", children: Math.round(((_f = calorieData.calculation) == null ? void 0 : _f.tdee) || 0) }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 488,
+                          lineNumber: 489,
                           columnNumber: 53
                         }, globalThis)
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 484,
+                        lineNumber: 485,
                         columnNumber: 49
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 470,
+                      lineNumber: 471,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__metabolic-insights", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__insight-item", children: [
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-icon", children: "🛌" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 495,
+                          lineNumber: 496,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-text", children: [
@@ -3455,18 +3455,18 @@ var require_js = __commonJS({
                           " cal/day"
                         ] }, void 0, true, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 496,
+                          lineNumber: 497,
                           columnNumber: 53
                         }, globalThis)
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 494,
+                        lineNumber: 495,
                         columnNumber: 49
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__insight-item", children: [
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-icon", children: "🏃‍♂️" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 499,
+                          lineNumber: 500,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-text", children: [
@@ -3475,18 +3475,18 @@ var require_js = __commonJS({
                           " cal/day"
                         ] }, void 0, true, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 500,
+                          lineNumber: 501,
                           columnNumber: 53
                         }, globalThis)
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 498,
+                        lineNumber: 499,
                         columnNumber: 49
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__insight-item", children: [
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-icon", children: "🎯" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 503,
+                          lineNumber: 504,
                           columnNumber: 53
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-text", children: [
@@ -3495,76 +3495,76 @@ var require_js = __commonJS({
                           " cal/day"
                         ] }, void 0, true, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                          lineNumber: 504,
+                          lineNumber: 505,
                           columnNumber: 53
                         }, globalThis)
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 502,
+                        lineNumber: 503,
                         columnNumber: 49
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 493,
+                      lineNumber: 494,
                       columnNumber: 45
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 468,
+                    lineNumber: 469,
                     columnNumber: 41
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 462,
+                  lineNumber: 463,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-overview", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-card hero__calorie-card--target", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-label", children: "Target Calories" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 512,
+                      lineNumber: 513,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-value", children: calorieData.targetCalories.toLocaleString() }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 513,
+                      lineNumber: 514,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-subtext", children: (_j = calorieData.recommendation) == null ? void 0 : _j.weeklyGoal }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 514,
+                      lineNumber: 515,
                       columnNumber: 45
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 511,
+                    lineNumber: 512,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-card hero__calorie-card--current", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-label", children: "Current Intake" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 520,
+                      lineNumber: 521,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-value", children: calorieData.currentCalories.toLocaleString() }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 521,
+                      lineNumber: 522,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-subtext", children: calorieData.remainingCalories > 0 ? `${calorieData.remainingCalories} remaining` : `${Math.abs(calorieData.remainingCalories)} over` }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 522,
+                      lineNumber: 523,
                       columnNumber: 45
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 519,
+                    lineNumber: 520,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-card hero__calorie-card--progress", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-label", children: "Progress" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 531,
+                      lineNumber: 532,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-value", children: [
@@ -3572,7 +3572,7 @@ var require_js = __commonJS({
                       "%"
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 532,
+                      lineNumber: 533,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-progress-bar", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3585,38 +3585,38 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 534,
+                        lineNumber: 535,
                         columnNumber: 49
                       },
                       globalThis
                     ) }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 533,
+                      lineNumber: 534,
                       columnNumber: 45
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 530,
+                    lineNumber: 531,
                     columnNumber: 41
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 510,
+                  lineNumber: 511,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 460,
+                lineNumber: 461,
                 columnNumber: 33
               }, globalThis) : /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__setup-profile", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__setup-icon", children: "⚙️" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 544,
+                  lineNumber: 545,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "hero__setup-message", children: "Complete your profile to see personalized calorie targets" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 545,
+                  lineNumber: 546,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3630,28 +3630,28 @@ var require_js = __commonJS({
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 548,
+                    lineNumber: 549,
                     columnNumber: 37
                   },
                   globalThis
                 )
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 543,
+                lineNumber: 544,
                 columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-              lineNumber: 268,
+              lineNumber: 269,
               columnNumber: 25
             }, globalThis)
           ) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-            lineNumber: 240,
+            lineNumber: 241,
             columnNumber: 17
           }, globalThis) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-            lineNumber: 239,
+            lineNumber: 240,
             columnNumber: 13
           }, globalThis)
         },
@@ -3659,7 +3659,7 @@ var require_js = __commonJS({
         false,
         {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-          lineNumber: 232,
+          lineNumber: 233,
           columnNumber: 9
         },
         globalThis

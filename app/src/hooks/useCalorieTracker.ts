@@ -25,6 +25,7 @@ interface MealData {
     protein: number;
     carbs: number;
     fat: number;
+    fiber: number;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     time: string;
 }
@@ -112,6 +113,7 @@ export const useCalorieTracker = () => {
                 protein: meal.total_protein_g,
                 carbs: meal.total_carbs_g,
                 fat: meal.total_fat_g,
+                fiber: meal.total_fiber_g || 0,
                 mealType: meal.meal_type as 'breakfast' | 'lunch' | 'dinner' | 'snack',
                 time: meal.time ? new Date(`1970-01-01T${meal.time}`).toLocaleTimeString('en-US', { 
                     hour: 'numeric', 

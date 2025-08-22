@@ -1,0 +1,89 @@
+.circular-progress {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.circular-progress__svg {
+    display: block;
+}
+
+.circular-progress__background {
+    opacity: 0.3;
+}
+
+.circular-progress__progress {
+    transition: stroke-dashoffset 0.5s ease-in-out;
+    stroke-linecap: round;
+}
+
+.circular-progress__content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    font-weight: 600;
+}
+
+.circular-progress--small .circular-progress__content {
+    font-size: 0.875rem;
+    line-height: 1.2;
+}
+
+.circular-progress--medium .circular-progress__content {
+    font-size: 1.125rem;
+    line-height: 1.25;
+}
+
+.circular-progress--large .circular-progress__content {
+    font-size: 1.5rem;
+    line-height: 1.3;
+}
+
+.circular-progress__value {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.circular-progress--medium .circular-progress__value {
+    font-size: 1.6em;
+    margin-bottom: 3px;
+}
+
+.circular-progress--large .circular-progress__value {
+    font-size: 2em;
+    margin-bottom: 4px;
+}
+
+.circular-progress__label {
+    font-size: 0.7em;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 2px 0;
+}
+
+.circular-progress--medium .circular-progress__label {
+    font-size: 0.65em;
+}
+
+.circular-progress--large .circular-progress__label {
+    font-size: 0.6em;
+}
+
+.circular-progress__max {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.circular-progress--medium .circular-progress__max {
+    font-size: 0.85em;
+}
+
+.circular-progress--large .circular-progress__max {
+    font-size: 0.9em;
+}
