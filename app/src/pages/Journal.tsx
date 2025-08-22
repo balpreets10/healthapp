@@ -1,6 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useContentManager } from '../hooks/useContentManager';
-import { useAuth } from '../hooks/useAuth';
+import { useCalorieTracker } from '../hooks/useCalorieTracker';
+import { 
+    getProgressPercentage,
+    calculateAverageCaloriesPerMeal,
+    calculateMacroRatio
+} from '../utils/nutritionCalculations';
+import { NUTRITION_CONSTANTS } from '../config/constants';
 import './Journal.css';
 
 interface MealEntry {
@@ -10,164 +16,40 @@ interface MealEntry {
     protein: number;
     carbs: number;
     fat: number;
-    timestamp: Date;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-}
-
-interface NutritionSummary {
-    totalCalories: number;
-    totalProtein: number;
-    totalCarbs: number;
-    totalFat: number;
-    goalCalories: number;
-    goalProtein: number;
-    goalCarbs: number;
-    goalFat: number;
+    time: string;
 }
 
 const Journal: React.FC = () => {
     const pageRef = useRef<HTMLElement>(null);
     const { setCurrentSection } = useContentManager();
-    const { user } = useAuth();
+    const { todaysMeals, calorieData } = useCalorieTracker();
 
-    const [meals, setMeals] = useState<MealEntry[]>([]);
-    const [nutritionSummary, setNutritionSummary] = useState<NutritionSummary>({
-        totalCalories: 0,
-        totalProtein: 0,
-        totalCarbs: 0,
-        totalFat: 0,
-        goalCalories: 2000,
-        goalProtein: 150,
-        goalCarbs: 250,
-        goalFat: 65
-    });
+    // Calculate nutrition goals from calorieData
+    const nutritionGoals = {
+        goalCalories: calorieData.targetCalories,
+        goalProtein: Math.round(calorieData.targetCalories * 0.3 / 4), // 30% of calories from protein
+        goalCarbs: Math.round(calorieData.targetCalories * 0.45 / 4), // 45% of calories from carbs
+        goalFat: Math.round(calorieData.targetCalories * 0.25 / 9)    // 25% of calories from fat
+    };
+
+    // Calculate current nutrition from today's meals
+    const nutritionSummary = {
+        totalCalories: calorieData.currentCalories,
+        totalProtein: todaysMeals.reduce((sum, meal) => sum + meal.protein, 0),
+        totalCarbs: todaysMeals.reduce((sum, meal) => sum + meal.carbs, 0),
+        totalFat: todaysMeals.reduce((sum, meal) => sum + meal.fat, 0),
+        ...nutritionGoals
+    };
 
     useEffect(() => {
         setCurrentSection('journal');
-
-        // Load sample meals data for today (this would come from your data source)
-        const todaysMeals: MealEntry[] = [
-            {
-                id: '1',
-                name: 'Greek Yogurt with Berries',
-                calories: 180,
-                protein: 15,
-                carbs: 20,
-                fat: 5,
-                timestamp: new Date(new Date().setHours(8, 30, 0, 0)),
-                mealType: 'breakfast'
-            },
-            {
-                id: '2',
-                name: 'Banana',
-                calories: 105,
-                protein: 1.3,
-                carbs: 27,
-                fat: 0.4,
-                timestamp: new Date(new Date().setHours(10, 15, 0, 0)),
-                mealType: 'snack'
-            },
-            {
-                id: '3',
-                name: 'Grilled Chicken Salad',
-                calories: 350,
-                protein: 35,
-                carbs: 12,
-                fat: 18,
-                timestamp: new Date(new Date().setHours(12, 45, 0, 0)),
-                mealType: 'lunch'
-            },
-            {
-                id: '4',
-                name: 'Almonds (28g)',
-                calories: 164,
-                protein: 6,
-                carbs: 6,
-                fat: 14,
-                timestamp: new Date(new Date().setHours(15, 20, 0, 0)),
-                mealType: 'snack'
-            },
-            {
-                id: '5',
-                name: 'Salmon with Quinoa',
-                calories: 420,
-                protein: 38,
-                carbs: 35,
-                fat: 16,
-                timestamp: new Date(new Date().setHours(19, 0, 0, 0)),
-                mealType: 'dinner'
-            },
-            {
-                id: '6',
-                name: 'Mixed Vegetables',
-                calories: 80,
-                protein: 4,
-                carbs: 16,
-                fat: 1,
-                timestamp: new Date(new Date().setHours(19, 0, 0, 0)),
-                mealType: 'dinner'
-            }
-        ];
-
-        setMeals(todaysMeals);
-        updateNutritionSummary(todaysMeals);
     }, [setCurrentSection]);
 
-    const updateNutritionSummary = (mealList: MealEntry[]) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const todaysMeals = mealList.filter(meal => {
-            const mealDate = new Date(meal.timestamp);
-            mealDate.setHours(0, 0, 0, 0);
-            return mealDate.getTime() === today.getTime();
-        });
-
-        const summary = todaysMeals.reduce(
-            (acc, meal) => ({
-                ...acc,
-                totalCalories: acc.totalCalories + meal.calories,
-                totalProtein: acc.totalProtein + meal.protein,
-                totalCarbs: acc.totalCarbs + meal.carbs,
-                totalFat: acc.totalFat + meal.fat
-            }),
-            {
-                totalCalories: 0,
-                totalProtein: 0,
-                totalCarbs: 0,
-                totalFat: 0,
-                goalCalories: nutritionSummary.goalCalories,
-                goalProtein: nutritionSummary.goalProtein,
-                goalCarbs: nutritionSummary.goalCarbs,
-                goalFat: nutritionSummary.goalFat
-            }
-        );
-
-        setNutritionSummary(summary);
-    };
-
     const getMealsByType = (type: MealEntry['mealType']) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        return meals.filter(meal => {
-            const mealDate = new Date(meal.timestamp);
-            mealDate.setHours(0, 0, 0, 0);
-            return meal.mealType === type && mealDate.getTime() === today.getTime();
-        }).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        return todaysMeals.filter(meal => meal.mealType === type);
     };
 
-    const formatTime = (timestamp: Date) => {
-        return timestamp.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-    };
-
-    const getProgressPercentage = (current: number, goal: number) => {
-        return Math.min((current / goal) * 100, 100);
-    };
 
     const getTotalMealsByType = (type: MealEntry['mealType']) => {
         const typeMeals = getMealsByType(type);
@@ -194,7 +76,7 @@ const Journal: React.FC = () => {
                     <h2 className="journal__section-title">Daily Nutrition Summary</h2>
                     <div className="journal__nutrition-grid">
                         <div className="journal__nutrition-card journal__nutrition-card--calories">
-                            <div className="journal__nutrition-icon">🔥</div>
+                            <div className="journal__nutrition-icon">{NUTRITION_CONSTANTS.nutritionIcons.calories}</div>
                             <div className="journal__nutrition-content">
                                 <div className="journal__nutrition-value">
                                     {Math.round(nutritionSummary.totalCalories)} / {nutritionSummary.goalCalories}
@@ -210,7 +92,7 @@ const Journal: React.FC = () => {
                         </div>
 
                         <div className="journal__nutrition-card journal__nutrition-card--protein">
-                            <div className="journal__nutrition-icon">💪</div>
+                            <div className="journal__nutrition-icon">{NUTRITION_CONSTANTS.nutritionIcons.protein}</div>
                             <div className="journal__nutrition-content">
                                 <div className="journal__nutrition-value">
                                     {Math.round(nutritionSummary.totalProtein)}g / {nutritionSummary.goalProtein}g
@@ -226,7 +108,7 @@ const Journal: React.FC = () => {
                         </div>
 
                         <div className="journal__nutrition-card journal__nutrition-card--carbs">
-                            <div className="journal__nutrition-icon">🌾</div>
+                            <div className="journal__nutrition-icon">{NUTRITION_CONSTANTS.nutritionIcons.carbs}</div>
                             <div className="journal__nutrition-content">
                                 <div className="journal__nutrition-value">
                                     {Math.round(nutritionSummary.totalCarbs)}g / {nutritionSummary.goalCarbs}g
@@ -242,7 +124,7 @@ const Journal: React.FC = () => {
                         </div>
 
                         <div className="journal__nutrition-card journal__nutrition-card--fat">
-                            <div className="journal__nutrition-icon">🥑</div>
+                            <div className="journal__nutrition-icon">{NUTRITION_CONSTANTS.nutritionIcons.fat}</div>
                             <div className="journal__nutrition-content">
                                 <div className="journal__nutrition-value">
                                     {Math.round(nutritionSummary.totalFat)}g / {nutritionSummary.goalFat}g
@@ -274,10 +156,7 @@ const Journal: React.FC = () => {
                                 <div className="journal__meal-header">
                                     <div className="journal__meal-type">
                                         <span className="journal__meal-icon">
-                                            {mealType === 'breakfast' && '🌅'}
-                                            {mealType === 'lunch' && '☀️'}
-                                            {mealType === 'dinner' && '🌙'}
-                                            {mealType === 'snack' && '🍿'}
+                                            {NUTRITION_CONSTANTS.mealTypeIcons[mealType]}
                                         </span>
                                         <h3 className="journal__meal-title">
                                             {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
@@ -297,22 +176,22 @@ const Journal: React.FC = () => {
                                     {typeMeals.map(meal => (
                                         <div key={meal.id} className="journal__meal-item">
                                             <div className="journal__meal-time">
-                                                {formatTime(meal.timestamp)}
+                                                {meal.time}
                                             </div>
                                             <div className="journal__meal-details">
                                                 <div className="journal__meal-name">{meal.name}</div>
                                                 <div className="journal__meal-nutrition">
                                                     <span className="journal__nutrition-item">
-                                                        🔥 {meal.calories} cal
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.calories} {meal.calories} cal
                                                     </span>
                                                     <span className="journal__nutrition-item">
-                                                        💪 {meal.protein}g protein
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.protein} {meal.protein}g protein
                                                     </span>
                                                     <span className="journal__nutrition-item">
-                                                        🌾 {meal.carbs}g carbs
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.carbs} {meal.carbs}g carbs
                                                     </span>
                                                     <span className="journal__nutrition-item">
-                                                        🥑 {meal.fat}g fat
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.fat} {meal.fat}g fat
                                                     </span>
                                                 </div>
                                             </div>
@@ -329,7 +208,7 @@ const Journal: React.FC = () => {
                     <h2 className="journal__section-title">Today's Quick Stats</h2>
                     <div className="journal__stats-grid">
                         <div className="journal__stat-card">
-                            <div className="journal__stat-value">{meals.length}</div>
+                            <div className="journal__stat-value">{todaysMeals.length}</div>
                             <div className="journal__stat-label">Total Meals/Snacks</div>
                         </div>
                         <div className="journal__stat-card">
@@ -340,13 +219,13 @@ const Journal: React.FC = () => {
                         </div>
                         <div className="journal__stat-card">
                             <div className="journal__stat-value">
-                                {meals.length > 0 ? Math.round(nutritionSummary.totalCalories / meals.length) : 0}
+                                {calculateAverageCaloriesPerMeal(nutritionSummary.totalCalories, todaysMeals.length)}
                             </div>
                             <div className="journal__stat-label">Avg Calories per Meal</div>
                         </div>
                         <div className="journal__stat-card">
                             <div className="journal__stat-value">
-                                {Math.round((nutritionSummary.totalProtein / nutritionSummary.totalCalories) * 100)}%
+                                {calculateMacroRatio(nutritionSummary.totalProtein, nutritionSummary.totalCalories)}%
                             </div>
                             <div className="journal__stat-label">Protein Ratio</div>
                         </div>

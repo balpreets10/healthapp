@@ -43,7 +43,7 @@ const ModernNavigation: React.FC<ModernNavigationProps> = ({
     const [config, setConfig] = useState(() => managerRef.current?.getConfig() ?? { items: [] });
     const [navState, setNavState] = useState<NavigationState>(() => ({
         isOpen: false,
-        activeItem: 'home',
+        activeItem: managerRef.current?.getState().activeItem || 'home',
         hoveredItem: null,
         focusedItem: null,
         keyboardMode: false
@@ -200,10 +200,6 @@ const ModernNavigation: React.FC<ModernNavigationProps> = ({
                         );
                     })}
 
-                    {/* Profile as a nav item
-                    <li className={`modern-nav__item modern-nav__item--profile ${navState.activeItem === 'profile' ? 'modern-nav__item--active' : ''}`}>
-                        <ProfileDropdown />
-                    </li> */}
                 </ul>
 
                 {/* Right side - empty for balance */}

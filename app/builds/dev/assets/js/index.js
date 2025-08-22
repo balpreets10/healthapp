@@ -1046,6 +1046,149 @@ var require_js = __commonJS({
           console.warn("Failed to clear extended session:", error);
         }
       }
+      // ===== ORIENTATION MANAGEMENT ===== //
+      getOrientations(applicableFor) {
+        return __async(this, null, function* () {
+          try {
+            let query = this.client.from("orientations").select("*").order("label", { ascending: true });
+            if (applicableFor && applicableFor !== "both") {
+              query = query.or(`applicable_for.eq.${applicableFor},applicable_for.eq.both`);
+            }
+            const { data, error } = yield query;
+            return { data: data || [], error };
+          } catch (err) {
+            console.error("Get orientations failed:", err);
+            return { data: [], error: err };
+          }
+        });
+      }
+      // ===== MEALS MANAGEMENT ===== //
+      getTodaysMeals(userId) {
+        return __async(this, null, function* () {
+          try {
+            const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+            const { data, error } = yield this.client.from("meals").select("*").eq("user_id", userId).eq("date", today).order("time", { ascending: true });
+            return { data: data || [], error };
+          } catch (err) {
+            console.error("Get today's meals failed:", err);
+            return { data: [], error: err };
+          }
+        });
+      }
+      getMealsByDateRange(userId, startDate, endDate) {
+        return __async(this, null, function* () {
+          try {
+            const { data, error } = yield this.client.from("meals").select("*").eq("user_id", userId).gte("date", startDate).lte("date", endDate).order("date", { ascending: false }).order("time", { ascending: true });
+            return { data: data || [], error };
+          } catch (err) {
+            console.error("Get meals by date range failed:", err);
+            return { data: [], error: err };
+          }
+        });
+      }
+      addMeal(mealData) {
+        return __async(this, null, function* () {
+          try {
+            const { data, error } = yield this.client.from("meals").insert([mealData]).select().single();
+            return { data, error };
+          } catch (err) {
+            console.error("Add meal failed:", err);
+            return { data: null, error: err };
+          }
+        });
+      }
+      updateMeal(mealId, updates) {
+        return __async(this, null, function* () {
+          try {
+            const { data, error } = yield this.client.from("meals").update(__spreadProps(__spreadValues({}, updates), {
+              updated_at: (/* @__PURE__ */ new Date()).toISOString()
+            })).eq("id", mealId).select().single();
+            return { data, error };
+          } catch (err) {
+            console.error("Update meal failed:", err);
+            return { data: null, error: err };
+          }
+        });
+      }
+      deleteMeal(mealId) {
+        return __async(this, null, function* () {
+          try {
+            const { error } = yield this.client.from("meals").delete().eq("id", mealId);
+            return { error };
+          } catch (err) {
+            console.error("Delete meal failed:", err);
+            return { error: err };
+          }
+        });
+      }
+      // ===== CUSTOM MEALS MANAGEMENT ===== //
+      checkCustomMealExists(userId, mealName, calories, protein, carbs, fat) {
+        return __async(this, null, function* () {
+          try {
+            const { data, error } = yield this.client.from("custom_meals").select("id").eq("submitted_by", userId).eq("name", mealName).eq("calories_per_100g", calories).eq("protein_g", protein).eq("carbohydrates_g", carbs).eq("fats_g", fat).maybeSingle();
+            return { exists: !!data, error };
+          } catch (err) {
+            console.error("Check custom meal exists failed:", err);
+            return { exists: false, error: err };
+          }
+        });
+      }
+      addCustomMeal(customMealData) {
+        return __async(this, null, function* () {
+          try {
+            const { data, error } = yield this.client.from("custom_meals").insert([customMealData]).select().single();
+            return { data, error };
+          } catch (err) {
+            console.error("Add custom meal failed:", err);
+            return { data: null, error: err };
+          }
+        });
+      }
+      // ===== FOOD SEARCH FUNCTIONALITY ===== //
+      searchFoods(query, limit = 5) {
+        return __async(this, null, function* () {
+          try {
+            const { data, error } = yield this.client.from("foods").select("id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg").ilike("name", `%${query}%`).limit(limit).order("name", { ascending: true });
+            return { data: data || [], error };
+          } catch (err) {
+            console.error("Search foods failed:", err);
+            return { data: [], error: err };
+          }
+        });
+      }
+      searchCustomMeals(userId, query, limit = 5) {
+        return __async(this, null, function* () {
+          try {
+            const { data, error } = yield this.client.from("custom_meals").select("id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg").eq("submitted_by", userId).eq("status", "approved").ilike("name", `%${query}%`).limit(limit).order("name", { ascending: true });
+            return { data: data || [], error };
+          } catch (err) {
+            console.error("Search custom meals failed:", err);
+            return { data: [], error: err };
+          }
+        });
+      }
+      searchFoodsAndCustomMeals(userId, query, limit = 5) {
+        return __async(this, null, function* () {
+          try {
+            const [foodsResult, customMealsResult] = yield Promise.all([
+              this.searchFoods(query, Math.ceil(limit / 2)),
+              this.searchCustomMeals(userId, query, Math.ceil(limit / 2))
+            ]);
+            if (foodsResult.error && customMealsResult.error) {
+              return { data: [], error: foodsResult.error };
+            }
+            const combinedResults = [
+              ...(foodsResult.data || []).map((food) => __spreadProps(__spreadValues({}, food), { source: "foods" })),
+              ...(customMealsResult.data || []).map((meal) => __spreadProps(__spreadValues({}, meal), { source: "custom_meals" }))
+            ];
+            const sortedResults = combinedResults.sort((a, b) => a.name.localeCompare(b.name)).slice(0, limit);
+            return { data: sortedResults, error: null };
+          } catch (err) {
+            console.error("Search foods and custom meals failed:", err);
+            return { data: [], error: err };
+          }
+        });
+      }
       // ===== OAUTH CALLBACK HANDLER ===== //
       handleOAuthCallback() {
         return __async(this, null, function* () {
@@ -1448,13 +1591,16 @@ var require_js = __commonJS({
         var _a, _b;
         return (_b = (_a = managerRef.current) == null ? void 0 : _a.getConfig()) != null ? _b : { items: [] };
       });
-      const [navState, setNavState] = reactExports.useState(() => ({
-        isOpen: false,
-        activeItem: "home",
-        hoveredItem: null,
-        focusedItem: null,
-        keyboardMode: false
-      }));
+      const [navState, setNavState] = reactExports.useState(() => {
+        var _a;
+        return {
+          isOpen: false,
+          activeItem: ((_a = managerRef.current) == null ? void 0 : _a.getState().activeItem) || "home",
+          hoveredItem: null,
+          focusedItem: null,
+          keyboardMode: false
+        };
+      });
       const [isScrolled, setIsScrolled] = reactExports.useState(false);
       const reducedMotion = reactExports.useMemo(() => prefersReducedMotion(), []);
       reactExports.useEffect(() => {
@@ -1609,7 +1755,7 @@ var require_js = __commonJS({
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "modern-nav__right" }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/navigation/ModernNavigation.tsx",
-              lineNumber: 210,
+              lineNumber: 206,
               columnNumber: 17
             }, globalThis)
           ] }, void 0, true, {
@@ -2083,6 +2229,246 @@ var require_js = __commonJS({
         observeImage
       });
     };
+    class CalorieCalculatorService {
+      static calculateBMR(profile) {
+        const { height_cm, weight_kg, age = 30, gender = "male" } = profile;
+        if (gender === "male") {
+          return 5 * weight_kg + 6.25 * height_cm - 5 * age + 5;
+        } else {
+          return 5 * weight_kg + 6.25 * height_cm - 5 * age - 161;
+        }
+      }
+      static calculateTDEE(bmr, activityLevel) {
+        const multiplier = this.ACTIVITY_MULTIPLIERS[activityLevel] || 1.55;
+        return Math.round(bmr * multiplier);
+      }
+      static convertDurationToWeeks(duration, unit) {
+        switch (unit) {
+          case "days":
+            return duration / 7;
+          case "weeks":
+            return duration;
+          case "months":
+            return duration * 4.33;
+          default:
+            return duration;
+        }
+      }
+      static calculateTargetCalories(profile) {
+        const bmr = this.calculateBMR(profile);
+        const tdee = this.calculateTDEE(bmr, profile.activity_level);
+        const { weight_kg, target_weight_kg, target_duration, target_duration_unit } = profile;
+        const weightChangeKg = target_weight_kg - weight_kg;
+        const durationWeeks = this.convertDurationToWeeks(target_duration, target_duration_unit);
+        const weightChangePerWeek = durationWeeks > 0 ? weightChangeKg / durationWeeks : 0;
+        const dailyCalorieDeficit = weightChangePerWeek * this.CALORIES_PER_KG / 7;
+        let targetCalories = tdee + dailyCalorieDeficit;
+        const minCalories = profile.gender === "male" ? 1300 : 1100;
+        if (targetCalories < minCalories) {
+          targetCalories = minCalories;
+        }
+        return {
+          bmr: Math.round(bmr),
+          tdee,
+          targetCalories: Math.round(targetCalories),
+          weightChangePerWeek: Math.round(weightChangePerWeek * 100) / 100,
+          dailyCalorieDeficit: Math.round(dailyCalorieDeficit)
+        };
+      }
+      static getCalorieRecommendation(calculation) {
+        const { weightChangePerWeek, targetCalories, tdee } = calculation;
+        if (weightChangePerWeek > 0) {
+          return {
+            message: `To gain ${Math.abs(weightChangePerWeek)}kg per week, aim for ${targetCalories} calories daily`,
+            type: "gain",
+            weeklyGoal: `+${Math.abs(weightChangePerWeek)}kg per week`
+          };
+        } else if (weightChangePerWeek < 0) {
+          return {
+            message: `To lose ${Math.abs(weightChangePerWeek)}kg per week, aim for ${targetCalories} calories daily`,
+            type: "loss",
+            weeklyGoal: `-${Math.abs(weightChangePerWeek)}kg per week`
+          };
+        } else {
+          return {
+            message: `To maintain your current weight, aim for ${tdee} calories daily`,
+            type: "maintain",
+            weeklyGoal: "Maintain current weight"
+          };
+        }
+      }
+      static getMacroRatios(orientation) {
+        if (!orientation) {
+          return { protein: 0.3, carbs: 0.45, fat: 0.25 };
+        }
+        switch (orientation) {
+          case "energy_focused":
+          case "energetic_bulking":
+            return { protein: 0.2, carbs: 0.4, fat: 0.4 };
+          case "lean_muscle_building":
+          case "muscle_preservation":
+            return { protein: 0.3, carbs: 0.35, fat: 0.35 };
+          default:
+            return { protein: 0.3, carbs: 0.45, fat: 0.25 };
+        }
+      }
+      static validateProfile(profile) {
+        const errors = [];
+        if (!profile.height_cm || profile.height_cm <= 0) {
+          errors.push("Height is required");
+        }
+        if (!profile.weight_kg || profile.weight_kg <= 0) {
+          errors.push("Current weight is required");
+        }
+        if (!profile.target_weight_kg || profile.target_weight_kg <= 0) {
+          errors.push("Target weight is required");
+        }
+        if (!profile.target_duration || profile.target_duration <= 0) {
+          errors.push("Target duration is required");
+        }
+        return {
+          isValid: errors.length === 0,
+          errors
+        };
+      }
+    }
+    __publicField(CalorieCalculatorService, "ACTIVITY_MULTIPLIERS", {
+      sedentary: 1.05,
+      light: 1.2,
+      moderate: 1.375,
+      active: 1.55,
+      very_active: 1.725
+    });
+    __publicField(CalorieCalculatorService, "CALORIES_PER_KG", 7700);
+    const useCalorieTracker = () => {
+      const { user } = useAuth();
+      const [profile, setProfile] = reactExports.useState(null);
+      const [todaysMeals, setTodaysMeals] = reactExports.useState([]);
+      const [isLoading, setIsLoading] = reactExports.useState(true);
+      const loadProfile = () => __async(exports, null, function* () {
+        if (!user) {
+          setIsLoading(false);
+          return;
+        }
+        try {
+          const { data } = yield SupabaseService$1.getUserProfile(user.id);
+          let additionalData = { target_weight_kg: 0, target_duration: 0, target_duration_unit: "weeks", orientation: "" };
+          try {
+            const stored = localStorage.getItem(`profile_extra_${user.id}`);
+            if (stored) {
+              additionalData = JSON.parse(stored);
+            }
+          } catch (e) {
+            console.warn("Failed to load additional profile data:", e);
+          }
+          if (data && data.height_cm && data.weight_kg && additionalData.target_weight_kg && additionalData.target_duration) {
+            const userProfile = {
+              height_cm: data.height_cm,
+              weight_kg: data.weight_kg,
+              target_weight_kg: additionalData.target_weight_kg,
+              target_duration: additionalData.target_duration,
+              target_duration_unit: additionalData.target_duration_unit,
+              activity_level: data.activity_level || "moderate",
+              age: 30,
+              gender: "male",
+              orientation: additionalData.orientation || ""
+            };
+            setProfile(userProfile);
+          } else {
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error("Error loading profile:", error);
+          setProfile(null);
+        } finally {
+          setIsLoading(false);
+        }
+      });
+      const loadTodaysMeals = () => __async(exports, null, function* () {
+        if (!user) {
+          setTodaysMeals([]);
+          return;
+        }
+        try {
+          const { data, error } = yield SupabaseService$1.getTodaysMeals(user.id);
+          if (error) {
+            console.error("Error loading today's meals:", error);
+            setTodaysMeals([]);
+            return;
+          }
+          const transformedMeals = data.map((meal) => ({
+            id: meal.id,
+            name: meal.meal_name,
+            calories: meal.total_calories,
+            protein: meal.total_protein_g,
+            carbs: meal.total_carbs_g,
+            fat: meal.total_fat_g,
+            mealType: meal.meal_type,
+            time: meal.time ? (/* @__PURE__ */ new Date(`1970-01-01T${meal.time}`)).toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true
+            }) : "Not specified"
+          }));
+          setTodaysMeals(transformedMeals);
+        } catch (error) {
+          console.error("Failed to load today's meals:", error);
+          setTodaysMeals([]);
+        }
+      });
+      reactExports.useEffect(() => {
+        loadProfile();
+        loadTodaysMeals();
+      }, [user]);
+      const calorieData = reactExports.useMemo(() => {
+        if (!profile) {
+          return {
+            targetCalories: 0,
+            currentCalories: 0,
+            remainingCalories: 0,
+            percentageConsumed: 0,
+            hasProfile: false,
+            isLoading
+          };
+        }
+        const validation = CalorieCalculatorService.validateProfile(profile);
+        if (!validation.isValid) {
+          return {
+            targetCalories: 0,
+            currentCalories: 0,
+            remainingCalories: 0,
+            percentageConsumed: 0,
+            hasProfile: false,
+            isLoading
+          };
+        }
+        const calculation = CalorieCalculatorService.calculateTargetCalories(profile);
+        const recommendation = CalorieCalculatorService.getCalorieRecommendation(calculation);
+        const currentCalories = todaysMeals.reduce((sum, meal) => sum + meal.calories, 0);
+        const remainingCalories = calculation.targetCalories - currentCalories;
+        const percentageConsumed = calculation.targetCalories > 0 ? Math.round(currentCalories / calculation.targetCalories * 100) : 0;
+        return {
+          targetCalories: calculation.targetCalories,
+          currentCalories,
+          remainingCalories,
+          percentageConsumed,
+          calculation,
+          recommendation,
+          hasProfile: true,
+          isLoading
+        };
+      }, [profile, todaysMeals, isLoading]);
+      const refreshData = () => __async(exports, null, function* () {
+        yield loadProfile();
+        yield loadTodaysMeals();
+      });
+      return {
+        calorieData,
+        todaysMeals,
+        profile,
+        refreshData
+      };
+    };
     const Hero$1 = "";
     const Hero = ({
       title = "Your Health Journey Starts Here",
@@ -2096,7 +2482,7 @@ var require_js = __commonJS({
       showAchievements = false,
       autoScroll = false
     }) => {
-      var _a, _b;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
       const heroRef = reactExports.useRef(null);
       const contentRef = reactExports.useRef(null);
       reactExports.useRef(null);
@@ -2107,38 +2493,7 @@ var require_js = __commonJS({
       const [reducedMotion, setReducedMotion] = reactExports.useState(false);
       const { setCurrentSection } = useContentManager();
       const { isAuthenticated, user } = useAuth();
-      const todaysMeals = reactExports.useMemo(() => [
-        {
-          id: "1",
-          name: "Oatmeal with Berries",
-          calories: 320,
-          protein: 12,
-          carbs: 58,
-          fat: 6,
-          mealType: "breakfast",
-          time: "8:00 AM"
-        },
-        {
-          id: "2",
-          name: "Grilled Chicken Salad",
-          calories: 450,
-          protein: 35,
-          carbs: 25,
-          fat: 18,
-          mealType: "lunch",
-          time: "12:30 PM"
-        },
-        {
-          id: "3",
-          name: "Greek Yogurt",
-          calories: 150,
-          protein: 15,
-          carbs: 12,
-          fat: 5,
-          mealType: "snack",
-          time: "3:15 PM"
-        }
-      ], []);
+      const { calorieData, todaysMeals, profile } = useCalorieTracker();
       const nutritionSummary = reactExports.useMemo(() => {
         const totals = todaysMeals.reduce(
           (acc, meal) => ({
@@ -2149,13 +2504,17 @@ var require_js = __commonJS({
           }),
           { calories: 0, protein: 0, carbs: 0, fat: 0 }
         );
+        const macroRatios = CalorieCalculatorService.getMacroRatios(profile == null ? void 0 : profile.orientation);
         return __spreadProps(__spreadValues({}, totals), {
-          goalCalories: 2e3,
-          goalProtein: 150,
-          goalCarbs: 250,
-          goalFat: 65
+          goalCalories: calorieData.targetCalories,
+          goalProtein: Math.round(calorieData.targetCalories * macroRatios.protein / 4),
+          // protein has 4 calories per gram
+          goalCarbs: Math.round(calorieData.targetCalories * macroRatios.carbs / 4),
+          // carbs has 4 calories per gram
+          goalFat: Math.round(calorieData.targetCalories * macroRatios.fat / 9)
+          // fat has 9 calories per gram
         });
-      }, [todaysMeals]);
+      }, [todaysMeals, calorieData.targetCalories, profile == null ? void 0 : profile.orientation]);
       reactExports.useMemo(() => {
         if (!showParticles)
           return [];
@@ -2283,27 +2642,27 @@ var require_js = __commonJS({
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__auth-content", children: [
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__auth-visual", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__health-icon", children: "🍎" }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 295,
+                lineNumber: 245,
                 columnNumber: 33
               }, globalThis) }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 294,
+                lineNumber: 244,
                 columnNumber: 29
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__auth-text", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h1", { className: "hero__title", children: title }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 299,
+                  lineNumber: 249,
                   columnNumber: 33
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "hero__subtitle", children: subtitle }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 300,
+                  lineNumber: 250,
                   columnNumber: 33
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "hero__description", children: description }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 301,
+                  lineNumber: 251,
                   columnNumber: 33
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__cta-group", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -2316,12 +2675,12 @@ var require_js = __commonJS({
                     children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__cta-icon", children: "🔑" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 310,
+                        lineNumber: 260,
                         columnNumber: 41
                       }, globalThis),
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__cta-text", children: primaryCtaText }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 311,
+                        lineNumber: 261,
                         columnNumber: 41
                       }, globalThis)
                     ]
@@ -2330,23 +2689,23 @@ var require_js = __commonJS({
                   true,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 304,
+                    lineNumber: 254,
                     columnNumber: 37
                   },
                   globalThis
                 ) }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 303,
+                  lineNumber: 253,
                   columnNumber: 33
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 298,
+                lineNumber: 248,
                 columnNumber: 29
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-              lineNumber: 293,
+              lineNumber: 243,
               columnNumber: 25
             }, globalThis)
           ) : (
@@ -2358,235 +2717,443 @@ var require_js = __commonJS({
                 "! 👋"
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 320,
+                lineNumber: 270,
                 columnNumber: 33
               }, globalThis) }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 319,
+                lineNumber: 269,
                 columnNumber: 29
               }, globalThis),
-              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meals-visualization", children: [
-                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-pie-chart", children: [
-                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("svg", { className: "hero__pie-svg", width: "200", height: "200", viewBox: "0 0 42 42", children: [
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
-                      "circle",
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__nutrition-dashboard", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-progress-section", children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-status", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-current", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-number", children: nutritionSummary.calories }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 280,
+                        columnNumber: 45
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-unit", children: "cal" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 281,
+                        columnNumber: 45
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 279,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-divider", children: "of" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 283,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-target", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-number", children: nutritionSummary.goalCalories }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 285,
+                        columnNumber: 45
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__calorie-unit", children: "cal" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 286,
+                        columnNumber: 45
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 284,
+                      columnNumber: 41
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 278,
+                    columnNumber: 37
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__progress-container", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__progress-bar", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                        "div",
+                        {
+                          className: `hero__progress-fill ${nutritionSummary.calories > nutritionSummary.goalCalories ? "hero__progress-fill--over" : ""}`,
+                          style: {
+                            width: `${Math.min(nutritionSummary.calories / nutritionSummary.goalCalories * 100, 100)}%`
+                          }
+                        },
+                        void 0,
+                        false,
+                        {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 293,
+                          columnNumber: 45
+                        },
+                        globalThis
+                      ),
+                      nutritionSummary.calories > nutritionSummary.goalCalories && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                        "div",
+                        {
+                          className: "hero__progress-overflow",
+                          style: {
+                            width: `${Math.min((nutritionSummary.calories - nutritionSummary.goalCalories) / nutritionSummary.goalCalories * 100, 50)}%`
+                          }
+                        },
+                        void 0,
+                        false,
+                        {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 302,
+                          columnNumber: 49
+                        },
+                        globalThis
+                      )
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 292,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__progress-labels", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__progress-label hero__progress-label--start", children: "0" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 311,
+                        columnNumber: 45
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__progress-label hero__progress-label--target", children: "Target" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 312,
+                        columnNumber: 45
+                      }, globalThis),
+                      nutritionSummary.calories > nutritionSummary.goalCalories && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__progress-label hero__progress-label--over", children: [
+                        "+",
+                        nutritionSummary.calories - nutritionSummary.goalCalories
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 314,
+                        columnNumber: 49
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 310,
+                      columnNumber: 41
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 291,
+                    columnNumber: 37
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: `hero__calorie-status-message ${nutritionSummary.calories < nutritionSummary.goalCalories * 0.8 ? "hero__calorie-status--low" : nutritionSummary.calories > nutritionSummary.goalCalories * 1.1 ? "hero__calorie-status--high" : "hero__calorie-status--good"}`, children: [
+                    nutritionSummary.calories < nutritionSummary.goalCalories * 0.8 && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__status-icon", children: "🟡" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 327,
+                        columnNumber: 49
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
+                        "Need ",
+                        nutritionSummary.goalCalories - nutritionSummary.calories,
+                        " more calories"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 328,
+                        columnNumber: 49
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 326,
+                      columnNumber: 45
+                    }, globalThis),
+                    nutritionSummary.calories > nutritionSummary.goalCalories * 1.1 && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__status-icon", children: "🔴" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 333,
+                        columnNumber: 49
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
+                        nutritionSummary.calories - nutritionSummary.goalCalories,
+                        " calories over target"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 334,
+                        columnNumber: 49
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 332,
+                      columnNumber: 45
+                    }, globalThis),
+                    nutritionSummary.calories >= nutritionSummary.goalCalories * 0.8 && nutritionSummary.calories <= nutritionSummary.goalCalories * 1.1 && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__status-icon", children: "🟢" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 340,
+                        columnNumber: 49
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: "On track with your calorie goals!" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 341,
+                        columnNumber: 49
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 339,
+                      columnNumber: 45
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 320,
+                    columnNumber: 37
+                  }, globalThis)
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                  lineNumber: 277,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-cards", children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-card hero__macro-card--protein", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-header", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-icon", children: "💪" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 351,
+                        columnNumber: 45
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-name", children: "Protein" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 352,
+                        columnNumber: 45
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 350,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-values", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-current", children: [
+                        nutritionSummary.protein,
+                        "g"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 355,
+                        columnNumber: 45
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-target", children: [
+                        "/ ",
+                        nutritionSummary.goalProtein,
+                        "g"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 356,
+                        columnNumber: 45
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 354,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-progress", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                      "div",
                       {
-                        className: "hero__pie-bg",
-                        cx: "21",
-                        cy: "21",
-                        r: "15.91549430918954",
-                        fill: "transparent",
-                        stroke: "#e2e8f0",
-                        strokeWidth: "3"
+                        className: "hero__macro-progress-bar hero__macro-progress-bar--protein",
+                        style: { width: `${Math.min(nutritionSummary.protein / nutritionSummary.goalProtein * 100, 100)}%` }
                       },
                       void 0,
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 330,
-                        columnNumber: 41
+                        lineNumber: 359,
+                        columnNumber: 45
                       },
                       globalThis
-                    ),
-                    (() => {
-                      const total = nutritionSummary.protein + nutritionSummary.carbs + nutritionSummary.fat;
-                      if (total === 0)
-                        return null;
-                      const proteinPercentage = nutritionSummary.protein / total * 100;
-                      const carbsPercentage = nutritionSummary.carbs / total * 100;
-                      const fatPercentage = nutritionSummary.fat / total * 100;
-                      let cumulativePercentage = 0;
-                      const segments = [];
-                      if (proteinPercentage > 0) {
-                        segments.push(
-                          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
-                            "circle",
-                            {
-                              className: "hero__pie-segment hero__pie-segment--protein",
-                              cx: "21",
-                              cy: "21",
-                              r: "15.91549430918954",
-                              fill: "transparent",
-                              stroke: "#10b981",
-                              strokeWidth: "3",
-                              strokeDasharray: `${proteinPercentage} ${100 - proteinPercentage}`,
-                              strokeDashoffset: 25 - cumulativePercentage,
-                              transform: "rotate(-90 21 21)"
-                            },
-                            "protein",
-                            false,
-                            {
-                              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                              lineNumber: 355,
-                              columnNumber: 53
-                            },
-                            globalThis
-                          )
-                        );
-                        cumulativePercentage += proteinPercentage;
-                      }
-                      if (carbsPercentage > 0) {
-                        segments.push(
-                          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
-                            "circle",
-                            {
-                              className: "hero__pie-segment hero__pie-segment--carbs",
-                              cx: "21",
-                              cy: "21",
-                              r: "15.91549430918954",
-                              fill: "transparent",
-                              stroke: "#f59e0b",
-                              strokeWidth: "3",
-                              strokeDasharray: `${carbsPercentage} ${100 - carbsPercentage}`,
-                              strokeDashoffset: 25 - cumulativePercentage,
-                              transform: "rotate(-90 21 21)"
-                            },
-                            "carbs",
-                            false,
-                            {
-                              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                              lineNumber: 375,
-                              columnNumber: 53
-                            },
-                            globalThis
-                          )
-                        );
-                        cumulativePercentage += carbsPercentage;
-                      }
-                      if (fatPercentage > 0) {
-                        segments.push(
-                          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
-                            "circle",
-                            {
-                              className: "hero__pie-segment hero__pie-segment--fat",
-                              cx: "21",
-                              cy: "21",
-                              r: "15.91549430918954",
-                              fill: "transparent",
-                              stroke: "#ec4899",
-                              strokeWidth: "3",
-                              strokeDasharray: `${fatPercentage} ${100 - fatPercentage}`,
-                              strokeDashoffset: 25 - cumulativePercentage,
-                              transform: "rotate(-90 21 21)"
-                            },
-                            "fat",
-                            false,
-                            {
-                              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                              lineNumber: 395,
-                              columnNumber: 53
-                            },
-                            globalThis
-                          )
-                        );
-                      }
-                      return segments;
-                    })(),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("text", { x: "21", y: "22", textAnchor: "middle", className: "hero__pie-calories", children: nutritionSummary.calories }, void 0, false, {
+                    ) }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 415,
+                      lineNumber: 358,
                       columnNumber: 41
                     }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("text", { x: "21", y: "29", textAnchor: "middle", className: "hero__pie-calories-label", children: "calories" }, void 0, false, {
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-percentage", children: [
+                      Math.round(nutritionSummary.protein / nutritionSummary.goalProtein * 100),
+                      "%"
+                    ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 418,
+                      lineNumber: 364,
                       columnNumber: 41
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 328,
+                    lineNumber: 349,
                     columnNumber: 37
                   }, globalThis),
-                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-legend", children: [
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__legend-item hero__legend-item--protein", children: [
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-color" }, void 0, false, {
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-card hero__macro-card--carbs", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-header", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-icon", children: "🍞" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 426,
+                        lineNumber: 371,
                         columnNumber: 45
                       }, globalThis),
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-label", children: "Protein" }, void 0, false, {
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-name", children: "Carbs" }, void 0, false, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 427,
-                        columnNumber: 45
-                      }, globalThis),
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-value", children: [
-                        nutritionSummary.protein,
-                        "g"
-                      ] }, void 0, true, {
-                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 428,
+                        lineNumber: 372,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 425,
+                      lineNumber: 370,
                       columnNumber: 41
                     }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__legend-item hero__legend-item--carbs", children: [
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-color" }, void 0, false, {
-                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 431,
-                        columnNumber: 45
-                      }, globalThis),
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-label", children: "Carbs" }, void 0, false, {
-                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 432,
-                        columnNumber: 45
-                      }, globalThis),
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-value", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-values", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-current", children: [
                         nutritionSummary.carbs,
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 433,
-                        columnNumber: 45
-                      }, globalThis)
-                    ] }, void 0, true, {
-                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 430,
-                      columnNumber: 41
-                    }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__legend-item hero__legend-item--fat", children: [
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-color" }, void 0, false, {
-                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 436,
+                        lineNumber: 375,
                         columnNumber: 45
                       }, globalThis),
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-label", children: "Fat" }, void 0, false, {
-                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 437,
-                        columnNumber: 45
-                      }, globalThis),
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__legend-value", children: [
-                        nutritionSummary.fat,
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-target", children: [
+                        "/ ",
+                        nutritionSummary.goalCarbs,
                         "g"
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 438,
+                        lineNumber: 376,
                         columnNumber: 45
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 435,
+                      lineNumber: 374,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-progress", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                      "div",
+                      {
+                        className: "hero__macro-progress-bar hero__macro-progress-bar--carbs",
+                        style: { width: `${Math.min(nutritionSummary.carbs / nutritionSummary.goalCarbs * 100, 100)}%` }
+                      },
+                      void 0,
+                      false,
+                      {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 379,
+                        columnNumber: 45
+                      },
+                      globalThis
+                    ) }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 378,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-percentage", children: [
+                      Math.round(nutritionSummary.carbs / nutritionSummary.goalCarbs * 100),
+                      "%"
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 384,
                       columnNumber: 41
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 424,
+                    lineNumber: 369,
+                    columnNumber: 37
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-card hero__macro-card--fat", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-header", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-icon", children: "🥑" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 391,
+                        columnNumber: 45
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-name", children: "Fat" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 392,
+                        columnNumber: 45
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 390,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-values", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-current", children: [
+                        nutritionSummary.fat,
+                        "g"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 395,
+                        columnNumber: 45
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__macro-target", children: [
+                        "/ ",
+                        nutritionSummary.goalFat,
+                        "g"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 396,
+                        columnNumber: 45
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 394,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-progress", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                      "div",
+                      {
+                        className: "hero__macro-progress-bar hero__macro-progress-bar--fat",
+                        style: { width: `${Math.min(nutritionSummary.fat / nutritionSummary.goalFat * 100, 100)}%` }
+                      },
+                      void 0,
+                      false,
+                      {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 399,
+                        columnNumber: 45
+                      },
+                      globalThis
+                    ) }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 398,
+                      columnNumber: 41
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__macro-percentage", children: [
+                      Math.round(nutritionSummary.fat / nutritionSummary.goalFat * 100),
+                      "%"
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 404,
+                      columnNumber: 41
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 389,
                     columnNumber: 37
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 327,
+                  lineNumber: 348,
                   columnNumber: 33
+                }, globalThis),
+                calorieData.recommendation && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: `hero__goal-recommendation hero__goal-recommendation--${calorieData.recommendation.type}`, children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__recommendation-icon", children: [
+                    calorieData.recommendation.type === "loss" && "📉",
+                    calorieData.recommendation.type === "gain" && "📈",
+                    calorieData.recommendation.type === "maintain" && "⚖️"
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 413,
+                    columnNumber: 41
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__recommendation-text", children: calorieData.recommendation.message }, void 0, false, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 418,
+                    columnNumber: 41
+                  }, globalThis)
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                  lineNumber: 412,
+                  columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meals-list", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { className: "hero__meals-title", children: "Today's Meals" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 445,
+                    lineNumber: 426,
                     columnNumber: 37
                   }, globalThis),
-                  todaysMeals.length > 0 ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meals-grid", children: todaysMeals.map((meal, index2) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meal-card", children: [
+                  todaysMeals.length > 0 ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meals-grid", children: todaysMeals.map((meal, index2) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meal-card hero__meal-card--compact", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meal-header", children: [
                       /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__meal-type", children: [
                         meal.mealType === "breakfast" && "🌅",
@@ -2596,44 +3163,39 @@ var require_js = __commonJS({
                         meal.mealType
                       ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 451,
+                        lineNumber: 432,
                         columnNumber: 57
                       }, globalThis),
-                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__meal-time", children: meal.time }, void 0, false, {
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__meal-calories", children: [
+                        meal.calories,
+                        " cal"
+                      ] }, void 0, true, {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 458,
+                        lineNumber: 439,
                         columnNumber: 57
                       }, globalThis)
                     ] }, void 0, true, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 450,
+                      lineNumber: 431,
                       columnNumber: 53
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meal-name", children: meal.name }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 460,
-                      columnNumber: 53
-                    }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__meal-calories", children: [
-                      meal.calories,
-                      " cal"
-                    ] }, void 0, true, {
-                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 461,
+                      lineNumber: 441,
                       columnNumber: 53
                     }, globalThis)
                   ] }, meal.id, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 449,
+                    lineNumber: 430,
                     columnNumber: 49
                   }, globalThis)) }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 447,
+                    lineNumber: 428,
                     columnNumber: 41
                   }, globalThis) : /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__no-meals", children: [
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { children: "No meals tracked today yet" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                      lineNumber: 467,
+                      lineNumber: 447,
                       columnNumber: 45
                     }, globalThis),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -2647,38 +3209,337 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                        lineNumber: 468,
+                        lineNumber: 448,
                         columnNumber: 45
                       },
                       globalThis
                     )
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                    lineNumber: 466,
+                    lineNumber: 446,
                     columnNumber: 41
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                  lineNumber: 444,
+                  lineNumber: 425,
                   columnNumber: 33
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-                lineNumber: 325,
+                lineNumber: 275,
                 columnNumber: 29
+              }, globalThis),
+              calorieData.hasProfile ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-tracking", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__metabolic-dashboard", children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__metabolic-header", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h4", { className: "hero__metabolic-title", children: "📊 Your Metabolic Profile" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 464,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "hero__metabolic-subtitle", children: "Understanding your body's energy needs" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 465,
+                      columnNumber: 45
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 463,
+                    columnNumber: 41
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__metabolic-visual", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-flow", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-node hero__energy-node--bmr", children: [
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-pulse" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 472,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-icon", children: "🔥" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 473,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-label", children: "BMR" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 474,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-value", children: Math.round(((_c = calorieData.calculation) == null ? void 0 : _c.bmr) || 0) }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 475,
+                          columnNumber: 53
+                        }, globalThis)
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 471,
+                        columnNumber: 49
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-arrow", children: [
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-line" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 479,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-tip" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 480,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__energy-multiplier", children: [
+                          "x ",
+                          ((_d = calorieData.calculation) == null ? void 0 : _d.tdee) && ((_e = calorieData.calculation) == null ? void 0 : _e.bmr) ? (calorieData.calculation.tdee / calorieData.calculation.bmr).toFixed(2) : "1.0"
+                        ] }, void 0, true, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 481,
+                          columnNumber: 53
+                        }, globalThis)
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 478,
+                        columnNumber: 49
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-node hero__energy-node--tdee", children: [
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-pulse hero__energy-pulse--delayed" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 485,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-icon", children: "⚡" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 486,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-label", children: "TDEE" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 487,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__energy-value", children: Math.round(((_f = calorieData.calculation) == null ? void 0 : _f.tdee) || 0) }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 488,
+                          columnNumber: 53
+                        }, globalThis)
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 484,
+                        columnNumber: 49
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 470,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__metabolic-insights", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__insight-item", children: [
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-icon", children: "🛌" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 495,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-text", children: [
+                          "At rest: ",
+                          Math.round(((_g = calorieData.calculation) == null ? void 0 : _g.bmr) || 0),
+                          " cal/day"
+                        ] }, void 0, true, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 496,
+                          columnNumber: 53
+                        }, globalThis)
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 494,
+                        columnNumber: 49
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__insight-item", children: [
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-icon", children: "🏃‍♂️" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 499,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-text", children: [
+                          "Active: +",
+                          Math.round((((_h = calorieData.calculation) == null ? void 0 : _h.tdee) || 0) - (((_i = calorieData.calculation) == null ? void 0 : _i.bmr) || 0)),
+                          " cal/day"
+                        ] }, void 0, true, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 500,
+                          columnNumber: 53
+                        }, globalThis)
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 498,
+                        columnNumber: 49
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__insight-item", children: [
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-icon", children: "🎯" }, void 0, false, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 503,
+                          columnNumber: 53
+                        }, globalThis),
+                        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "hero__insight-text", children: [
+                          "Target: ",
+                          calorieData.targetCalories,
+                          " cal/day"
+                        ] }, void 0, true, {
+                          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                          lineNumber: 504,
+                          columnNumber: 53
+                        }, globalThis)
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 502,
+                        columnNumber: 49
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 493,
+                      columnNumber: 45
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 468,
+                    columnNumber: 41
+                  }, globalThis)
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                  lineNumber: 462,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-overview", children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-card hero__calorie-card--target", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-label", children: "Target Calories" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 512,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-value", children: calorieData.targetCalories.toLocaleString() }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 513,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-subtext", children: (_j = calorieData.recommendation) == null ? void 0 : _j.weeklyGoal }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 514,
+                      columnNumber: 45
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 511,
+                    columnNumber: 41
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-card hero__calorie-card--current", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-label", children: "Current Intake" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 520,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-value", children: calorieData.currentCalories.toLocaleString() }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 521,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-subtext", children: calorieData.remainingCalories > 0 ? `${calorieData.remainingCalories} remaining` : `${Math.abs(calorieData.remainingCalories)} over` }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 522,
+                      columnNumber: 45
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 519,
+                    columnNumber: 41
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-card hero__calorie-card--progress", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-label", children: "Progress" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 531,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-value", children: [
+                      calorieData.percentageConsumed,
+                      "%"
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 532,
+                      columnNumber: 45
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__calorie-progress-bar", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                      "div",
+                      {
+                        className: "hero__calorie-progress-fill",
+                        style: { width: `${Math.min(calorieData.percentageConsumed, 100)}%` }
+                      },
+                      void 0,
+                      false,
+                      {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                        lineNumber: 534,
+                        columnNumber: 49
+                      },
+                      globalThis
+                    ) }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                      lineNumber: 533,
+                      columnNumber: 45
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 530,
+                    columnNumber: 41
+                  }, globalThis)
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                  lineNumber: 510,
+                  columnNumber: 37
+                }, globalThis)
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                lineNumber: 460,
+                columnNumber: 33
+              }, globalThis) : /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__setup-profile", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "hero__setup-icon", children: "⚙️" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                  lineNumber: 544,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "hero__setup-message", children: "Complete your profile to see personalized calorie targets" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                  lineNumber: 545,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "button",
+                  {
+                    className: "hero__setup-btn",
+                    onClick: () => window.location.href = "/profile",
+                    children: "Setup Profile"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                    lineNumber: 548,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
+                lineNumber: 543,
+                columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-              lineNumber: 318,
+              lineNumber: 268,
               columnNumber: 25
             }, globalThis)
           ) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-            lineNumber: 290,
+            lineNumber: 240,
             columnNumber: 17
           }, globalThis) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-            lineNumber: 289,
+            lineNumber: 239,
             columnNumber: 13
           }, globalThis)
         },
@@ -2686,7 +3547,7 @@ var require_js = __commonJS({
         false,
         {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/sections/Hero.tsx",
-          lineNumber: 282,
+          lineNumber: 232,
           columnNumber: 9
         },
         globalThis
@@ -2696,22 +3557,47 @@ var require_js = __commonJS({
     const AddMeals = () => {
       const pageRef = reactExports.useRef(null);
       const { setCurrentSection } = useContentManager();
-      useAuth();
-      const [meals, setMeals] = reactExports.useState([]);
-      reactExports.useState(false);
+      const { todaysMeals, calorieData, refreshData } = useCalorieTracker();
+      const { user } = useAuth();
       const [searchQuery, setSearchQuery] = reactExports.useState("");
       const [selectedMealType, setSelectedMealType] = reactExports.useState("breakfast");
       const [showQuickAdd, setShowQuickAdd] = reactExports.useState(false);
-      const [nutritionSummary, setNutritionSummary] = reactExports.useState({
-        totalCalories: 0,
-        totalProtein: 0,
-        totalCarbs: 0,
-        totalFat: 0,
-        goalCalories: 2e3,
-        goalProtein: 150,
-        goalCarbs: 250,
-        goalFat: 65
+      const [showCustomEntry, setShowCustomEntry] = reactExports.useState(false);
+      const [isSubmitting, setIsSubmitting] = reactExports.useState(false);
+      const [submitMessage, setSubmitMessage] = reactExports.useState(null);
+      const [autocompleteQuery, setAutocompleteQuery] = reactExports.useState("");
+      const [searchResults, setSearchResults] = reactExports.useState([]);
+      const [showAutocomplete, setShowAutocomplete] = reactExports.useState(false);
+      const [selectedMealTypeForSearch, setSelectedMealTypeForSearch] = reactExports.useState("breakfast");
+      const [isSearching, setIsSearching] = reactExports.useState(false);
+      const autocompleteRef = reactExports.useRef(null);
+      const [customMealForm, setCustomMealForm] = reactExports.useState({
+        mealName: "",
+        mealType: "breakfast",
+        calories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
+        fiber: "",
+        sugar: "",
+        sodium: "",
+        notes: "",
+        time: "",
+        saveMeal: false
       });
+      const nutritionSummary = {
+        totalCalories: calorieData.currentCalories,
+        totalProtein: todaysMeals.reduce((sum, meal) => sum + meal.protein, 0),
+        totalCarbs: todaysMeals.reduce((sum, meal) => sum + meal.carbs, 0),
+        totalFat: todaysMeals.reduce((sum, meal) => sum + meal.fat, 0),
+        goalCalories: calorieData.targetCalories,
+        goalProtein: Math.round(calorieData.targetCalories * 0.3 / 4),
+        // 30% of calories from protein
+        goalCarbs: Math.round(calorieData.targetCalories * 0.45 / 4),
+        // 45% of calories from carbs
+        goalFat: Math.round(calorieData.targetCalories * 0.25 / 9)
+        // 25% of calories from fat
+      };
       const quickAddFoods = [
         { name: "Banana", calories: 105, protein: 1.3, carbs: 27, fat: 0.4 },
         { name: "Chicken Breast (100g)", calories: 165, protein: 31, carbs: 0, fat: 3.6 },
@@ -2724,97 +3610,454 @@ var require_js = __commonJS({
       ];
       reactExports.useEffect(() => {
         setCurrentSection("add-meals");
-        const sampleMeals = [
-          {
-            id: "1",
-            name: "Oatmeal with Banana",
-            calories: 259,
-            protein: 7.3,
-            carbs: 55,
-            fat: 3.4,
-            timestamp: /* @__PURE__ */ new Date(),
-            mealType: "breakfast"
-          },
-          {
-            id: "2",
-            name: "Grilled Chicken Salad",
-            calories: 285,
-            protein: 35,
-            carbs: 12,
-            fat: 8,
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1e3),
-            // 2 hours ago
-            mealType: "lunch"
-          }
-        ];
-        setMeals(sampleMeals);
-        updateNutritionSummary(sampleMeals);
       }, [setCurrentSection]);
-      const updateNutritionSummary = (mealList) => {
-        const today = /* @__PURE__ */ new Date();
-        today.setHours(0, 0, 0, 0);
-        const todaysMeals = mealList.filter((meal) => {
-          const mealDate = new Date(meal.timestamp);
-          mealDate.setHours(0, 0, 0, 0);
-          return mealDate.getTime() === today.getTime();
-        });
-        const summary = todaysMeals.reduce(
-          (acc, meal) => __spreadProps(__spreadValues({}, acc), {
-            totalCalories: acc.totalCalories + meal.calories,
-            totalProtein: acc.totalProtein + meal.protein,
-            totalCarbs: acc.totalCarbs + meal.carbs,
-            totalFat: acc.totalFat + meal.fat
-          }),
-          {
-            totalCalories: 0,
-            totalProtein: 0,
-            totalCarbs: 0,
-            totalFat: 0,
-            goalCalories: nutritionSummary.goalCalories,
-            goalProtein: nutritionSummary.goalProtein,
-            goalCarbs: nutritionSummary.goalCarbs,
-            goalFat: nutritionSummary.goalFat
+      const debouncedSearch = reactExports.useCallback(
+        (query) => __async(exports, null, function* () {
+          if (!query.trim() || !user) {
+            setSearchResults([]);
+            setShowAutocomplete(false);
+            return;
           }
-        );
-        setNutritionSummary(summary);
-      };
-      const addMeal = (food) => {
-        const newMeal = {
-          id: Date.now().toString(),
+          setIsSearching(true);
+          try {
+            const { data, error } = yield SupabaseService$1.searchFoodsAndCustomMeals(user.id, query.trim(), 5);
+            if (error) {
+              console.error("Search error:", error);
+              setSearchResults([]);
+            } else {
+              setSearchResults(data);
+              setShowAutocomplete(data.length > 0);
+            }
+          } catch (error) {
+            console.error("Search failed:", error);
+            setSearchResults([]);
+          } finally {
+            setIsSearching(false);
+          }
+        }),
+        [user]
+      );
+      reactExports.useEffect(() => {
+        const timer = setTimeout(() => {
+          if (autocompleteQuery.length >= 2) {
+            debouncedSearch(autocompleteQuery);
+          } else {
+            setSearchResults([]);
+            setShowAutocomplete(false);
+          }
+        }, 300);
+        return () => clearTimeout(timer);
+      }, [autocompleteQuery, debouncedSearch]);
+      reactExports.useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
+            setShowAutocomplete(false);
+          }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+      }, []);
+      const addMeal = (food) => __async(exports, null, function* () {
+        console.log("Adding meal to database:", {
           name: food.name,
           calories: food.calories,
           protein: food.protein,
           carbs: food.carbs,
           fat: food.fat,
-          timestamp: /* @__PURE__ */ new Date(),
           mealType: selectedMealType
-        };
-        const updatedMeals = [...meals, newMeal];
-        setMeals(updatedMeals);
-        updateNutritionSummary(updatedMeals);
+        });
+        yield refreshData();
         setShowQuickAdd(false);
-      };
-      const removeMeal = (mealId) => {
-        const updatedMeals = meals.filter((meal) => meal.id !== mealId);
-        setMeals(updatedMeals);
-        updateNutritionSummary(updatedMeals);
-      };
+      });
+      const addMealFromSearch = (searchResult) => __async(exports, null, function* () {
+        if (!user)
+          return;
+        try {
+          const currentDate = /* @__PURE__ */ new Date();
+          const dateStr = currentDate.toISOString().split("T")[0];
+          const timeStr = currentDate.toTimeString().split(" ")[0].substring(0, 5);
+          const calories = Math.round(searchResult.calories_per_100g);
+          const protein = searchResult.protein_g;
+          const carbs = searchResult.carbohydrates_g;
+          const fat = searchResult.fats_g;
+          const fiber = searchResult.fiber_g || 0;
+          const sugar = searchResult.free_sugar_g || 0;
+          const sodium = searchResult.sodium_mg || 0;
+          const mealData = {
+            user_id: user.id,
+            meal_type: selectedMealTypeForSearch,
+            meal_name: searchResult.name,
+            date: dateStr,
+            time: timeStr,
+            foods: {
+              [searchResult.source]: {
+                id: searchResult.id,
+                name: searchResult.name,
+                calories,
+                protein,
+                carbs,
+                fat,
+                fiber,
+                sugar,
+                sodium,
+                serving: "100g"
+              }
+            },
+            total_calories: calories,
+            total_protein_g: protein,
+            total_carbs_g: carbs,
+            total_fat_g: fat,
+            total_fiber_g: fiber,
+            total_sugar_g: sugar,
+            total_sodium_mg: sodium
+          };
+          const { error } = yield SupabaseService$1.addMeal(mealData);
+          if (error) {
+            console.error("Error adding meal from search:", error);
+            setSubmitMessage({ text: "Failed to add meal. Please try again.", type: "error" });
+          } else {
+            setSubmitMessage({ text: `${searchResult.name} added successfully!`, type: "success" });
+            setAutocompleteQuery("");
+            setShowAutocomplete(false);
+            yield refreshData();
+            setTimeout(() => {
+              setSubmitMessage(null);
+            }, 3e3);
+          }
+        } catch (error) {
+          console.error("Error adding meal from search:", error);
+          setSubmitMessage({ text: "An unexpected error occurred. Please try again.", type: "error" });
+        }
+      });
+      const removeMeal = (mealId) => __async(exports, null, function* () {
+        console.log("Removing meal from database:", mealId);
+        yield refreshData();
+      });
       const filteredFoods = quickAddFoods.filter(
         (food) => food.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       const getMealsByType = (type) => {
-        const today = /* @__PURE__ */ new Date();
-        today.setHours(0, 0, 0, 0);
-        return meals.filter((meal) => {
-          const mealDate = new Date(meal.timestamp);
-          mealDate.setHours(0, 0, 0, 0);
-          return meal.mealType === type && mealDate.getTime() === today.getTime();
-        });
+        return todaysMeals.filter((meal) => meal.mealType === type);
       };
-      const getProgressPercentage = (current, goal) => {
+      const getProgressPercentage2 = (current, goal) => {
         return Math.min(current / goal * 100, 100);
       };
+      const handleCustomMealSubmit = (e) => __async(exports, null, function* () {
+        e.preventDefault();
+        if (!user) {
+          setSubmitMessage({ text: "Please log in to add meals", type: "error" });
+          return;
+        }
+        if (!customMealForm.mealName.trim() || !customMealForm.calories) {
+          setSubmitMessage({ text: "Please fill in meal name and calories", type: "error" });
+          return;
+        }
+        setIsSubmitting(true);
+        setSubmitMessage(null);
+        try {
+          const calories = parseFloat(customMealForm.calories) || 0;
+          const protein = parseFloat(customMealForm.protein) || 0;
+          const carbs = parseFloat(customMealForm.carbs) || 0;
+          const fat = parseFloat(customMealForm.fat) || 0;
+          const fiber = parseFloat(customMealForm.fiber) || 0;
+          const sugar = parseFloat(customMealForm.sugar) || 0;
+          const sodium = parseFloat(customMealForm.sodium) || 0;
+          const currentDate = /* @__PURE__ */ new Date();
+          const dateStr = currentDate.toISOString().split("T")[0];
+          const timeStr = customMealForm.time || currentDate.toTimeString().split(" ")[0].substring(0, 5);
+          const mealData = {
+            user_id: user.id,
+            meal_type: customMealForm.mealType,
+            meal_name: customMealForm.mealName.trim(),
+            date: dateStr,
+            time: timeStr,
+            foods: {
+              custom: {
+                name: customMealForm.mealName.trim(),
+                calories,
+                protein,
+                carbs,
+                fat,
+                fiber,
+                sugar,
+                sodium,
+                notes: customMealForm.notes
+              }
+            },
+            total_calories: Math.round(calories),
+            total_protein_g: protein,
+            total_carbs_g: carbs,
+            total_fat_g: fat,
+            total_fiber_g: fiber,
+            total_sugar_g: sugar,
+            total_sodium_mg: sodium,
+            notes: customMealForm.notes
+          };
+          const { error: mealError } = yield SupabaseService$1.addMeal(mealData);
+          if (mealError) {
+            console.error("Error adding meal:", mealError);
+            setSubmitMessage({ text: "Failed to add meal. Please try again.", type: "error" });
+            return;
+          }
+          if (customMealForm.saveMeal) {
+            const { exists, error: checkError } = yield SupabaseService$1.checkCustomMealExists(
+              user.id,
+              customMealForm.mealName.trim(),
+              calories,
+              protein,
+              carbs,
+              fat
+            );
+            if (checkError) {
+              console.error("Error checking custom meal existence:", checkError);
+              setSubmitMessage({ text: "Meal added, but failed to save for future reference", type: "info" });
+            } else if (exists) {
+              setSubmitMessage({ text: "Meal added! This meal is already saved for future reference.", type: "success" });
+            } else {
+              const customMealData = {
+                name: customMealForm.mealName.trim(),
+                calories_per_100g: calories,
+                protein_g: protein,
+                carbohydrates_g: carbs,
+                fats_g: fat,
+                fiber_g: fiber,
+                free_sugar_g: sugar,
+                sodium_mg: sodium,
+                submitted_by: user.id,
+                status: "pending"
+              };
+              const { error: customMealError } = yield SupabaseService$1.addCustomMeal(customMealData);
+              if (customMealError) {
+                console.error("Error adding custom meal:", customMealError);
+                setSubmitMessage({ text: "Meal added, but failed to save for future reference", type: "info" });
+              } else {
+                setSubmitMessage({ text: "Meal added successfully and saved for future reference!", type: "success" });
+              }
+            }
+          } else {
+            setSubmitMessage({ text: "Meal added successfully!", type: "success" });
+          }
+          setCustomMealForm({
+            mealName: "",
+            mealType: "breakfast",
+            calories: "",
+            protein: "",
+            carbs: "",
+            fat: "",
+            fiber: "",
+            sugar: "",
+            sodium: "",
+            notes: "",
+            time: "",
+            saveMeal: false
+          });
+          yield refreshData();
+          setTimeout(() => {
+            setSubmitMessage(null);
+          }, 3e3);
+        } catch (error) {
+          console.error("Error submitting custom meal:", error);
+          setSubmitMessage({ text: "An unexpected error occurred. Please try again.", type: "error" });
+        } finally {
+          setIsSubmitting(false);
+        }
+      });
       return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("section", { ref: pageRef, id: "add-meals", className: "add-meals", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__container", children: [
+        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__search-section", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__search-container", ref: autocompleteRef, children: [
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__search-input-row", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "input",
+                {
+                  type: "text",
+                  placeholder: "Search foods and meals...",
+                  value: autocompleteQuery,
+                  onChange: (e) => {
+                    setAutocompleteQuery(e.target.value);
+                    if (e.target.value.length >= 2) {
+                      setShowAutocomplete(true);
+                    }
+                  },
+                  onFocus: () => {
+                    if (autocompleteQuery.length >= 2 && searchResults.length > 0) {
+                      setShowAutocomplete(true);
+                    }
+                  },
+                  className: "add-meals__autocomplete-input"
+                },
+                void 0,
+                false,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 440,
+                  columnNumber: 29
+                },
+                globalThis
+              ),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "select",
+                {
+                  value: selectedMealTypeForSearch,
+                  onChange: (e) => setSelectedMealTypeForSearch(e.target.value),
+                  className: "add-meals__meal-type-select",
+                  children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "breakfast", children: "🌅 Breakfast" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 462,
+                      columnNumber: 33
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "lunch", children: "☀️ Lunch" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 463,
+                      columnNumber: 33
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "dinner", children: "🌙 Dinner" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 464,
+                      columnNumber: 33
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "snack", children: "🍿 Snack" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 465,
+                      columnNumber: 33
+                    }, globalThis)
+                  ]
+                },
+                void 0,
+                true,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 457,
+                  columnNumber: 29
+                },
+                globalThis
+              )
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 439,
+              columnNumber: 25
+            }, globalThis),
+            showAutocomplete && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__autocomplete-dropdown", children: isSearching ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__autocomplete-loading", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: "Searching..." }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 474,
+              columnNumber: 41
+            }, globalThis) }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 473,
+              columnNumber: 37
+            }, globalThis) : searchResults.length > 0 ? searchResults.map((result) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+              "div",
+              {
+                className: "add-meals__autocomplete-item",
+                onClick: () => addMealFromSearch(result),
+                children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__autocomplete-item-content", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__autocomplete-item-header", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "add-meals__autocomplete-item-name", children: result.name }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                        lineNumber: 485,
+                        columnNumber: 53
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "add-meals__autocomplete-item-source", children: result.source === "custom_meals" ? "👤 Custom" : "🍎 Standard" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                        lineNumber: 486,
+                        columnNumber: 53
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 484,
+                      columnNumber: 49
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__autocomplete-item-nutrition", children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
+                        Math.round(result.calories_per_100g),
+                        " cal"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                        lineNumber: 491,
+                        columnNumber: 53
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
+                        result.protein_g,
+                        "g protein"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                        lineNumber: 492,
+                        columnNumber: 53
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
+                        result.carbohydrates_g,
+                        "g carbs"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                        lineNumber: 493,
+                        columnNumber: 53
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
+                        result.fats_g,
+                        "g fat"
+                      ] }, void 0, true, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                        lineNumber: 494,
+                        columnNumber: 53
+                      }, globalThis)
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 490,
+                      columnNumber: 49
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 483,
+                    columnNumber: 45
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("button", { className: "add-meals__autocomplete-add-btn", children: "+" }, void 0, false, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 497,
+                    columnNumber: 45
+                  }, globalThis)
+                ]
+              },
+              `${result.source}-${result.id}`,
+              true,
+              {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 478,
+                columnNumber: 41
+              },
+              globalThis
+            )) : autocompleteQuery.length >= 2 ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__autocomplete-empty", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
+              'No foods found for "',
+              autocompleteQuery,
+              '"'
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 504,
+              columnNumber: 41
+            }, globalThis) }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 503,
+              columnNumber: 37
+            }, globalThis) : null }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 471,
+              columnNumber: 29
+            }, globalThis)
+          ] }, void 0, true, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+            lineNumber: 438,
+            columnNumber: 21
+          }, globalThis),
+          submitMessage && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: `add-meals__message add-meals__message--${submitMessage.type}`, children: submitMessage.text }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+            lineNumber: 513,
+            columnNumber: 25
+          }, globalThis)
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+          lineNumber: 437,
+          columnNumber: 17
+        }, globalThis),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__quick-actions", children: [
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
             "button",
@@ -2827,30 +4070,36 @@ var require_js = __commonJS({
             false,
             {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 192,
+              lineNumber: 521,
               columnNumber: 21
             },
             globalThis
           ),
-          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("button", { className: "add-meals__quick-btn", children: "🔍 Search Foods" }, void 0, false, {
-            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 198,
-            columnNumber: 21
-          }, globalThis),
-          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("button", { className: "add-meals__quick-btn", children: "📊 Custom Entry" }, void 0, false, {
-            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 201,
-            columnNumber: 21
-          }, globalThis)
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+            "button",
+            {
+              className: "add-meals__quick-btn",
+              onClick: () => setShowCustomEntry(!showCustomEntry),
+              children: "📊 Custom Entry"
+            },
+            void 0,
+            false,
+            {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 527,
+              columnNumber: 21
+            },
+            globalThis
+          )
         ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-          lineNumber: 191,
+          lineNumber: 520,
           columnNumber: 17
         }, globalThis),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__nutrition-summary", children: [
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "add-meals__section-title", children: "Today's Nutrition" }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 208,
+            lineNumber: 537,
             columnNumber: 21
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__nutrition-visual", children: [
@@ -2866,7 +4115,7 @@ var require_js = __commonJS({
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 214,
+                    lineNumber: 543,
                     columnNumber: 37
                   },
                   globalThis
@@ -2875,51 +4124,51 @@ var require_js = __commonJS({
                   "path",
                   {
                     className: "add-meals__circle-progress add-meals__circle-progress--calories",
-                    strokeDasharray: `${getProgressPercentage(nutritionSummary.totalCalories, nutritionSummary.goalCalories)}, 100`,
+                    strokeDasharray: `${getProgressPercentage2(nutritionSummary.totalCalories, nutritionSummary.goalCalories)}, 100`,
                     d: "M18 2.0845\r\n                                           a 15.9155 15.9155 0 0 1 0 31.831\r\n                                           a 15.9155 15.9155 0 0 1 0 -31.831"
                   },
                   void 0,
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 219,
+                    lineNumber: 548,
                     columnNumber: 37
                   },
                   globalThis
                 )
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 213,
+                lineNumber: 542,
                 columnNumber: 33
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-content", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-icon", children: "🔥" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 227,
+                  lineNumber: 556,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-value", children: Math.round(nutritionSummary.totalCalories) }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 228,
+                  lineNumber: 557,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-label", children: "Calories" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 229,
+                  lineNumber: 558,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 226,
+                lineNumber: 555,
                 columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 212,
+              lineNumber: 541,
               columnNumber: 29
             }, globalThis) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 211,
+              lineNumber: 540,
               columnNumber: 25
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__macro-circle", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-container", children: [
@@ -2934,7 +4183,7 @@ var require_js = __commonJS({
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 238,
+                    lineNumber: 567,
                     columnNumber: 37
                   },
                   globalThis
@@ -2943,27 +4192,27 @@ var require_js = __commonJS({
                   "path",
                   {
                     className: "add-meals__circle-progress add-meals__circle-progress--protein",
-                    strokeDasharray: `${getProgressPercentage(nutritionSummary.totalProtein, nutritionSummary.goalProtein)}, 100`,
+                    strokeDasharray: `${getProgressPercentage2(nutritionSummary.totalProtein, nutritionSummary.goalProtein)}, 100`,
                     d: "M18 2.0845\r\n                                           a 15.9155 15.9155 0 0 1 0 31.831\r\n                                           a 15.9155 15.9155 0 0 1 0 -31.831"
                   },
                   void 0,
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 243,
+                    lineNumber: 572,
                     columnNumber: 37
                   },
                   globalThis
                 )
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 237,
+                lineNumber: 566,
                 columnNumber: 33
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-content", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-icon", children: "💪" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 251,
+                  lineNumber: 580,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-value", children: [
@@ -2971,26 +4220,26 @@ var require_js = __commonJS({
                   "g"
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 252,
+                  lineNumber: 581,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-label", children: "Protein" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 253,
+                  lineNumber: 582,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 250,
+                lineNumber: 579,
                 columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 236,
+              lineNumber: 565,
               columnNumber: 29
             }, globalThis) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 235,
+              lineNumber: 564,
               columnNumber: 25
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__macro-circle", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-container", children: [
@@ -3005,7 +4254,7 @@ var require_js = __commonJS({
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 262,
+                    lineNumber: 591,
                     columnNumber: 37
                   },
                   globalThis
@@ -3014,27 +4263,27 @@ var require_js = __commonJS({
                   "path",
                   {
                     className: "add-meals__circle-progress add-meals__circle-progress--carbs",
-                    strokeDasharray: `${getProgressPercentage(nutritionSummary.totalCarbs, nutritionSummary.goalCarbs)}, 100`,
+                    strokeDasharray: `${getProgressPercentage2(nutritionSummary.totalCarbs, nutritionSummary.goalCarbs)}, 100`,
                     d: "M18 2.0845\r\n                                           a 15.9155 15.9155 0 0 1 0 31.831\r\n                                           a 15.9155 15.9155 0 0 1 0 -31.831"
                   },
                   void 0,
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 267,
+                    lineNumber: 596,
                     columnNumber: 37
                   },
                   globalThis
                 )
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 261,
+                lineNumber: 590,
                 columnNumber: 33
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-content", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-icon", children: "🌾" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 275,
+                  lineNumber: 604,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-value", children: [
@@ -3042,26 +4291,26 @@ var require_js = __commonJS({
                   "g"
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 276,
+                  lineNumber: 605,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-label", children: "Carbs" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 277,
+                  lineNumber: 606,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 274,
+                lineNumber: 603,
                 columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 260,
+              lineNumber: 589,
               columnNumber: 29
             }, globalThis) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 259,
+              lineNumber: 588,
               columnNumber: 25
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__macro-circle", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-container", children: [
@@ -3076,7 +4325,7 @@ var require_js = __commonJS({
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 286,
+                    lineNumber: 615,
                     columnNumber: 37
                   },
                   globalThis
@@ -3085,27 +4334,27 @@ var require_js = __commonJS({
                   "path",
                   {
                     className: "add-meals__circle-progress add-meals__circle-progress--fat",
-                    strokeDasharray: `${getProgressPercentage(nutritionSummary.totalFat, nutritionSummary.goalFat)}, 100`,
+                    strokeDasharray: `${getProgressPercentage2(nutritionSummary.totalFat, nutritionSummary.goalFat)}, 100`,
                     d: "M18 2.0845\r\n                                           a 15.9155 15.9155 0 0 1 0 31.831\r\n                                           a 15.9155 15.9155 0 0 1 0 -31.831"
                   },
                   void 0,
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 291,
+                    lineNumber: 620,
                     columnNumber: 37
                   },
                   globalThis
                 )
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 285,
+                lineNumber: 614,
                 columnNumber: 33
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-content", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-icon", children: "🥑" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 299,
+                  lineNumber: 628,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-value", children: [
@@ -3113,43 +4362,43 @@ var require_js = __commonJS({
                   "g"
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 300,
+                  lineNumber: 629,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__circle-label", children: "Fat" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 301,
+                  lineNumber: 630,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 298,
+                lineNumber: 627,
                 columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 284,
+              lineNumber: 613,
               columnNumber: 29
             }, globalThis) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 283,
+              lineNumber: 612,
               columnNumber: 25
             }, globalThis)
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 209,
+            lineNumber: 538,
             columnNumber: 21
           }, globalThis)
         ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-          lineNumber: 207,
+          lineNumber: 536,
           columnNumber: 17
         }, globalThis),
         showQuickAdd && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__quick-add-panel", children: [
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__panel-header", children: [
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { className: "add-meals__panel-title", children: "Quick Add Foods" }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 312,
+              lineNumber: 641,
               columnNumber: 29
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3163,20 +4412,20 @@ var require_js = __commonJS({
               false,
               {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 313,
+                lineNumber: 642,
                 columnNumber: 29
               },
               globalThis
             )
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 311,
+            lineNumber: 640,
             columnNumber: 25
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__meal-type-selector", children: [
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__meal-label", children: "Meal Type:" }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 322,
+              lineNumber: 651,
               columnNumber: 29
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3188,22 +4437,22 @@ var require_js = __commonJS({
                 children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "breakfast", children: "🌅 Breakfast" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 328,
+                    lineNumber: 657,
                     columnNumber: 33
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "lunch", children: "☀️ Lunch" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 329,
+                    lineNumber: 658,
                     columnNumber: 33
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "dinner", children: "🌙 Dinner" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 330,
+                    lineNumber: 659,
                     columnNumber: 33
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "snack", children: "🍿 Snack" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 331,
+                    lineNumber: 660,
                     columnNumber: 33
                   }, globalThis)
                 ]
@@ -3212,14 +4461,14 @@ var require_js = __commonJS({
               true,
               {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 323,
+                lineNumber: 652,
                 columnNumber: 29
               },
               globalThis
             )
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 321,
+            lineNumber: 650,
             columnNumber: 25
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__search-box", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3235,20 +4484,20 @@ var require_js = __commonJS({
             false,
             {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 336,
+              lineNumber: 665,
               columnNumber: 29
             },
             globalThis
           ) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 335,
+            lineNumber: 664,
             columnNumber: 25
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__foods-grid", children: filteredFoods.map((food, index2) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__food-card", children: [
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__food-info", children: [
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h4", { className: "add-meals__food-name", children: food.name }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 349,
+                lineNumber: 678,
                 columnNumber: 41
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__food-nutrition", children: [
@@ -3257,7 +4506,7 @@ var require_js = __commonJS({
                   " cal"
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 351,
+                  lineNumber: 680,
                   columnNumber: 45
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: [
@@ -3265,17 +4514,17 @@ var require_js = __commonJS({
                   "g protein"
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 352,
+                  lineNumber: 681,
                   columnNumber: 45
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 350,
+                lineNumber: 679,
                 columnNumber: 41
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 348,
+              lineNumber: 677,
               columnNumber: 37
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3289,29 +4538,498 @@ var require_js = __commonJS({
               false,
               {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 355,
+                lineNumber: 684,
                 columnNumber: 37
               },
               globalThis
             )
           ] }, index2, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 347,
+            lineNumber: 676,
             columnNumber: 33
           }, globalThis)) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 345,
+            lineNumber: 674,
             columnNumber: 25
           }, globalThis)
         ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-          lineNumber: 310,
+          lineNumber: 639,
+          columnNumber: 21
+        }, globalThis),
+        showCustomEntry && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__custom-entry-panel", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__panel-header", children: [
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { className: "add-meals__panel-title", children: "Custom Meal Entry" }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 700,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+              "button",
+              {
+                className: "add-meals__close-btn",
+                onClick: () => setShowCustomEntry(false),
+                children: "✕"
+              },
+              void 0,
+              false,
+              {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 701,
+                columnNumber: 29
+              },
+              globalThis
+            )
+          ] }, void 0, true, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+            lineNumber: 699,
+            columnNumber: 25
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("form", { className: "add-meals__custom-form", onSubmit: handleCustomMealSubmit, children: [
+            submitMessage && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: `add-meals__message add-meals__message--${submitMessage.type}`, children: submitMessage.text }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 711,
+              columnNumber: 33
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Meal Name *" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 717,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "input",
+                {
+                  type: "text",
+                  className: "add-meals__form-input",
+                  value: customMealForm.mealName,
+                  onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { mealName: e.target.value })),
+                  placeholder: "Enter meal name",
+                  required: true
+                },
+                void 0,
+                false,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 718,
+                  columnNumber: 33
+                },
+                globalThis
+              )
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 716,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Meal Type *" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 729,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "select",
+                {
+                  className: "add-meals__form-select",
+                  value: customMealForm.mealType,
+                  onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { mealType: e.target.value })),
+                  children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "breakfast", children: "🌅 Breakfast" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 735,
+                      columnNumber: 37
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "lunch", children: "☀️ Lunch" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 736,
+                      columnNumber: 37
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "dinner", children: "🌙 Dinner" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 737,
+                      columnNumber: 37
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "snack", children: "🍿 Snack" }, void 0, false, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                      lineNumber: 738,
+                      columnNumber: 37
+                    }, globalThis)
+                  ]
+                },
+                void 0,
+                true,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 730,
+                  columnNumber: 33
+                },
+                globalThis
+              )
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 728,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Time" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 743,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "input",
+                {
+                  type: "time",
+                  className: "add-meals__form-input",
+                  value: customMealForm.time,
+                  onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { time: e.target.value }))
+                },
+                void 0,
+                false,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 744,
+                  columnNumber: 33
+                },
+                globalThis
+              )
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 742,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-row", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group add-meals__form-group--half", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Calories *" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 754,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "input",
+                  {
+                    type: "number",
+                    className: "add-meals__form-input",
+                    value: customMealForm.calories,
+                    onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { calories: e.target.value })),
+                    placeholder: "0",
+                    min: "0",
+                    step: "1",
+                    required: true
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 755,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 753,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group add-meals__form-group--half", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Protein (g)" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 768,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "input",
+                  {
+                    type: "number",
+                    className: "add-meals__form-input",
+                    value: customMealForm.protein,
+                    onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { protein: e.target.value })),
+                    placeholder: "0",
+                    min: "0",
+                    step: "0.1"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 769,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 767,
+                columnNumber: 33
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 752,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-row", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group add-meals__form-group--half", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Carbs (g)" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 783,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "input",
+                  {
+                    type: "number",
+                    className: "add-meals__form-input",
+                    value: customMealForm.carbs,
+                    onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { carbs: e.target.value })),
+                    placeholder: "0",
+                    min: "0",
+                    step: "0.1"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 784,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 782,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group add-meals__form-group--half", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Fat (g)" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 796,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "input",
+                  {
+                    type: "number",
+                    className: "add-meals__form-input",
+                    value: customMealForm.fat,
+                    onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { fat: e.target.value })),
+                    placeholder: "0",
+                    min: "0",
+                    step: "0.1"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 797,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 795,
+                columnNumber: 33
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 781,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-row", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group add-meals__form-group--half", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Fiber (g)" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 811,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "input",
+                  {
+                    type: "number",
+                    className: "add-meals__form-input",
+                    value: customMealForm.fiber,
+                    onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { fiber: e.target.value })),
+                    placeholder: "0",
+                    min: "0",
+                    step: "0.1"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 812,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 810,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group add-meals__form-group--half", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Sugar (g)" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 824,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "input",
+                  {
+                    type: "number",
+                    className: "add-meals__form-input",
+                    value: customMealForm.sugar,
+                    onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { sugar: e.target.value })),
+                    placeholder: "0",
+                    min: "0",
+                    step: "0.1"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                    lineNumber: 825,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 823,
+                columnNumber: 33
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 809,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Sodium (mg)" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 838,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "input",
+                {
+                  type: "number",
+                  className: "add-meals__form-input",
+                  value: customMealForm.sodium,
+                  onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { sodium: e.target.value })),
+                  placeholder: "0",
+                  min: "0",
+                  step: "0.1"
+                },
+                void 0,
+                false,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 839,
+                  columnNumber: 33
+                },
+                globalThis
+              )
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 837,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-label", children: "Notes" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 851,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "textarea",
+                {
+                  className: "add-meals__form-textarea",
+                  value: customMealForm.notes,
+                  onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { notes: e.target.value })),
+                  placeholder: "Additional notes about the meal...",
+                  rows: 3
+                },
+                void 0,
+                false,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 852,
+                  columnNumber: 33
+                },
+                globalThis
+              )
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 850,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-group", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("label", { className: "add-meals__form-checkbox-label", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                "input",
+                {
+                  type: "checkbox",
+                  className: "add-meals__form-checkbox",
+                  checked: customMealForm.saveMeal,
+                  onChange: (e) => setCustomMealForm((prev) => __spreadProps(__spreadValues({}, prev), { saveMeal: e.target.checked }))
+                },
+                void 0,
+                false,
+                {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                  lineNumber: 863,
+                  columnNumber: 37
+                },
+                globalThis
+              ),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "add-meals__form-checkbox-text", children: "Save meal for future references" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 869,
+                columnNumber: 37
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 862,
+              columnNumber: 33
+            }, globalThis) }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 861,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__form-actions", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+              "button",
+              {
+                type: "submit",
+                className: "add-meals__add-meal-btn add-meals__add-meal-btn--primary",
+                disabled: isSubmitting,
+                children: isSubmitting ? "Adding Meal..." : "Add Meal"
+              },
+              void 0,
+              false,
+              {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+                lineNumber: 876,
+                columnNumber: 33
+              },
+              globalThis
+            ) }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+              lineNumber: 875,
+              columnNumber: 29
+            }, globalThis)
+          ] }, void 0, true, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+            lineNumber: 709,
+            columnNumber: 25
+          }, globalThis)
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
+          lineNumber: 698,
           columnNumber: 21
         }, globalThis),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__meals-section", children: [
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "add-meals__section-title", children: "Today's Meals" }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-            lineNumber: 369,
+            lineNumber: 890,
             columnNumber: 21
           }, globalThis),
           ["breakfast", "lunch", "dinner", "snack"].map((mealType) => {
@@ -3327,7 +5045,7 @@ var require_js = __commonJS({
                   mealType.charAt(0).toUpperCase() + mealType.slice(1)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 378,
+                  lineNumber: 899,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "add-meals__meal-type-calories", children: [
@@ -3335,19 +5053,19 @@ var require_js = __commonJS({
                   " calories"
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 385,
+                  lineNumber: 906,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 377,
+                lineNumber: 898,
                 columnNumber: 33
               }, globalThis),
               typeMeals.length > 0 ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__meal-list", children: typeMeals.map((meal) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__meal-item", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__meal-info", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "add-meals__meal-name", children: meal.name }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 395,
+                    lineNumber: 916,
                     columnNumber: 53
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "add-meals__meal-nutrition", children: [
@@ -3361,12 +5079,12 @@ var require_js = __commonJS({
                     "g fat"
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 396,
+                    lineNumber: 917,
                     columnNumber: 53
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 394,
+                  lineNumber: 915,
                   columnNumber: 49
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3380,18 +5098,18 @@ var require_js = __commonJS({
                   false,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 400,
+                    lineNumber: 921,
                     columnNumber: 49
                   },
                   globalThis
                 )
               ] }, meal.id, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 393,
+                lineNumber: 914,
                 columnNumber: 45
               }, globalThis)) }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 391,
+                lineNumber: 912,
                 columnNumber: 37
               }, globalThis) : /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "add-meals__empty-meal-type", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { children: [
@@ -3400,7 +5118,7 @@ var require_js = __commonJS({
                   " entries yet"
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                  lineNumber: 411,
+                  lineNumber: 932,
                   columnNumber: 41
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3420,41 +5138,40 @@ var require_js = __commonJS({
                   true,
                   {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                    lineNumber: 412,
+                    lineNumber: 933,
                     columnNumber: 41
                   },
                   globalThis
                 )
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-                lineNumber: 410,
+                lineNumber: 931,
                 columnNumber: 37
               }, globalThis)
             ] }, mealType, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-              lineNumber: 376,
+              lineNumber: 897,
               columnNumber: 29
             }, globalThis);
           })
         ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-          lineNumber: 368,
+          lineNumber: 889,
           columnNumber: 17
         }, globalThis)
       ] }, void 0, true, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-        lineNumber: 188,
+        lineNumber: 434,
         columnNumber: 13
       }, globalThis) }, void 0, false, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/AddMeals.tsx",
-        lineNumber: 187,
+        lineNumber: 433,
         columnNumber: 9
       }, globalThis);
     };
     const Profile$1 = "";
     const Profile = () => {
       const { user, signOut } = useAuth();
-      const navigate = useNavigate();
       const [profileData, setProfileData] = reactExports.useState({
         height_cm: 0,
         weight_kg: 0,
@@ -3462,7 +5179,9 @@ var require_js = __commonJS({
         target_duration: 0,
         target_duration_unit: "weeks",
         activity_level: "moderate",
-        health_goals: []
+        orientation: "",
+        age: 0,
+        gender: ""
       });
       const [isEditing, setIsEditing] = reactExports.useState(false);
       const [heightUnit, setHeightUnit] = reactExports.useState("cm");
@@ -3472,6 +5191,7 @@ var require_js = __commonJS({
       const [heightInches, setHeightInches] = reactExports.useState(0);
       const [isLoading, setIsLoading] = reactExports.useState(false);
       const [hasProfile, setHasProfile] = reactExports.useState(false);
+      const [orientationOptions, setOrientationOptions] = reactExports.useState([]);
       const getUserName = reactExports.useCallback(() => {
         var _a, _b, _c;
         if (!user)
@@ -3495,30 +5215,27 @@ var require_js = __commonJS({
       }, [user]);
       reactExports.useEffect(() => {
         loadUserProfile();
+        loadOrientations();
       }, [user]);
+      reactExports.useEffect(() => {
+        loadOrientations();
+      }, [profileData.weight_kg, profileData.target_weight_kg]);
       const loadUserProfile = () => __async(exports, null, function* () {
         if (!user)
           return;
         try {
           const { data } = yield SupabaseService$1.getUserProfile(user.id);
-          let additionalData = { target_weight_kg: 0, target_duration: 0, target_duration_unit: "weeks" };
-          try {
-            const stored = localStorage.getItem(`profile_extra_${user.id}`);
-            if (stored) {
-              additionalData = JSON.parse(stored);
-            }
-          } catch (e) {
-            console.warn("Failed to load additional profile data:", e);
-          }
           if (data) {
             setProfileData({
               height_cm: data.height_cm || 0,
               weight_kg: data.weight_kg || 0,
-              target_weight_kg: additionalData.target_weight_kg || 0,
-              target_duration: additionalData.target_duration || 0,
-              target_duration_unit: additionalData.target_duration_unit || "weeks",
+              target_weight_kg: data.target_weight_kg || 0,
+              target_duration: data.target_duration || 0,
+              target_duration_unit: data.target_duration_unit || "weeks",
               activity_level: data.activity_level || "moderate",
-              health_goals: data.health_goals || []
+              orientation: data.orientation || "",
+              age: data.age || 0,
+              gender: data.gender || ""
             });
             setHasProfile(true);
             if (data.height_cm) {
@@ -3528,19 +5245,47 @@ var require_js = __commonJS({
               setHeightInches(inches);
             }
           } else {
-            setProfileData({
-              height_cm: 0,
-              weight_kg: 0,
-              target_weight_kg: additionalData.target_weight_kg || 0,
-              target_duration: additionalData.target_duration || 0,
-              target_duration_unit: additionalData.target_duration_unit || "weeks",
-              activity_level: "moderate",
-              health_goals: []
-            });
             setIsEditing(true);
           }
         } catch (error) {
           console.error("Error loading profile:", error);
+        }
+      });
+      const loadOrientations = () => __async(exports, null, function* () {
+        try {
+          const currentWeight = profileData.weight_kg;
+          const targetWeight = profileData.target_weight_kg;
+          let applicableFor = "both";
+          if (currentWeight > 0 && targetWeight > 0) {
+            if (targetWeight < currentWeight) {
+              applicableFor = "weight_loss";
+            } else if (targetWeight > currentWeight) {
+              applicableFor = "weight_gain";
+            }
+          }
+          const { data, error } = yield SupabaseService$1.getOrientations(applicableFor);
+          if (error) {
+            console.error("Error loading orientations:", error);
+            setOrientationOptions(getOrientationOptionsFallback(applicableFor));
+          } else {
+            setOrientationOptions(data.map((orientation) => ({
+              value: orientation.value,
+              label: orientation.label
+            })));
+          }
+        } catch (error) {
+          console.error("Error loading orientations:", error);
+          const currentWeight = profileData.weight_kg;
+          const targetWeight = profileData.target_weight_kg;
+          let applicableFor = "both";
+          if (currentWeight > 0 && targetWeight > 0) {
+            if (targetWeight < currentWeight) {
+              applicableFor = "weight_loss";
+            } else if (targetWeight > currentWeight) {
+              applicableFor = "weight_gain";
+            }
+          }
+          setOrientationOptions(getOrientationOptionsFallback(applicableFor));
         }
       });
       const convertHeight = (feet, inches) => {
@@ -3566,6 +5311,25 @@ var require_js = __commonJS({
       };
       const handleInputChange = (field, value) => {
         setProfileData((prev) => __spreadProps(__spreadValues({}, prev), { [field]: value }));
+      };
+      const getOrientationOptionsFallback = (applicableFor) => {
+        if (applicableFor === "weight_loss") {
+          return [
+            { value: "energy_focused", label: "Energy Focussed" },
+            { value: "muscle_preservation", label: "Muscle Preservation" }
+          ];
+        } else if (applicableFor === "weight_gain") {
+          return [
+            { value: "lean_muscle_building", label: "Lean Muscle Building" },
+            { value: "energetic_bulking", label: "Energetic Bulking" }
+          ];
+        }
+        return [
+          { value: "energy_focused", label: "Energy Focussed" },
+          { value: "muscle_preservation", label: "Muscle Preservation" },
+          { value: "lean_muscle_building", label: "Lean Muscle Building" },
+          { value: "energetic_bulking", label: "Energetic Bulking" }
+        ];
       };
       const validateInputs = () => {
         if (heightUnit === "ft") {
@@ -3593,6 +5357,14 @@ var require_js = __commonJS({
           NotificationManager.getInstance().show("Please enter valid target duration", "error");
           return false;
         }
+        if (!profileData.age || profileData.age < 1 || profileData.age > 120) {
+          NotificationManager.getInstance().show("Please enter valid age (1-120)", "error");
+          return false;
+        }
+        if (!profileData.gender) {
+          NotificationManager.getInstance().show("Please select a gender", "error");
+          return false;
+        }
         return true;
       };
       const handleSave = () => __async(exports, null, function* () {
@@ -3611,14 +5383,17 @@ var require_js = __commonJS({
           } else {
             dataToSave.weight_kg = profileData.weight_kg;
           }
+          if (targetWeightUnit === "lbs") {
+            dataToSave.target_weight_kg = convertWeight(profileData.target_weight_kg, "lbs", "kg");
+          } else {
+            dataToSave.target_weight_kg = profileData.target_weight_kg;
+          }
           dataToSave.activity_level = profileData.activity_level;
-          dataToSave.health_goals = profileData.health_goals;
-          const additionalData = {
-            target_weight_kg: targetWeightUnit === "lbs" ? convertWeight(profileData.target_weight_kg, "lbs", "kg") : profileData.target_weight_kg,
-            target_duration: profileData.target_duration,
-            target_duration_unit: profileData.target_duration_unit
-          };
-          localStorage.setItem(`profile_extra_${user.id}`, JSON.stringify(additionalData));
+          dataToSave.target_duration = profileData.target_duration;
+          dataToSave.target_duration_unit = profileData.target_duration_unit;
+          dataToSave.orientation = profileData.orientation;
+          dataToSave.age = profileData.age;
+          dataToSave.gender = profileData.gender;
           const { error } = yield SupabaseService$1.updateUserProfile(user.id, dataToSave);
           if (error) {
             throw error;
@@ -3637,46 +5412,45 @@ var require_js = __commonJS({
         loadUserProfile();
         setIsEditing(false);
       };
-      const handleSignOut = reactExports.useCallback(() => __async(exports, null, function* () {
+      const handleSignOut = () => __async(exports, null, function* () {
         try {
           yield signOut();
-          navigate("/");
         } catch (error) {
-          console.error("Error signing out:", error);
+          console.error("Sign out error:", error);
           NotificationManager.getInstance().show("Failed to sign out", "error");
         }
-      }), [signOut, navigate]);
+      });
       return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__container", children: [
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__header", children: [
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__user", children: [
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__avatar", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__initials", children: getUserInitials() }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 274,
+              lineNumber: 343,
               columnNumber: 29
             }, globalThis) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 273,
+              lineNumber: 342,
               columnNumber: 25
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("ul", { className: "profile__info", children: [
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("li", { className: "profile__name", children: getUserName() }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 279,
+                lineNumber: 348,
                 columnNumber: 29
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("li", { className: "profile__email", children: user == null ? void 0 : user.email }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 280,
+                lineNumber: 349,
                 columnNumber: 29
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 278,
+              lineNumber: 347,
               columnNumber: 25
             }, globalThis)
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-            lineNumber: 272,
+            lineNumber: 341,
             columnNumber: 21
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3684,40 +5458,28 @@ var require_js = __commonJS({
             {
               className: "profile__signout-btn",
               onClick: handleSignOut,
-              "aria-label": "Sign out",
               type: "button",
-              children: [
-                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__signout-icon", children: "🚪" }, void 0, false, {
-                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 289,
-                  columnNumber: 25
-                }, globalThis),
-                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__signout-text", children: "Sign Out" }, void 0, false, {
-                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 290,
-                  columnNumber: 25
-                }, globalThis)
-              ]
+              children: "Sign Out"
             },
             void 0,
-            true,
+            false,
             {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 283,
+              lineNumber: 352,
               columnNumber: 21
             },
             globalThis
           )
         ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-          lineNumber: 271,
+          lineNumber: 340,
           columnNumber: 17
         }, globalThis),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__content", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__section", children: [
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__section-header", children: [
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { children: "Setup Profile" }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 297,
+              lineNumber: 364,
               columnNumber: 29
             }, globalThis),
             !isEditing && hasProfile && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3731,14 +5493,14 @@ var require_js = __commonJS({
               false,
               {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 299,
+                lineNumber: 366,
                 columnNumber: 33
               },
               globalThis
             )
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-            lineNumber: 296,
+            lineNumber: 363,
             columnNumber: 25
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__form", children: [
@@ -3747,7 +5509,7 @@ var require_js = __commonJS({
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Height" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 312,
+                    lineNumber: 379,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3763,14 +5525,14 @@ var require_js = __commonJS({
                     false,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 313,
+                      lineNumber: 380,
                       columnNumber: 41
                     },
                     globalThis
                   )
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 311,
+                  lineNumber: 378,
                   columnNumber: 37
                 }, globalThis),
                 heightUnit === "cm" ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__input-group", children: [
@@ -3791,19 +5553,19 @@ var require_js = __commonJS({
                     false,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 324,
+                      lineNumber: 391,
                       columnNumber: 45
                     },
                     globalThis
                   ),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__unit", children: "cm" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 335,
+                    lineNumber: 402,
                     columnNumber: 45
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 323,
+                  lineNumber: 390,
                   columnNumber: 41
                 }, globalThis) : /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__height-row", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__input-group", children: [
@@ -3828,19 +5590,19 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                        lineNumber: 340,
+                        lineNumber: 407,
                         columnNumber: 49
                       },
                       globalThis
                     ),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__unit", children: "ft" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 355,
+                      lineNumber: 422,
                       columnNumber: 49
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 339,
+                    lineNumber: 406,
                     columnNumber: 45
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__input-group", children: [
@@ -3865,36 +5627,36 @@ var require_js = __commonJS({
                       false,
                       {
                         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                        lineNumber: 358,
+                        lineNumber: 425,
                         columnNumber: 49
                       },
                       globalThis
                     ),
                     /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__unit", children: "in" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 373,
+                      lineNumber: 440,
                       columnNumber: 49
                     }, globalThis)
                   ] }, void 0, true, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 357,
+                    lineNumber: 424,
                     columnNumber: 45
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 338,
+                  lineNumber: 405,
                   columnNumber: 41
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 310,
+                lineNumber: 377,
                 columnNumber: 33
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-group", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Weight" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 381,
+                    lineNumber: 448,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3910,14 +5672,14 @@ var require_js = __commonJS({
                     false,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 382,
+                      lineNumber: 449,
                       columnNumber: 41
                     },
                     globalThis
                   )
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 380,
+                  lineNumber: 447,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__input-group", children: [
@@ -3942,29 +5704,29 @@ var require_js = __commonJS({
                     false,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 392,
+                      lineNumber: 459,
                       columnNumber: 41
                     },
                     globalThis
                   ),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__unit", children: weightUnit }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 407,
+                    lineNumber: 474,
                     columnNumber: 41
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 391,
+                  lineNumber: 458,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 379,
+                lineNumber: 446,
                 columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 309,
+              lineNumber: 376,
               columnNumber: 29
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__row", children: [
@@ -3972,7 +5734,7 @@ var require_js = __commonJS({
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Target Weight" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 415,
+                    lineNumber: 482,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -3988,14 +5750,14 @@ var require_js = __commonJS({
                     false,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 416,
+                      lineNumber: 483,
                       columnNumber: 41
                     },
                     globalThis
                   )
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 414,
+                  lineNumber: 481,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__input-group", children: [
@@ -4020,34 +5782,34 @@ var require_js = __commonJS({
                     false,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 426,
+                      lineNumber: 493,
                       columnNumber: 41
                     },
                     globalThis
                   ),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__unit", children: targetWeightUnit }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 441,
+                    lineNumber: 508,
                     columnNumber: 41
                   }, globalThis)
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 425,
+                  lineNumber: 492,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 413,
+                lineNumber: 480,
                 columnNumber: 33
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-group", children: [
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Target Duration" }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 447,
+                  lineNumber: 514,
                   columnNumber: 41
                 }, globalThis) }, void 0, false, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 446,
+                  lineNumber: 513,
                   columnNumber: 37
                 }, globalThis),
                 /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__duration-row", children: [
@@ -4068,13 +5830,13 @@ var require_js = __commonJS({
                     false,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 451,
+                      lineNumber: 518,
                       columnNumber: 45
                     },
                     globalThis
                   ) }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 450,
+                    lineNumber: 517,
                     columnNumber: 41
                   }, globalThis),
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -4089,17 +5851,17 @@ var require_js = __commonJS({
                       children: [
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "days", children: "Days" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                          lineNumber: 471,
+                          lineNumber: 538,
                           columnNumber: 45
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "weeks", children: "Weeks" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                          lineNumber: 472,
+                          lineNumber: 539,
                           columnNumber: 45
                         }, globalThis),
                         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "months", children: "Months" }, void 0, false, {
                           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                          lineNumber: 473,
+                          lineNumber: 540,
                           columnNumber: 45
                         }, globalThis)
                       ]
@@ -4108,69 +5870,116 @@ var require_js = __commonJS({
                     true,
                     {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 463,
+                      lineNumber: 530,
                       columnNumber: 41
                     },
                     globalThis
                   )
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 449,
+                  lineNumber: 516,
                   columnNumber: 37
                 }, globalThis)
               ] }, void 0, true, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 445,
+                lineNumber: 512,
                 columnNumber: 33
               }, globalThis)
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 412,
+              lineNumber: 479,
               columnNumber: 29
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__row", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-group", children: [
-              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Activity Level" }, void 0, false, {
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Age" }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 482,
+                lineNumber: 549,
                 columnNumber: 41
               }, globalThis) }, void 0, false, {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 481,
+                lineNumber: 548,
+                columnNumber: 37
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__input-group", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "input",
+                  {
+                    id: "age",
+                    name: "age",
+                    type: "number",
+                    min: "1",
+                    max: "120",
+                    value: profileData.age,
+                    onChange: (e) => handleInputChange("age", parseInt(e.target.value) || 0),
+                    disabled: !isEditing,
+                    placeholder: "Age"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                    lineNumber: 552,
+                    columnNumber: 41
+                  },
+                  globalThis
+                ),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "profile__unit", children: "years" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                  lineNumber: 563,
+                  columnNumber: 41
+                }, globalThis)
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                lineNumber: 551,
+                columnNumber: 37
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+              lineNumber: 547,
+              columnNumber: 33
+            }, globalThis) }, void 0, false, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+              lineNumber: 546,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__row", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-group", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Gender" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                lineNumber: 571,
+                columnNumber: 41
+              }, globalThis) }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                lineNumber: 570,
                 columnNumber: 37
               }, globalThis),
               /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
                 "select",
                 {
-                  id: "activity-level",
-                  name: "activity-level",
-                  value: profileData.activity_level,
-                  onChange: (e) => handleInputChange("activity_level", e.target.value),
+                  id: "gender",
+                  name: "gender",
+                  value: profileData.gender,
+                  onChange: (e) => handleInputChange("gender", e.target.value),
                   disabled: !isEditing,
                   className: "profile__select",
                   children: [
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "sedentary", children: "Sedentary" }, void 0, false, {
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "", children: "Select gender" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 492,
+                      lineNumber: 581,
                       columnNumber: 41
                     }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "light", children: "Light" }, void 0, false, {
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "male", children: "Male" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 493,
+                      lineNumber: 582,
                       columnNumber: 41
                     }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "moderate", children: "Moderate" }, void 0, false, {
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "female", children: "Female" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 494,
+                      lineNumber: 583,
                       columnNumber: 41
                     }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "active", children: "Active" }, void 0, false, {
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "other", children: "Other" }, void 0, false, {
                       fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 495,
-                      columnNumber: 41
-                    }, globalThis),
-                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "very_active", children: "Very Active" }, void 0, false, {
-                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                      lineNumber: 496,
+                      lineNumber: 584,
                       columnNumber: 41
                     }, globalThis)
                   ]
@@ -4179,23 +5988,136 @@ var require_js = __commonJS({
                 true,
                 {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 484,
+                  lineNumber: 573,
                   columnNumber: 37
                 },
                 globalThis
               )
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 480,
+              lineNumber: 569,
               columnNumber: 33
             }, globalThis) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 479,
+              lineNumber: 568,
+              columnNumber: 29
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__row", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-group", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Activity Level" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                  lineNumber: 592,
+                  columnNumber: 41
+                }, globalThis) }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                  lineNumber: 591,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "select",
+                  {
+                    id: "activity-level",
+                    name: "activity-level",
+                    value: profileData.activity_level,
+                    onChange: (e) => handleInputChange("activity_level", e.target.value),
+                    disabled: !isEditing,
+                    className: "profile__select",
+                    children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "sedentary", children: "Sedentary" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                        lineNumber: 602,
+                        columnNumber: 41
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "light", children: "Light" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                        lineNumber: 603,
+                        columnNumber: 41
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "moderate", children: "Moderate" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                        lineNumber: 604,
+                        columnNumber: 41
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "active", children: "Active" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                        lineNumber: 605,
+                        columnNumber: 41
+                      }, globalThis),
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "very_active", children: "Very Active" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                        lineNumber: 606,
+                        columnNumber: 41
+                      }, globalThis)
+                    ]
+                  },
+                  void 0,
+                  true,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                    lineNumber: 594,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                lineNumber: 590,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-group", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__field-header", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { children: "Orientation" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                  lineNumber: 612,
+                  columnNumber: 41
+                }, globalThis) }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                  lineNumber: 611,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "select",
+                  {
+                    id: "orientation",
+                    name: "orientation",
+                    value: profileData.orientation,
+                    onChange: (e) => handleInputChange("orientation", e.target.value),
+                    disabled: !isEditing,
+                    className: "profile__select",
+                    children: [
+                      /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: "", children: "Select orientation" }, void 0, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                        lineNumber: 622,
+                        columnNumber: 41
+                      }, globalThis),
+                      orientationOptions.map((option) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("option", { value: option.value, children: option.label }, option.value, false, {
+                        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                        lineNumber: 624,
+                        columnNumber: 45
+                      }, globalThis))
+                    ]
+                  },
+                  void 0,
+                  true,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                    lineNumber: 614,
+                    columnNumber: 37
+                  },
+                  globalThis
+                )
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+                lineNumber: 610,
+                columnNumber: 33
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
+              lineNumber: 589,
               columnNumber: 29
             }, globalThis)
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-            lineNumber: 308,
+            lineNumber: 375,
             columnNumber: 25
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__actions", children: isEditing ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
@@ -4208,13 +6130,13 @@ var require_js = __commonJS({
                 children: isLoading ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
                   /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "profile__loading-spinner" }, void 0, false, {
                     fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                    lineNumber: 512,
+                    lineNumber: 643,
                     columnNumber: 49
                   }, globalThis),
                   "Updating..."
                 ] }, void 0, true, {
                   fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                  lineNumber: 511,
+                  lineNumber: 642,
                   columnNumber: 45
                 }, globalThis) : hasProfile ? "Update Profile" : "Save Profile"
               },
@@ -4222,7 +6144,7 @@ var require_js = __commonJS({
               false,
               {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 505,
+                lineNumber: 636,
                 columnNumber: 37
               },
               globalThis
@@ -4239,14 +6161,14 @@ var require_js = __commonJS({
               false,
               {
                 fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-                lineNumber: 520,
+                lineNumber: 651,
                 columnNumber: 41
               },
               globalThis
             )
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-            lineNumber: 504,
+            lineNumber: 635,
             columnNumber: 33
           }, globalThis) : hasProfile && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
             "button",
@@ -4259,31 +6181,573 @@ var require_js = __commonJS({
             false,
             {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-              lineNumber: 531,
+              lineNumber: 662,
               columnNumber: 37
             },
             globalThis
           ) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-            lineNumber: 502,
+            lineNumber: 633,
             columnNumber: 25
           }, globalThis)
         ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-          lineNumber: 295,
+          lineNumber: 362,
           columnNumber: 21
         }, globalThis) }, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-          lineNumber: 294,
+          lineNumber: 361,
           columnNumber: 17
         }, globalThis)
       ] }, void 0, true, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-        lineNumber: 270,
+        lineNumber: 339,
         columnNumber: 13
       }, globalThis) }, void 0, false, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Profile.tsx",
-        lineNumber: 269,
+        lineNumber: 338,
+        columnNumber: 9
+      }, globalThis);
+    };
+    const getProgressPercentage = (current, goal) => {
+      return Math.min(current / goal * 100, 100);
+    };
+    const calculateMacroRatio = (macro, totalCalories) => {
+      const macroCalories = macro * (macro === totalCalories ? 1 : 4);
+      return totalCalories > 0 ? Math.round(macroCalories / totalCalories * 100) : 0;
+    };
+    const calculateAverageCaloriesPerMeal = (totalCalories, mealCount) => {
+      return mealCount > 0 ? Math.round(totalCalories / mealCount) : 0;
+    };
+    const NUTRITION_CONSTANTS = {
+      caloriesPerGramProtein: 4,
+      caloriesPerGramCarbs: 4,
+      caloriesPerGramFat: 9,
+      caloriesPerGramAlcohol: 7,
+      defaultMacroDistribution: {
+        protein: 0.25,
+        carbs: 0.45,
+        fat: 0.3
+      },
+      mealTypeIcons: {
+        breakfast: "🌅",
+        lunch: "☀️",
+        dinner: "🌙",
+        snack: "🍿"
+      },
+      nutritionIcons: {
+        calories: "🔥",
+        protein: "💪",
+        carbs: "🌾",
+        fat: "🥑"
+      }
+    };
+    const Journal$1 = "";
+    const Journal = () => {
+      const pageRef = reactExports.useRef(null);
+      const { setCurrentSection } = useContentManager();
+      const { todaysMeals, calorieData } = useCalorieTracker();
+      const nutritionGoals = {
+        goalCalories: calorieData.targetCalories,
+        goalProtein: Math.round(calorieData.targetCalories * 0.3 / 4),
+        // 30% of calories from protein
+        goalCarbs: Math.round(calorieData.targetCalories * 0.45 / 4),
+        // 45% of calories from carbs
+        goalFat: Math.round(calorieData.targetCalories * 0.25 / 9)
+        // 25% of calories from fat
+      };
+      const nutritionSummary = __spreadValues({
+        totalCalories: calorieData.currentCalories,
+        totalProtein: todaysMeals.reduce((sum, meal) => sum + meal.protein, 0),
+        totalCarbs: todaysMeals.reduce((sum, meal) => sum + meal.carbs, 0),
+        totalFat: todaysMeals.reduce((sum, meal) => sum + meal.fat, 0)
+      }, nutritionGoals);
+      reactExports.useEffect(() => {
+        setCurrentSection("journal");
+      }, [setCurrentSection]);
+      const getMealsByType = (type) => {
+        return todaysMeals.filter((meal) => meal.mealType === type);
+      };
+      const getTotalMealsByType = (type) => {
+        const typeMeals = getMealsByType(type);
+        return typeMeals.reduce((sum, meal) => sum + meal.calories, 0);
+      };
+      return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("section", { ref: pageRef, id: "journal", className: "journal", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__container", children: [
+        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__header", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h1", { className: "journal__title", children: "📝 Today's Health Journal" }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+            lineNumber: 63,
+            columnNumber: 21
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__date", children: (/* @__PURE__ */ new Date()).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          }) }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+            lineNumber: 64,
+            columnNumber: 21
+          }, globalThis)
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+          lineNumber: 62,
+          columnNumber: 17
+        }, globalThis),
+        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-overview", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "journal__section-title", children: "Daily Nutrition Summary" }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+            lineNumber: 76,
+            columnNumber: 21
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-grid", children: [
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-card journal__nutrition-card--calories", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-icon", children: NUTRITION_CONSTANTS.nutritionIcons.calories }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 79,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-content", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-value", children: [
+                  Math.round(nutritionSummary.totalCalories),
+                  " / ",
+                  nutritionSummary.goalCalories
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 81,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-label", children: "Calories" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 84,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__progress-bar", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "div",
+                  {
+                    className: "journal__progress-fill journal__progress-fill--calories",
+                    style: { width: `${getProgressPercentage(nutritionSummary.totalCalories, nutritionSummary.goalCalories)}%` }
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 86,
+                    columnNumber: 37
+                  },
+                  globalThis
+                ) }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 85,
+                  columnNumber: 33
+                }, globalThis)
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 80,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 78,
+              columnNumber: 25
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-card journal__nutrition-card--protein", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-icon", children: NUTRITION_CONSTANTS.nutritionIcons.protein }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 95,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-content", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-value", children: [
+                  Math.round(nutritionSummary.totalProtein),
+                  "g / ",
+                  nutritionSummary.goalProtein,
+                  "g"
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 97,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-label", children: "Protein" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 100,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__progress-bar", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "div",
+                  {
+                    className: "journal__progress-fill journal__progress-fill--protein",
+                    style: { width: `${getProgressPercentage(nutritionSummary.totalProtein, nutritionSummary.goalProtein)}%` }
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 102,
+                    columnNumber: 37
+                  },
+                  globalThis
+                ) }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 101,
+                  columnNumber: 33
+                }, globalThis)
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 96,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 94,
+              columnNumber: 25
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-card journal__nutrition-card--carbs", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-icon", children: NUTRITION_CONSTANTS.nutritionIcons.carbs }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 111,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-content", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-value", children: [
+                  Math.round(nutritionSummary.totalCarbs),
+                  "g / ",
+                  nutritionSummary.goalCarbs,
+                  "g"
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 113,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-label", children: "Carbs" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 116,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__progress-bar", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "div",
+                  {
+                    className: "journal__progress-fill journal__progress-fill--carbs",
+                    style: { width: `${getProgressPercentage(nutritionSummary.totalCarbs, nutritionSummary.goalCarbs)}%` }
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 118,
+                    columnNumber: 37
+                  },
+                  globalThis
+                ) }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 117,
+                  columnNumber: 33
+                }, globalThis)
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 112,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 110,
+              columnNumber: 25
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-card journal__nutrition-card--fat", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-icon", children: NUTRITION_CONSTANTS.nutritionIcons.fat }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 127,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-content", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-value", children: [
+                  Math.round(nutritionSummary.totalFat),
+                  "g / ",
+                  nutritionSummary.goalFat,
+                  "g"
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 129,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__nutrition-label", children: "Fat" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 132,
+                  columnNumber: 33
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__progress-bar", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+                  "div",
+                  {
+                    className: "journal__progress-fill journal__progress-fill--fat",
+                    style: { width: `${getProgressPercentage(nutritionSummary.totalFat, nutritionSummary.goalFat)}%` }
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 134,
+                    columnNumber: 37
+                  },
+                  globalThis
+                ) }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 133,
+                  columnNumber: 33
+                }, globalThis)
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 128,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 126,
+              columnNumber: 25
+            }, globalThis)
+          ] }, void 0, true, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+            lineNumber: 77,
+            columnNumber: 21
+          }, globalThis)
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+          lineNumber: 75,
+          columnNumber: 17
+        }, globalThis),
+        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meals-timeline", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "journal__section-title", children: "Today's Detailed Meal Log" }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+            lineNumber: 146,
+            columnNumber: 21
+          }, globalThis),
+          ["breakfast", "lunch", "dinner", "snack"].map((mealType) => {
+            const typeMeals = getMealsByType(mealType);
+            const typeCalories = getTotalMealsByType(mealType);
+            if (typeMeals.length === 0)
+              return null;
+            return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-section", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-header", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-type", children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "journal__meal-icon", children: NUTRITION_CONSTANTS.mealTypeIcons[mealType] }, void 0, false, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 158,
+                    columnNumber: 41
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h3", { className: "journal__meal-title", children: mealType.charAt(0).toUpperCase() + mealType.slice(1) }, void 0, false, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 161,
+                    columnNumber: 41
+                  }, globalThis)
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 157,
+                  columnNumber: 37
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-summary", children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "journal__meal-count", children: [
+                    typeMeals.length,
+                    " ",
+                    typeMeals.length === 1 ? "item" : "items"
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 166,
+                    columnNumber: 41
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "journal__meal-calories", children: [
+                    Math.round(typeCalories),
+                    " cal"
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 169,
+                    columnNumber: 41
+                  }, globalThis)
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 165,
+                  columnNumber: 37
+                }, globalThis)
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 156,
+                columnNumber: 33
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-items", children: typeMeals.map((meal) => /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-item", children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-time", children: meal.time }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 178,
+                  columnNumber: 45
+                }, globalThis),
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-details", children: [
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-name", children: meal.name }, void 0, false, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 182,
+                    columnNumber: 49
+                  }, globalThis),
+                  /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__meal-nutrition", children: [
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "journal__nutrition-item", children: [
+                      NUTRITION_CONSTANTS.nutritionIcons.calories,
+                      " ",
+                      meal.calories,
+                      " cal"
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                      lineNumber: 184,
+                      columnNumber: 53
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "journal__nutrition-item", children: [
+                      NUTRITION_CONSTANTS.nutritionIcons.protein,
+                      " ",
+                      meal.protein,
+                      "g protein"
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                      lineNumber: 187,
+                      columnNumber: 53
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "journal__nutrition-item", children: [
+                      NUTRITION_CONSTANTS.nutritionIcons.carbs,
+                      " ",
+                      meal.carbs,
+                      "g carbs"
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                      lineNumber: 190,
+                      columnNumber: 53
+                    }, globalThis),
+                    /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "journal__nutrition-item", children: [
+                      NUTRITION_CONSTANTS.nutritionIcons.fat,
+                      " ",
+                      meal.fat,
+                      "g fat"
+                    ] }, void 0, true, {
+                      fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                      lineNumber: 193,
+                      columnNumber: 53
+                    }, globalThis)
+                  ] }, void 0, true, {
+                    fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                    lineNumber: 183,
+                    columnNumber: 49
+                  }, globalThis)
+                ] }, void 0, true, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                  lineNumber: 181,
+                  columnNumber: 45
+                }, globalThis)
+              ] }, meal.id, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 177,
+                columnNumber: 41
+              }, globalThis)) }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 175,
+                columnNumber: 33
+              }, globalThis)
+            ] }, mealType, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 155,
+              columnNumber: 29
+            }, globalThis);
+          })
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+          lineNumber: 145,
+          columnNumber: 17
+        }, globalThis),
+        /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__quick-stats", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "journal__section-title", children: "Today's Quick Stats" }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+            lineNumber: 208,
+            columnNumber: 21
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stats-grid", children: [
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-card", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-value", children: todaysMeals.length }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 211,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-label", children: "Total Meals/Snacks" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 212,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 210,
+              columnNumber: 25
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-card", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-value", children: [
+                Math.round(nutritionSummary.totalCalories / nutritionSummary.goalCalories * 100),
+                "%"
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 215,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-label", children: "Daily Goal Progress" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 218,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 214,
+              columnNumber: 25
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-card", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-value", children: calculateAverageCaloriesPerMeal(nutritionSummary.totalCalories, todaysMeals.length) }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 221,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-label", children: "Avg Calories per Meal" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 224,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 220,
+              columnNumber: 25
+            }, globalThis),
+            /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-card", children: [
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-value", children: [
+                calculateMacroRatio(nutritionSummary.totalProtein, nutritionSummary.totalCalories),
+                "%"
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 227,
+                columnNumber: 29
+              }, globalThis),
+              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "journal__stat-label", children: "Protein Ratio" }, void 0, false, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+                lineNumber: 230,
+                columnNumber: 29
+              }, globalThis)
+            ] }, void 0, true, {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+              lineNumber: 226,
+              columnNumber: 25
+            }, globalThis)
+          ] }, void 0, true, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+            lineNumber: 209,
+            columnNumber: 21
+          }, globalThis)
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+          lineNumber: 207,
+          columnNumber: 17
+        }, globalThis)
+      ] }, void 0, true, {
+        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+        lineNumber: 61,
+        columnNumber: 13
+      }, globalThis) }, void 0, false, {
+        fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/pages/Journal.tsx",
+        lineNumber: 60,
         columnNumber: 9
       }, globalThis);
     };
@@ -4425,40 +6889,23 @@ var require_js = __commonJS({
       lineNumber: 7,
       columnNumber: 5
     }, globalThis);
+    const ProtectedRoute$1 = "";
     const ProtectedRoute = ({ children, requireAdmin = false, fallback = null }) => {
-      const { loading, isAuthenticated, isAdmin, user } = useAuth();
+      const { loading, isAuthenticated, isAdmin, user, signInWithGoogle, authLoading } = useAuth();
+      const handleSignIn = reactExports.useCallback(() => __async(exports, null, function* () {
+        if (authLoading)
+          return;
+        try {
+          const result = yield signInWithGoogle();
+          if (!result.success) {
+            console.error("Sign in failed:", result.error);
+          }
+        } catch (error) {
+          console.error("Sign in error:", error);
+        }
+      }), [signInWithGoogle, authLoading]);
       if (loading) {
         return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "protected-route protected-route--loading", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(LoadingSpinner, {}, void 0, false, {
-          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
-          lineNumber: 20,
-          columnNumber: 17
-        }, globalThis) }, void 0, false, {
-          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
-          lineNumber: 19,
-          columnNumber: 13
-        }, globalThis);
-      }
-      if (requireAdmin && !isAdmin) {
-        return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "protected-route protected-route--unauthorized", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "protected-route__container", children: [
-          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "protected-route__title", children: "Access Denied" }, void 0, false, {
-            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
-            lineNumber: 33,
-            columnNumber: 21
-          }, globalThis),
-          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "protected-route__message", children: "You don't have admin privileges to access this area." }, void 0, false, {
-            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
-            lineNumber: 34,
-            columnNumber: 21
-          }, globalThis),
-          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "protected-route__user-info", children: [
-            "Signed in as: ",
-            user == null ? void 0 : user.email
-          ] }, void 0, true, {
-            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
-            lineNumber: 37,
-            columnNumber: 21
-          }, globalThis)
-        ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
           lineNumber: 32,
           columnNumber: 17
@@ -4468,9 +6915,101 @@ var require_js = __commonJS({
           columnNumber: 13
         }, globalThis);
       }
+      if (!isAuthenticated) {
+        return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "protected-route protected-route--unauthorized", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "protected-route__container", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "protected-route__title", children: "Sign In Required" }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+            lineNumber: 41,
+            columnNumber: 21
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "protected-route__message", children: "Please sign in to access this page." }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+            lineNumber: 42,
+            columnNumber: 21
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
+            "button",
+            {
+              className: "protected-route__signin-btn",
+              onClick: handleSignIn,
+              disabled: authLoading,
+              type: "button",
+              children: authLoading ? /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "protected-route__signin-icon", children: "⏳" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+                  lineNumber: 53,
+                  columnNumber: 33
+                }, globalThis),
+                "Signing in..."
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+                lineNumber: 52,
+                columnNumber: 29
+              }, globalThis) : /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children: [
+                /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "protected-route__signin-icon", children: "🔐" }, void 0, false, {
+                  fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+                  lineNumber: 58,
+                  columnNumber: 33
+                }, globalThis),
+                "Sign In with Google"
+              ] }, void 0, true, {
+                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+                lineNumber: 57,
+                columnNumber: 29
+              }, globalThis)
+            },
+            void 0,
+            false,
+            {
+              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+              lineNumber: 45,
+              columnNumber: 21
+            },
+            globalThis
+          )
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+          lineNumber: 40,
+          columnNumber: 17
+        }, globalThis) }, void 0, false, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+          lineNumber: 39,
+          columnNumber: 13
+        }, globalThis);
+      }
+      if (requireAdmin && !isAdmin) {
+        return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "protected-route protected-route--unauthorized", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "protected-route__container", children: [
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { className: "protected-route__title", children: "Access Denied" }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+            lineNumber: 72,
+            columnNumber: 21
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "protected-route__message", children: "You don't have admin privileges to access this area." }, void 0, false, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+            lineNumber: 73,
+            columnNumber: 21
+          }, globalThis),
+          /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { className: "protected-route__user-info", children: [
+            "Signed in as: ",
+            user == null ? void 0 : user.email
+          ] }, void 0, true, {
+            fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+            lineNumber: 76,
+            columnNumber: 21
+          }, globalThis)
+        ] }, void 0, true, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+          lineNumber: 71,
+          columnNumber: 17
+        }, globalThis) }, void 0, false, {
+          fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
+          lineNumber: 70,
+          columnNumber: 13
+        }, globalThis);
+      }
       return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(jsxDevRuntimeExports.Fragment, { children }, void 0, false, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/components/auth/ProtectedRoute.tsx",
-        lineNumber: 45,
+        lineNumber: 84,
         columnNumber: 12
       }, globalThis);
     };
@@ -4480,14 +7019,10 @@ var require_js = __commonJS({
       const unsubscribeRef = reactExports.useRef(null);
       const onStateChangeRef = reactExports.useRef(onStateChange);
       onStateChangeRef.current = onStateChange;
-      const [state, setState] = reactExports.useState(() => ({
-        isOpen: false,
-        activeItem: "home",
-        hoveredItem: null,
-        focusedItem: null,
-        keyboardMode: false,
-        isAnimating: false
-      }));
+      const [state, setState] = reactExports.useState(() => {
+        const manager = NavigationManager.getInstance();
+        return manager.getState();
+      });
       const [config2, setConfig] = reactExports.useState(() => ({
         items: [],
         animationDuration: 300,
@@ -5062,35 +7597,35 @@ var require_js = __commonJS({
           false,
           {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 35,
+            lineNumber: 36,
             columnNumber: 7
           },
           globalThis
         ),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("main", { className: "app__main", children }, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 43,
+          lineNumber: 44,
           columnNumber: 7
         }, globalThis),
         showFooter && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("footer", { className: "app__footer", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "app__footer-content", children: [
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "app__footer-main", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "app__footer-brand", children: [
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("strong", { children: appConfig.name }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 53,
+              lineNumber: 54,
               columnNumber: 17
             }, globalThis),
             /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { children: "Your health journey starts here" }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 54,
+              lineNumber: 55,
               columnNumber: 17
             }, globalThis)
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 52,
+            lineNumber: 53,
             columnNumber: 15
           }, globalThis) }, void 0, false, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 51,
+            lineNumber: 52,
             columnNumber: 13
           }, globalThis),
           /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "app__footer-bottom", children: [
@@ -5099,7 +7634,7 @@ var require_js = __commonJS({
               appConfig.name
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 58,
+              lineNumber: 59,
               columnNumber: 15
             }, globalThis),
             appConfig.debug.enabled && /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("span", { className: "app__footer-version", children: [
@@ -5107,26 +7642,26 @@ var require_js = __commonJS({
               appConfig.version
             ] }, void 0, true, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 60,
+              lineNumber: 61,
               columnNumber: 17
             }, globalThis)
           ] }, void 0, true, {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 57,
+            lineNumber: 58,
             columnNumber: 13
           }, globalThis)
         ] }, void 0, true, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 50,
+          lineNumber: 51,
           columnNumber: 11
         }, globalThis) }, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 49,
+          lineNumber: 50,
           columnNumber: 9
         }, globalThis)
       ] }, void 0, true, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-        lineNumber: 33,
+        lineNumber: 34,
         columnNumber: 5
       }, globalThis);
     };
@@ -5158,20 +7693,20 @@ var require_js = __commonJS({
         false,
         {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 97,
+          lineNumber: 98,
           columnNumber: 7
         },
         globalThis
       ) }, void 0, false, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-        lineNumber: 96,
+        lineNumber: 97,
         columnNumber: 5
       }, globalThis);
     };
     function App() {
       const [isLoading, setIsLoading] = reactExports.useState(true);
       const auth = useAuth();
-      useAuthNavigation(auth.isAuthenticated, auth.loading);
+      const navigation = useAuthNavigation(auth.isAuthenticated, auth.loading);
       const { isAuthenticated, loading, authLoading } = auth;
       reactExports.useEffect(() => {
         const scrollManager = ScrollManager.getInstance();
@@ -5206,6 +7741,29 @@ var require_js = __commonJS({
           console.log("📊 Experimental tracking enabled for:", event);
         }
       }, []);
+      reactExports.useEffect(() => {
+        const handleGoogleSigninRequest = (event) => __async(this, null, function* () {
+          var _a;
+          const item = (_a = event.detail) == null ? void 0 : _a.item;
+          if (appConfig.debug.enableLogging) {
+            console.log("🔐 Google sign-in requested for:", item == null ? void 0 : item.label);
+          }
+          try {
+            const result = yield auth.signInWithGoogle();
+            if (result.success && item) {
+              setTimeout(() => {
+                navigation.actions.navigate(item.id);
+              }, 1e3);
+            }
+          } catch (error) {
+            console.error("🔐 Google sign-in failed:", error);
+          }
+        });
+        document.addEventListener("navigation:google-signin-requested", handleGoogleSigninRequest);
+        return () => {
+          document.removeEventListener("navigation:google-signin-requested", handleGoogleSigninRequest);
+        };
+      }, [auth, navigation.actions]);
       const handlePreloaderComplete = () => {
         setIsLoading(false);
         document.body.classList.add("app-loaded");
@@ -5231,7 +7789,7 @@ var require_js = __commonJS({
           false,
           {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 191,
+            lineNumber: 220,
             columnNumber: 7
           },
           this
@@ -5240,20 +7798,20 @@ var require_js = __commonJS({
       return /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(BrowserRouter, { children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Layout, { children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Routes, { children: [
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Route, { path: "/", element: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(HomePage, {}, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 204,
+          lineNumber: 233,
           columnNumber: 36
         }, this) }, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 204,
+          lineNumber: 233,
           columnNumber: 11
         }, this),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Route, { path: "/auth/callback", element: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(AuthCallback, {}, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 207,
+          lineNumber: 236,
           columnNumber: 49
         }, this) }, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 207,
+          lineNumber: 236,
           columnNumber: 11
         }, this),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(
@@ -5262,11 +7820,11 @@ var require_js = __commonJS({
             path: "/add-meals",
             element: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(ProtectedRoute, { children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(AddMeals, {}, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 214,
+              lineNumber: 243,
               columnNumber: 17
             }, this) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 213,
+              lineNumber: 242,
               columnNumber: 15
             }, this)
           },
@@ -5274,7 +7832,7 @@ var require_js = __commonJS({
           false,
           {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 210,
+            lineNumber: 239,
             columnNumber: 11
           },
           this
@@ -5285,11 +7843,11 @@ var require_js = __commonJS({
             path: "/profile",
             element: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(ProtectedRoute, { children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Profile, {}, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 224,
+              lineNumber: 253,
               columnNumber: 17
             }, this) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 223,
+              lineNumber: 252,
               columnNumber: 15
             }, this)
           },
@@ -5297,7 +7855,7 @@ var require_js = __commonJS({
           false,
           {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 220,
+            lineNumber: 249,
             columnNumber: 11
           },
           this
@@ -5306,32 +7864,13 @@ var require_js = __commonJS({
           Route,
           {
             path: "/journal",
-            element: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(ProtectedRoute, { children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("section", { id: "journal", className: "app__section", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "app__container", children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("div", { className: "section-placeholder", children: [
-              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("h2", { children: "📝 Health Journal Section" }, void 0, false, {
-                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-                lineNumber: 237,
-                columnNumber: 23
-              }, this),
-              /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV("p", { children: "This section will be implemented with health journal functionality." }, void 0, false, {
-                fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-                lineNumber: 238,
-                columnNumber: 23
-              }, this)
-            ] }, void 0, true, {
+            element: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(ProtectedRoute, { children: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Journal, {}, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 236,
-              columnNumber: 21
-            }, this) }, void 0, false, {
-              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 235,
-              columnNumber: 19
-            }, this) }, void 0, false, {
-              fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 234,
+              lineNumber: 263,
               columnNumber: 17
             }, this) }, void 0, false, {
               fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-              lineNumber: 233,
+              lineNumber: 262,
               columnNumber: 15
             }, this)
           },
@@ -5339,31 +7878,31 @@ var require_js = __commonJS({
           false,
           {
             fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-            lineNumber: 230,
+            lineNumber: 259,
             columnNumber: 11
           },
           this
         ),
         /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Route, { path: "*", element: /* @__PURE__ */ jsxDevRuntimeExports.jsxDEV(Navigate, { to: "/", replace: true }, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 247,
+          lineNumber: 269,
           columnNumber: 36
         }, this) }, void 0, false, {
           fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-          lineNumber: 247,
+          lineNumber: 269,
           columnNumber: 11
         }, this)
       ] }, void 0, true, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-        lineNumber: 202,
+        lineNumber: 231,
         columnNumber: 9
       }, this) }, void 0, false, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-        lineNumber: 201,
+        lineNumber: 230,
         columnNumber: 7
       }, this) }, void 0, false, {
         fileName: "F:/wamp/www/gamingdronzz.com-health/app/src/App.tsx",
-        lineNumber: 200,
+        lineNumber: 229,
         columnNumber: 5
       }, this);
     }

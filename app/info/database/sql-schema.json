@@ -1,5 +1,120 @@
 [
   {
+    "table_name": "custom_meal_rate_limits",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "custom_meal_rate_limits",
+    "column_name": "user_id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "custom_meal_rate_limits",
+    "column_name": "last_submission",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "custom_meal_rate_limits",
+    "column_name": "submission_count",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "id",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "calories_per_100g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "carbohydrates_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "protein_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "fats_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "free_sugar_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "fiber_g",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "sodium_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "calcium_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "iron_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "vitamin_c_mg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "folate_mcg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "submitted_by",
+    "data_type": "uuid"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "admin_notes",
+    "data_type": "text"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "denial_reason",
+    "data_type": "text"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "custom_meals",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
     "table_name": "foods",
     "column_name": "id",
     "data_type": "uuid"
@@ -245,6 +360,41 @@
     "data_type": "timestamp with time zone"
   },
   {
+    "table_name": "orientations",
+    "column_name": "id",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "orientations",
+    "column_name": "value",
+    "data_type": "character varying"
+  },
+  {
+    "table_name": "orientations",
+    "column_name": "label",
+    "data_type": "character varying"
+  },
+  {
+    "table_name": "orientations",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "orientations",
+    "column_name": "applicable_for",
+    "data_type": "character varying"
+  },
+  {
+    "table_name": "orientations",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "orientations",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
     "table_name": "user_profiles",
     "column_name": "id",
     "data_type": "uuid"
@@ -266,11 +416,6 @@
   },
   {
     "table_name": "user_profiles",
-    "column_name": "date_of_birth",
-    "data_type": "date"
-  },
-  {
-    "table_name": "user_profiles",
     "column_name": "height_cm",
     "data_type": "integer"
   },
@@ -286,16 +431,6 @@
   },
   {
     "table_name": "user_profiles",
-    "column_name": "health_goals",
-    "data_type": "ARRAY"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "dietary_restrictions",
-    "data_type": "ARRAY"
-  },
-  {
-    "table_name": "user_profiles",
     "column_name": "created_at",
     "data_type": "timestamp with time zone"
   },
@@ -303,6 +438,36 @@
     "table_name": "user_profiles",
     "column_name": "updated_at",
     "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "target_weight_kg",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "target_duration",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "target_duration_unit",
+    "data_type": "text"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "orientation",
+    "data_type": "text"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "age",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "user_profiles",
+    "column_name": "gender",
+    "data_type": "text"
   },
   {
     "table_name": "user_roles",

@@ -69,3 +69,27 @@ export const SHADOWS = {
     lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
     xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
 } as const;
+
+export const NUTRITION_CONSTANTS = {
+    caloriesPerGramProtein: 4,
+    caloriesPerGramCarbs: 4,
+    caloriesPerGramFat: 9,
+    caloriesPerGramAlcohol: 7,
+    defaultMacroDistribution: {
+        protein: 0.25,
+        carbs: 0.45,
+        fat: 0.30
+    },
+    mealTypeIcons: {
+        breakfast: '🌅',
+        lunch: '☀️',
+        dinner: '🌙',
+        snack: '🍿'
+    },
+    nutritionIcons: {
+        calories: '🔥',
+        protein: '💪',
+        carbs: '🌾',
+        fat: '🥑'
+    }
+} as const;

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { useContentManager } from '../../hooks/useContentManager';
 import { useAuth } from '../../hooks/useAuth';
 import { useCalorieTracker } from '../../hooks/useCalorieTracker';
+import CalorieCalculatorService from '../../services/CalorieCalculatorService';
 import './Hero.css';
 
 interface HeroProps {
@@ -59,7 +60,7 @@ const Hero: React.FC<HeroProps> = ({
     // Hooks
     const { setCurrentSection } = useContentManager();
     const { isAuthenticated, user } = useAuth();
-    const { calorieData, todaysMeals } = useCalorieTracker();
+    const { calorieData, todaysMeals, profile } = useCalorieTracker();
 
     // Calculate nutrition summary from real data
     const nutritionSummary = useMemo(() => {
@@ -72,14 +73,18 @@ const Hero: React.FC<HeroProps> = ({
             }),
             { calories: 0, protein: 0, carbs: 0, fat: 0 }
         );
+        
+        // Get macro ratios based on user's orientation
+        const macroRatios = CalorieCalculatorService.getMacroRatios(profile?.orientation);
+        
         return {
             ...totals,
             goalCalories: calorieData.targetCalories,
-            goalProtein: Math.round(calorieData.targetCalories * 0.3 / 4), // 30% of calories from protein
-            goalCarbs: Math.round(calorieData.targetCalories * 0.45 / 4), // 45% of calories from carbs
-            goalFat: Math.round(calorieData.targetCalories * 0.25 / 9) // 25% of calories from fat
+            goalProtein: Math.round(calorieData.targetCalories * macroRatios.protein / 4), // protein has 4 calories per gram
+            goalCarbs: Math.round(calorieData.targetCalories * macroRatios.carbs / 4), // carbs has 4 calories per gram
+            goalFat: Math.round(calorieData.targetCalories * macroRatios.fat / 9) // fat has 9 calories per gram
         };
-    }, [todaysMeals, calorieData.targetCalories]);
+    }, [todaysMeals, calorieData.targetCalories, profile?.orientation]);
 
     // Generate particles data
     const particlesData: ParticleData[] = useMemo(() => {
@@ -473,7 +478,7 @@ const Hero: React.FC<HeroProps> = ({
                                                 <div className="hero__energy-arrow">
                                                     <div className="hero__energy-line"></div>
                                                     <div className="hero__energy-tip"></div>
-                                                    <span className="hero__energy-multiplier">x {(calorieData.calculation?.tdee / calorieData.calculation?.bmr).toFixed(2) || '1.0'}</span>
+                                                    <span className="hero__energy-multiplier">x {(calorieData.calculation?.tdee && calorieData.calculation?.bmr ? (calorieData.calculation.tdee / calorieData.calculation.bmr).toFixed(2) : '1.0')}</span>
                                                 </div>
                                                 
                                                 <div className="hero__energy-node hero__energy-node--tdee">

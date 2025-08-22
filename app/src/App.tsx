@@ -166,6 +166,34 @@ function App() {
     }
   }, []);
 
+  // Listen for Google sign-in requests from NavigationManager
+  useEffect(() => {
+    const handleGoogleSigninRequest = async (event: CustomEvent) => {
+      const item = event.detail?.item;
+      if (appConfig.debug.enableLogging) {
+        console.log('🔐 Google sign-in requested for:', item?.label);
+      }
+      
+      try {
+        const result = await auth.signInWithGoogle();
+        if (result.success && item) {
+          // Navigate to the requested page after successful authentication
+          setTimeout(() => {
+            navigation.actions.navigate(item.id);
+          }, 1000); // Small delay to allow auth state to update
+        }
+      } catch (error) {
+        console.error('🔐 Google sign-in failed:', error);
+      }
+    };
+
+    document.addEventListener('navigation:google-signin-requested', handleGoogleSigninRequest as EventListener);
+
+    return () => {
+      document.removeEventListener('navigation:google-signin-requested', handleGoogleSigninRequest as EventListener);
+    };
+  }, [auth, navigation.actions]);
+
   const handlePreloaderComplete = () => {
     setIsLoading(false);
 

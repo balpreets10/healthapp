@@ -23,14 +23,10 @@ const useNavigation = (options: UseNavigationOptions = {}): UseNavigationReturn 
     // Update ref without causing re-render
     onStateChangeRef.current = onStateChange;
 
-    const [state, setState] = useState<NavigationState>(() => ({
-        isOpen: false,
-        activeItem: 'home',
-        hoveredItem: null,
-        focusedItem: null,
-        keyboardMode: false,
-        isAnimating: false
-    }));
+    const [state, setState] = useState<NavigationState>(() => {
+        const manager = NavigationManager.getInstance();
+        return manager.getState();
+    });
 
     const [config, setConfig] = useState<NavigationConfig>(() => ({
         items: [],

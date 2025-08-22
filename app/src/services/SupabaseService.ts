@@ -560,6 +560,253 @@ class SupabaseService {
         }
     }
 
+    // ===== ORIENTATION MANAGEMENT ===== //
+    async getOrientations(applicableFor?: 'weight_loss' | 'weight_gain' | 'both'): Promise<{ data: any[]; error?: any }> {
+        try {
+            let query = this.client
+                .from('orientations')
+                .select('*')
+                .order('label', { ascending: true });
+
+            if (applicableFor && applicableFor !== 'both') {
+                query = query.or(`applicable_for.eq.${applicableFor},applicable_for.eq.both`);
+            }
+
+            const { data, error } = await query;
+
+            return { data: data || [], error };
+        } catch (err) {
+            console.error('Get orientations failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
+    // ===== MEALS MANAGEMENT ===== //
+    async getTodaysMeals(userId: string): Promise<{ data: any[]; error?: any }> {
+        try {
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            
+            const { data, error } = await this.client
+                .from('meals')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('date', today)
+                .order('time', { ascending: true });
+
+            return { data: data || [], error };
+        } catch (err) {
+            console.error('Get today\'s meals failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
+    async getMealsByDateRange(userId: string, startDate: string, endDate: string): Promise<{ data: any[]; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('meals')
+                .select('*')
+                .eq('user_id', userId)
+                .gte('date', startDate)
+                .lte('date', endDate)
+                .order('date', { ascending: false })
+                .order('time', { ascending: true });
+
+            return { data: data || [], error };
+        } catch (err) {
+            console.error('Get meals by date range failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
+    async addMeal(mealData: {
+        user_id: string;
+        meal_type: string;
+        meal_name: string;
+        date: string;
+        time: string;
+        foods: any;
+        total_calories: number;
+        total_protein_g: number;
+        total_carbs_g: number;
+        total_fat_g: number;
+        total_fiber_g?: number;
+        total_sugar_g?: number;
+        total_sodium_mg?: number;
+        notes?: string;
+    }): Promise<{ data?: any; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('meals')
+                .insert([mealData])
+                .select()
+                .single();
+
+            return { data, error };
+        } catch (err) {
+            console.error('Add meal failed:', err);
+            return { data: null, error: err };
+        }
+    }
+
+    async updateMeal(mealId: string, updates: {
+        meal_type?: string;
+        meal_name?: string;
+        date?: string;
+        time?: string;
+        foods?: any;
+        total_calories?: number;
+        total_protein_g?: number;
+        total_carbs_g?: number;
+        total_fat_g?: number;
+        total_fiber_g?: number;
+        total_sugar_g?: number;
+        total_sodium_mg?: number;
+        notes?: string;
+    }): Promise<{ data?: any; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('meals')
+                .update({
+                    ...updates,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', mealId)
+                .select()
+                .single();
+
+            return { data, error };
+        } catch (err) {
+            console.error('Update meal failed:', err);
+            return { data: null, error: err };
+        }
+    }
+
+    async deleteMeal(mealId: string): Promise<{ error?: any }> {
+        try {
+            const { error } = await this.client
+                .from('meals')
+                .delete()
+                .eq('id', mealId);
+
+            return { error };
+        } catch (err) {
+            console.error('Delete meal failed:', err);
+            return { error: err };
+        }
+    }
+
+    // ===== CUSTOM MEALS MANAGEMENT ===== //
+    async checkCustomMealExists(userId: string, mealName: string, calories: number, protein: number, carbs: number, fat: number): Promise<{ exists: boolean; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('custom_meals')
+                .select('id')
+                .eq('submitted_by', userId)
+                .eq('name', mealName)
+                .eq('calories_per_100g', calories)
+                .eq('protein_g', protein)
+                .eq('carbohydrates_g', carbs)
+                .eq('fats_g', fat)
+                .maybeSingle();
+
+            return { exists: !!data, error };
+        } catch (err) {
+            console.error('Check custom meal exists failed:', err);
+            return { exists: false, error: err };
+        }
+    }
+
+    async addCustomMeal(customMealData: {
+        name: string;
+        calories_per_100g: number;
+        protein_g: number;
+        carbohydrates_g: number;
+        fats_g: number;
+        fiber_g?: number;
+        free_sugar_g?: number;
+        sodium_mg?: number;
+        submitted_by: string;
+        status: 'pending' | 'approved' | 'rejected';
+    }): Promise<{ data?: any; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('custom_meals')
+                .insert([customMealData])
+                .select()
+                .single();
+
+            return { data, error };
+        } catch (err) {
+            console.error('Add custom meal failed:', err);
+            return { data: null, error: err };
+        }
+    }
+
+    // ===== FOOD SEARCH FUNCTIONALITY ===== //
+    async searchFoods(query: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('foods')
+                .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
+                .ilike('name', `%${query}%`)
+                .limit(limit)
+                .order('name', { ascending: true });
+
+            return { data: data || [], error };
+        } catch (err) {
+            console.error('Search foods failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
+    async searchCustomMeals(userId: string, query: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('custom_meals')
+                .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
+                .eq('submitted_by', userId)
+                .eq('status', 'approved')
+                .ilike('name', `%${query}%`)
+                .limit(limit)
+                .order('name', { ascending: true });
+
+            return { data: data || [], error };
+        } catch (err) {
+            console.error('Search custom meals failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
+    async searchFoodsAndCustomMeals(userId: string, query: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+        try {
+            // Search both tables concurrently
+            const [foodsResult, customMealsResult] = await Promise.all([
+                this.searchFoods(query, Math.ceil(limit / 2)),
+                this.searchCustomMeals(userId, query, Math.ceil(limit / 2))
+            ]);
+
+            if (foodsResult.error && customMealsResult.error) {
+                return { data: [], error: foodsResult.error };
+            }
+
+            // Combine results, marking source for UI purposes
+            const combinedResults = [
+                ...(foodsResult.data || []).map(food => ({ ...food, source: 'foods' })),
+                ...(customMealsResult.data || []).map(meal => ({ ...meal, source: 'custom_meals' }))
+            ];
+
+            // Sort by name and limit to requested number
+            const sortedResults = combinedResults
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .slice(0, limit);
+
+            return { data: sortedResults, error: null };
+        } catch (err) {
+            console.error('Search foods and custom meals failed:', err);
+            return { data: [], error: err };
+        }
+    }
+
     // ===== OAUTH CALLBACK HANDLER ===== //
     async handleOAuthCallback(): Promise<{ success: boolean; error?: string }> {
         try {

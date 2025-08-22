@@ -1,9 +1,8 @@
 // components/auth/ProtectedRoute.tsx
-import { ReactNode } from 'react';
+import { ReactNode, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-// import LoginForm from './LoginForm';
-// import './ProtectedRoute.css';
+import './ProtectedRoute.css';
 
 interface ProtectedRouteProps {
     children: ReactNode;
@@ -12,7 +11,20 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requireAdmin = false, fallback = null }: ProtectedRouteProps) => {
-    const { loading, isAuthenticated, isAdmin, user } = useAuth();
+    const { loading, isAuthenticated, isAdmin, user, signInWithGoogle, authLoading } = useAuth();
+
+    const handleSignIn = useCallback(async () => {
+        if (authLoading) return;
+        
+        try {
+            const result = await signInWithGoogle();
+            if (!result.success) {
+                console.error('Sign in failed:', result.error);
+            }
+        } catch (error) {
+            console.error('Sign in error:', error);
+        }
+    }, [signInWithGoogle, authLoading]);
 
     if (loading) {
         return (
@@ -22,9 +34,36 @@ const ProtectedRoute = ({ children, requireAdmin = false, fallback = null }: Pro
         );
     }
 
-    // if (!isAuthenticated) {
-    //     return <>{fallback || <LoginForm />}</>;
-    // }
+    if (!isAuthenticated) {
+        return (
+            <div className="protected-route protected-route--unauthorized">
+                <div className="protected-route__container">
+                    <h2 className="protected-route__title">Sign In Required</h2>
+                    <p className="protected-route__message">
+                        Please sign in to access this page.
+                    </p>
+                    <button
+                        className="protected-route__signin-btn"
+                        onClick={handleSignIn}
+                        disabled={authLoading}
+                        type="button"
+                    >
+                        {authLoading ? (
+                            <>
+                                <span className="protected-route__signin-icon">⏳</span>
+                                Signing in...
+                            </>
+                        ) : (
+                            <>
+                                <span className="protected-route__signin-icon">🔐</span>
+                                Sign In with Google
+                            </>
+                        )}
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (requireAdmin && !isAdmin) {
         return (

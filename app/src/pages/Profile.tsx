@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import SupabaseService from '../services/SupabaseService';
 import NotificationManager from '../utils/NotificationManager';
@@ -12,7 +11,9 @@ interface UserProfileData {
     target_duration: number;
     target_duration_unit: string;
     activity_level: string;
-    health_goals: string[];
+    orientation: string;
+    age: number;
+    gender: string;
 }
 
 type HeightUnit = 'cm' | 'ft';
@@ -21,7 +22,6 @@ type DurationUnit = 'days' | 'weeks' | 'months';
 
 const Profile: React.FC = () => {
     const { user, signOut } = useAuth();
-    const navigate = useNavigate();
     
     const [profileData, setProfileData] = useState<UserProfileData>({
         height_cm: 0,
@@ -30,7 +30,9 @@ const Profile: React.FC = () => {
         target_duration: 0,
         target_duration_unit: 'weeks',
         activity_level: 'moderate',
-        health_goals: []
+        orientation: '',
+        age: 0,
+        gender: ''
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -41,6 +43,7 @@ const Profile: React.FC = () => {
     const [heightInches, setHeightInches] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [hasProfile, setHasProfile] = useState(false);
+    const [orientationOptions, setOrientationOptions] = useState<{ value: string; label: string }[]>([]);
 
     const getUserName = useCallback(() => {
         if (!user) return '';
@@ -67,9 +70,15 @@ const Profile: React.FC = () => {
         return email[0].toUpperCase();
     }, [user]);
 
+
     useEffect(() => {
         loadUserProfile();
+        loadOrientations();
     }, [user]);
+
+    useEffect(() => {
+        loadOrientations();
+    }, [profileData.weight_kg, profileData.target_weight_kg]);
 
     const loadUserProfile = async () => {
         if (!user) return;
@@ -77,26 +86,17 @@ const Profile: React.FC = () => {
         try {
             const { data } = await SupabaseService.getUserProfile(user.id);
             
-            // Load additional data from localStorage
-            let additionalData = { target_weight_kg: 0, target_duration: 0, target_duration_unit: 'weeks' };
-            try {
-                const stored = localStorage.getItem(`profile_extra_${user.id}`);
-                if (stored) {
-                    additionalData = JSON.parse(stored);
-                }
-            } catch (e) {
-                console.warn('Failed to load additional profile data:', e);
-            }
-            
             if (data) {
                 setProfileData({
                     height_cm: data.height_cm || 0,
                     weight_kg: data.weight_kg || 0,
-                    target_weight_kg: additionalData.target_weight_kg || 0,
-                    target_duration: additionalData.target_duration || 0,
-                    target_duration_unit: additionalData.target_duration_unit || 'weeks',
+                    target_weight_kg: data.target_weight_kg || 0,
+                    target_duration: data.target_duration || 0,
+                    target_duration_unit: data.target_duration_unit || 'weeks',
                     activity_level: data.activity_level || 'moderate',
-                    health_goals: data.health_goals || []
+                    orientation: data.orientation || '',
+                    age: data.age || 0,
+                    gender: data.gender || ''
                 });
                 setHasProfile(true);
                 
@@ -107,20 +107,56 @@ const Profile: React.FC = () => {
                     setHeightInches(inches);
                 }
             } else {
-                // Load from localStorage even if no database profile exists
-                setProfileData({
-                    height_cm: 0,
-                    weight_kg: 0,
-                    target_weight_kg: additionalData.target_weight_kg || 0,
-                    target_duration: additionalData.target_duration || 0,
-                    target_duration_unit: additionalData.target_duration_unit || 'weeks',
-                    activity_level: 'moderate',
-                    health_goals: []
-                });
                 setIsEditing(true); // Auto-edit if no profile exists
             }
         } catch (error) {
             console.error('Error loading profile:', error);
+        }
+    };
+
+    const loadOrientations = async () => {
+        try {
+            const currentWeight = profileData.weight_kg;
+            const targetWeight = profileData.target_weight_kg;
+            
+            let applicableFor: 'weight_loss' | 'weight_gain' | 'both' = 'both';
+            
+            if (currentWeight > 0 && targetWeight > 0) {
+                if (targetWeight < currentWeight) {
+                    applicableFor = 'weight_loss';
+                } else if (targetWeight > currentWeight) {
+                    applicableFor = 'weight_gain';
+                }
+            }
+            
+            const { data, error } = await SupabaseService.getOrientations(applicableFor);
+            
+            if (error) {
+                console.error('Error loading orientations:', error);
+                // Fallback to hardcoded values if database fetch fails
+                setOrientationOptions(getOrientationOptionsFallback(applicableFor));
+            } else {
+                setOrientationOptions(data.map(orientation => ({
+                    value: orientation.value,
+                    label: orientation.label
+                })));
+            }
+        } catch (error) {
+            console.error('Error loading orientations:', error);
+            // Fallback to hardcoded values
+            const currentWeight = profileData.weight_kg;
+            const targetWeight = profileData.target_weight_kg;
+            let applicableFor: 'weight_loss' | 'weight_gain' | 'both' = 'both';
+            
+            if (currentWeight > 0 && targetWeight > 0) {
+                if (targetWeight < currentWeight) {
+                    applicableFor = 'weight_loss';
+                } else if (targetWeight > currentWeight) {
+                    applicableFor = 'weight_gain';
+                }
+            }
+            
+            setOrientationOptions(getOrientationOptionsFallback(applicableFor));
         }
     };
 
@@ -149,6 +185,28 @@ const Profile: React.FC = () => {
 
     const handleInputChange = (field: keyof UserProfileData, value: number | string | string[]) => {
         setProfileData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const getOrientationOptionsFallback = (applicableFor: 'weight_loss' | 'weight_gain' | 'both'): { value: string; label: string }[] => {
+        if (applicableFor === 'weight_loss') {
+            return [
+                { value: 'energy_focused', label: 'Energy Focussed' },
+                { value: 'muscle_preservation', label: 'Muscle Preservation' }
+            ];
+        } else if (applicableFor === 'weight_gain') {
+            return [
+                { value: 'lean_muscle_building', label: 'Lean Muscle Building' },
+                { value: 'energetic_bulking', label: 'Energetic Bulking' }
+            ];
+        }
+        
+        // Default options when weights are equal or not set
+        return [
+            { value: 'energy_focused', label: 'Energy Focussed' },
+            { value: 'muscle_preservation', label: 'Muscle Preservation' },
+            { value: 'lean_muscle_building', label: 'Lean Muscle Building' },
+            { value: 'energetic_bulking', label: 'Energetic Bulking' }
+        ];
     };
 
     const validateInputs = (): boolean => {
@@ -181,6 +239,16 @@ const Profile: React.FC = () => {
             return false;
         }
 
+        if (!profileData.age || profileData.age < 1 || profileData.age > 120) {
+            NotificationManager.getInstance().show('Please enter valid age (1-120)', 'error');
+            return false;
+        }
+
+        if (!profileData.gender) {
+            NotificationManager.getInstance().show('Please select a gender', 'error');
+            return false;
+        }
+
         return true;
     };
 
@@ -191,7 +259,9 @@ const Profile: React.FC = () => {
             data.target_weight_kg > 0 &&
             data.target_duration > 0 &&
             data.target_duration_unit.length > 0 &&
-            data.activity_level.length > 0
+            data.activity_level.length > 0 &&
+            data.age > 0 &&
+            data.gender.length > 0
         );
     };
 
@@ -200,7 +270,6 @@ const Profile: React.FC = () => {
         
         setIsLoading(true);
         try {
-            // Only save fields that exist in the database schema
             const dataToSave: any = {};
             
             // Convert height to cm if in ft/in
@@ -217,20 +286,20 @@ const Profile: React.FC = () => {
                 dataToSave.weight_kg = profileData.weight_kg;
             }
             
-            // Add activity level and health goals (these exist in the schema)
-            dataToSave.activity_level = profileData.activity_level;
-            dataToSave.health_goals = profileData.health_goals;
+            // Convert target weight to kg if in lbs
+            if (targetWeightUnit === 'lbs') {
+                dataToSave.target_weight_kg = convertWeight(profileData.target_weight_kg, 'lbs', 'kg');
+            } else {
+                dataToSave.target_weight_kg = profileData.target_weight_kg;
+            }
             
-            // Store target weight, target duration, and duration unit in localStorage for now
-            // since they don't exist in the current database schema
-            const additionalData = {
-                target_weight_kg: targetWeightUnit === 'lbs' 
-                    ? convertWeight(profileData.target_weight_kg, 'lbs', 'kg')
-                    : profileData.target_weight_kg,
-                target_duration: profileData.target_duration,
-                target_duration_unit: profileData.target_duration_unit
-            };
-            localStorage.setItem(`profile_extra_${user.id}`, JSON.stringify(additionalData));
+            // Add all fields that now exist in the database
+            dataToSave.activity_level = profileData.activity_level;
+            dataToSave.target_duration = profileData.target_duration;
+            dataToSave.target_duration_unit = profileData.target_duration_unit;
+            dataToSave.orientation = profileData.orientation;
+            dataToSave.age = profileData.age;
+            dataToSave.gender = profileData.gender;
             
             const { error } = await SupabaseService.updateUserProfile(user.id, dataToSave);
             
@@ -255,15 +324,15 @@ const Profile: React.FC = () => {
         setIsEditing(false);
     };
 
-    const handleSignOut = useCallback(async () => {
+    const handleSignOut = async () => {
         try {
             await signOut();
-            navigate('/');
         } catch (error) {
-            console.error('Error signing out:', error);
+            console.error('Sign out error:', error);
             NotificationManager.getInstance().show('Failed to sign out', 'error');
         }
-    }, [signOut, navigate]);
+    };
+
 
     return (
         <div className="profile">
@@ -283,11 +352,9 @@ const Profile: React.FC = () => {
                     <button
                         className="profile__signout-btn"
                         onClick={handleSignOut}
-                        aria-label="Sign out"
                         type="button"
                     >
-                        <span className="profile__signout-icon">🚪</span>
-                        <span className="profile__signout-text">Sign Out</span>
+                        Sign Out
                     </button>
                 </div>
 
@@ -479,6 +546,49 @@ const Profile: React.FC = () => {
                             <div className="profile__row">
                                 <div className="profile__field-group">
                                     <div className="profile__field-header">
+                                        <h3>Age</h3>
+                                    </div>
+                                    <div className="profile__input-group">
+                                        <input
+                                            id="age"
+                                            name="age"
+                                            type="number"
+                                            min="1"
+                                            max="120"
+                                            value={profileData.age}
+                                            onChange={(e) => handleInputChange('age', parseInt(e.target.value) || 0)}
+                                            disabled={!isEditing}
+                                            placeholder="Age"
+                                        />
+                                        <span className="profile__unit">years</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="profile__row">
+                                <div className="profile__field-group">
+                                    <div className="profile__field-header">
+                                        <h3>Gender</h3>
+                                    </div>
+                                    <select
+                                        id="gender"
+                                        name="gender"
+                                        value={profileData.gender}
+                                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                                        disabled={!isEditing}
+                                        className="profile__select"
+                                    >
+                                        <option value="">Select gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="profile__row">
+                                <div className="profile__field-group">
+                                    <div className="profile__field-header">
                                         <h3>Activity Level</h3>
                                     </div>
                                     <select
@@ -494,6 +604,27 @@ const Profile: React.FC = () => {
                                         <option value="moderate">Moderate</option>
                                         <option value="active">Active</option>
                                         <option value="very_active">Very Active</option>
+                                    </select>
+                                </div>
+
+                                <div className="profile__field-group">
+                                    <div className="profile__field-header">
+                                        <h3>Orientation</h3>
+                                    </div>
+                                    <select
+                                        id="orientation"
+                                        name="orientation"
+                                        value={profileData.orientation}
+                                        onChange={(e) => handleInputChange('orientation', e.target.value)}
+                                        disabled={!isEditing}
+                                        className="profile__select"
+                                    >
+                                        <option value="">Select orientation</option>
+                                        {orientationOptions.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

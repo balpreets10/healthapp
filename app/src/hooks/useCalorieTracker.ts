@@ -29,6 +29,26 @@ interface MealData {
     time: string;
 }
 
+interface DatabaseMeal {
+    id: string;
+    user_id: string;
+    meal_type: string;
+    meal_name: string;
+    date: string;
+    time: string;
+    foods: any; // JSONB field
+    total_calories: number;
+    total_protein_g: number;
+    total_carbs_g: number;
+    total_fat_g: number;
+    total_fiber_g?: number;
+    total_sugar_g?: number;
+    total_sodium_mg?: number;
+    notes?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export const useCalorieTracker = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -44,7 +64,7 @@ export const useCalorieTracker = () => {
         try {
             const { data } = await SupabaseService.getUserProfile(user.id);
             
-            let additionalData = { target_weight_kg: 0, target_duration: 0, target_duration_unit: 'weeks' as const };
+            let additionalData = { target_weight_kg: 0, target_duration: 0, target_duration_unit: 'weeks' as const, orientation: '' };
             try {
                 const stored = localStorage.getItem(`profile_extra_${user.id}`);
                 if (stored) {
@@ -63,7 +83,8 @@ export const useCalorieTracker = () => {
                     target_duration_unit: additionalData.target_duration_unit,
                     activity_level: data.activity_level || 'moderate',
                     age: 30, 
-                    gender: 'male' 
+                    gender: 'male',
+                    orientation: additionalData.orientation || ''
                 };
                 
                 setProfile(userProfile);
@@ -78,41 +99,42 @@ export const useCalorieTracker = () => {
         }
     };
 
-    const loadTodaysMeals = () => {
-        const mockMeals: MealData[] = [
-            {
-                id: '1',
-                name: 'Oatmeal with Berries',
-                calories: 320,
-                protein: 12,
-                carbs: 58,
-                fat: 6,
-                mealType: 'breakfast',
-                time: '8:00 AM'
-            },
-            {
-                id: '2',
-                name: 'Grilled Chicken Salad',
-                calories: 450,
-                protein: 35,
-                carbs: 25,
-                fat: 18,
-                mealType: 'lunch',
-                time: '12:30 PM'
-            },
-            {
-                id: '3',
-                name: 'Greek Yogurt',
-                calories: 150,
-                protein: 15,
-                carbs: 12,
-                fat: 5,
-                mealType: 'snack',
-                time: '3:15 PM'
+    const loadTodaysMeals = async () => {
+        if (!user) {
+            setTodaysMeals([]);
+            return;
+        }
+
+        try {
+            const { data, error } = await SupabaseService.getTodaysMeals(user.id);
+            
+            if (error) {
+                console.error('Error loading today\'s meals:', error);
+                setTodaysMeals([]);
+                return;
             }
-        ];
-        
-        setTodaysMeals(mockMeals);
+
+            // Transform database meal data to match the MealData interface
+            const transformedMeals: MealData[] = data.map((meal: DatabaseMeal) => ({
+                id: meal.id,
+                name: meal.meal_name,
+                calories: meal.total_calories,
+                protein: meal.total_protein_g,
+                carbs: meal.total_carbs_g,
+                fat: meal.total_fat_g,
+                mealType: meal.meal_type as 'breakfast' | 'lunch' | 'dinner' | 'snack',
+                time: meal.time ? new Date(`1970-01-01T${meal.time}`).toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                }) : 'Not specified'
+            }));
+
+            setTodaysMeals(transformedMeals);
+        } catch (error) {
+            console.error('Failed to load today\'s meals:', error);
+            setTodaysMeals([]);
+        }
     };
 
     useEffect(() => {
@@ -165,9 +187,9 @@ export const useCalorieTracker = () => {
         };
     }, [profile, todaysMeals, isLoading]);
 
-    const refreshData = () => {
-        loadProfile();
-        loadTodaysMeals();
+    const refreshData = async () => {
+        await loadProfile();
+        await loadTodaysMeals();
     };
 
     return {

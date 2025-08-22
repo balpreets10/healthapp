@@ -7,6 +7,7 @@ interface UserProfile {
     activity_level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
     age?: number;
     gender?: 'male' | 'female';
+    orientation?: string;
 }
 
 interface CalorieCalculation {
@@ -15,6 +16,12 @@ interface CalorieCalculation {
     targetCalories: number;
     weightChangePerWeek: number;
     dailyCalorieDeficit: number;
+}
+
+interface MacroRatios {
+    protein: number;
+    carbs: number;
+    fat: number;
 }
 
 class CalorieCalculatorService {
@@ -113,6 +120,29 @@ class CalorieCalculatorService {
         }
     }
 
+    static getMacroRatios(orientation?: string): MacroRatios {
+        if (!orientation) {
+            // Default ratios if no orientation is specified
+            return { protein: 0.3, carbs: 0.45, fat: 0.25 };
+        }
+
+        switch (orientation) {
+            case 'energy_focused':
+            case 'energetic_bulking':
+                // Energy focused/Energetic bulking: 20% protein, 40% carbs, 40% fats
+                return { protein: 0.2, carbs: 0.4, fat: 0.4 };
+            
+            case 'lean_muscle_building':
+            case 'muscle_preservation':
+                // Lean muscle building/Muscle preservation: 30% protein, 35% carbs, 35% fats
+                return { protein: 0.3, carbs: 0.35, fat: 0.35 };
+            
+            default:
+                // Default ratios for unknown orientations
+                return { protein: 0.3, carbs: 0.45, fat: 0.25 };
+        }
+    }
+
     static validateProfile(profile: UserProfile): { isValid: boolean; errors: string[] } {
         const errors: string[] = [];
 
@@ -140,4 +170,4 @@ class CalorieCalculatorService {
 }
 
 export default CalorieCalculatorService;
-export type { UserProfile, CalorieCalculation };
+export type { UserProfile, CalorieCalculation, MacroRatios };

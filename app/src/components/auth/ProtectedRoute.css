@@ -1,0 +1,116 @@
+/* ProtectedRoute.css */
+
+.protected-route {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.protected-route--loading {
+    background: #f8f9fa;
+}
+
+.protected-route--unauthorized {
+    padding: 2rem;
+}
+
+.protected-route__container {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    background: white;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.protected-route__title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.protected-route__message {
+    font-size: 1.125rem;
+    color: #4a5568;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.protected-route__hint {
+    font-size: 1rem;
+    color: #718096;
+    background: #f7fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #4299e1;
+    margin-top: 1.5rem;
+}
+
+.protected-route__user-info {
+    font-size: 0.875rem;
+    color: #718096;
+    background: #f7fafc;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+}
+
+.protected-route__signin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.protected-route__signin-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.protected-route__signin-btn:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.protected-route__signin-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.protected-route__signin-icon {
+    font-size: 1.25rem;
+}
+
+@media (max-width: 640px) {
+    .protected-route__container {
+        margin: 1rem;
+        padding: 2rem 1.5rem;
+    }
+    
+    .protected-route__title {
+        font-size: 1.75rem;
+    }
+    
+    .protected-route__message {
+        font-size: 1rem;
+    }
+}
