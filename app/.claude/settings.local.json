@@ -5,7 +5,8 @@
       "WebSearch",
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

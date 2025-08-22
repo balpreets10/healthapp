@@ -18,11 +18,22 @@ All SQL-related files and scripts should be placed in the `info/sql-files/` dire
 - Include Row Level Security (RLS) policies where appropriate
 - Add helpful comments to explain complex queries or business logic
 
-## Token Usage Optimization
+## Token Usage Optimization - MANDATORY FOR ALL RESPONSES
 
-After completing tasks, Claude should give the user a choice to run `/clear` to optimize token usage, with clearing as the default option. and also display current query words and token usage
+IMPORTANT: Claude must end EVERY single response with token usage statistics, no exceptions.
 
-Example prompt: "Task completed. Would you like to clear the conversation context to optimize token usage? (xxx words and yyy tokens used) (%xx tokens left) [Y/n]"
+Mandatory ending for ALL responses:
+- Count total words in current conversation
+- Estimate total tokens used
+- Always offer the clear option
+- Format: "📊 Conversation stats: [X] words, [Y] tokens used. Run `/clear` to optimize? [Y/n]"
+
+This applies to:
+- Simple questions and answers
+- Complex tasks
+- Code explanations
+- File operations
+- Any and all interactions
 
 ## Website Development Best Practices
 

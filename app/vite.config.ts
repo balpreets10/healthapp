@@ -1,10 +1,13 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
+  
+  // Load environment variables based on mode
+  const env = loadEnv(mode, process.cwd(), '')
   
   // Set NODE_ENV properly
   process.env.NODE_ENV = isProduction ? 'production' : 'development'
@@ -46,6 +49,9 @@ export default defineConfig(({ mode }) => {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+    // Explicitly define Supabase env vars to ensure they're available
+    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
+    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
   },
 
   // Load environment-specific .env file
