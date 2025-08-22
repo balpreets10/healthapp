@@ -3,6 +3,7 @@ import { useContentManager } from '../hooks/useContentManager';
 import { useCalorieTracker } from '../hooks/useCalorieTracker';
 import { useAuth } from '../hooks/useAuth';
 import SupabaseService from '../services/SupabaseService';
+import { calculateCaloriesFromMacros } from '../utils/nutritionCalculations';
 import './AddMeals.css';
 
 interface MealEntry {
@@ -170,6 +171,23 @@ const AddMeals: React.FC = () => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Auto-calculate calories when macronutrients change
+    useEffect(() => {
+        const protein = parseFloat(customMealForm.protein) || 0;
+        const carbs = parseFloat(customMealForm.carbs) || 0;
+        const fat = parseFloat(customMealForm.fat) || 0;
+        const sugar = parseFloat(customMealForm.sugar) || 0;
+
+        // Only auto-calculate if at least one macro has a value and calories field is empty or was auto-calculated
+        if ((protein > 0 || carbs > 0 || fat > 0 || sugar > 0)) {
+            const calculatedCalories = calculateCaloriesFromMacros(protein, carbs, fat, sugar);
+            setCustomMealForm(prev => ({
+                ...prev, 
+                calories: calculatedCalories.toString()
+            }));
+        }
+    }, [customMealForm.protein, customMealForm.carbs, customMealForm.fat, customMealForm.sugar]);
 
 
     // Add meal function - TODO: Implement actual database insertion
@@ -751,13 +769,18 @@ const AddMeals: React.FC = () => {
 
                             <div className="add-meals__form-row">
                                 <div className="add-meals__form-group add-meals__form-group--half">
-                                    <label className="add-meals__form-label">Calories *</label>
+                                    <label className="add-meals__form-label">
+                                        Calories * 
+                                        <span className="add-meals__form-label-note">
+                                            (auto-calculated from macros)
+                                        </span>
+                                    </label>
                                     <input
                                         type="number"
-                                        className="add-meals__form-input"
+                                        className="add-meals__form-input add-meals__form-input--auto-calculated"
                                         value={customMealForm.calories}
                                         onChange={(e) => setCustomMealForm(prev => ({...prev, calories: e.target.value}))}
-                                        placeholder="0"
+                                        placeholder="Enter macros to auto-calculate"
                                         min="0"
                                         step="1"
                                         required

@@ -87,3 +87,11 @@ export const calculateMacroRatio = (macro: number, totalCalories: number): numbe
 export const calculateAverageCaloriesPerMeal = (totalCalories: number, mealCount: number): number => {
     return mealCount > 0 ? Math.round(totalCalories / mealCount) : 0;
 };
+
+export const calculateCaloriesFromMacros = (protein: number, carbs: number, fat: number, sugar: number = 0): number => {
+    const proteinCalories = protein * 4;
+    const carbCalories = carbs * 4;
+    const fatCalories = fat * 9;
+    const sugarCalories = sugar * 4;
+    return Math.round(proteinCalories + carbCalories + fatCalories + sugarCalories);
+};
