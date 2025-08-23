@@ -139,4 +139,6 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 [Dd]ata
-/app/builds/
+/app/builds
+app/builds
+"app/builds/" 
