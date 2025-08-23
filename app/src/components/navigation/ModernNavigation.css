@@ -24,9 +24,9 @@
 
 /* ===== CONTAINER ===== */
 .modern-nav__container {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     max-width: var(--gd-container-max-width);
     margin: 0 auto;
     padding: 0 var(--gd-container-padding);
@@ -61,7 +61,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    flex: 1;
+    grid-column: 2;
 }
 
 .modern-nav__item {
@@ -206,6 +206,8 @@
     display: flex;
     align-items: center;
     gap: var(--gd-space-3);
+    justify-content: flex-end;
+    grid-column: 3;
 }
 
 
@@ -431,15 +433,18 @@
 
     /* Adjust container for bottom navigation */
     .modern-nav__container {
-        padding: var(--gd-space-1);
+        display: flex;
         justify-content: center;
-        width: 100%;
+        padding: var(--gd-space-1);
+        width: 90%;
+        margin: 0 auto;
         gap: 0;
     }
 
     .modern-nav__list {
         gap: 0;
         padding: 0 var(--gd-space-1);
+        width: 100%;
     }
 }
 

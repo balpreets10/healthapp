@@ -6,7 +6,8 @@
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
       "Bash(npm run typecheck:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

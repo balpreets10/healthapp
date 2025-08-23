@@ -3,7 +3,7 @@
 /* ===== MAIN CONTAINER ===== */
 .add-meals {
     min-height: 100vh;
-    padding-top: calc(var(--gd-nav-height) + var(--gd-space-3));
+    padding-top: var(--gd-space-4);
     padding-bottom: var(--gd-space-12);
     background: var(--gd-bg-primary);
     color: var(--gd-text-primary);
@@ -13,6 +13,68 @@
     max-width: var(--gd-container-max-width);
     margin: 0 auto;
     padding: 0 var(--gd-container-padding);
+}
+
+/* ===== PAGE HEADER ===== */
+.add-meals__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--gd-space-4) 0;
+    margin-bottom: var(--gd-space-6);
+    border-bottom: 1px solid var(--gd-border-light);
+    background: var(--gd-card-bg);
+    border-radius: var(--gd-card-radius);
+    padding: var(--gd-space-4) var(--gd-space-6);
+    box-shadow: var(--gd-card-shadow);
+}
+
+.add-meals__title {
+    font-size: var(--gd-font-size-2xl);
+    font-weight: var(--gd-font-weight-bold);
+    color: var(--gd-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--gd-space-3);
+    background: var(--gd-gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+.add-meals__title::before {
+    content: '🍽️';
+    font-size: var(--gd-font-size-xl);
+    -webkit-text-fill-color: initial;
+    background: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes shimmer {
+
+    0%,
+    100% {
+        background-position: 200% 0;
+    }
+
+    50% {
+        background-position: -200% 0;
+    }
+}
+
+.add-meals__date {
+    font-size: var(--gd-font-size-sm);
+    font-weight: var(--gd-font-weight-medium);
+    color: var(--gd-text-secondary);
+    background: var(--gd-bg-primary-subtle);
+    padding: var(--gd-space-2) var(--gd-space-3);
+    border-radius: var(--gd-radius-full);
+    border: 1px solid var(--gd-border-light);
+    box-shadow: var(--gd-shadow-sm);
+    white-space: nowrap;
 }
 
 /* ===== LOADING AND EMPTY STATES ===== */
@@ -676,45 +738,47 @@
         padding: var(--gd-card-padding-base);
         margin: 0 var(--gd-space-2) var(--gd-space-8) var(--gd-space-2);
     }
-    
+
     .add-meals__custom-form {
         gap: var(--gd-space-4);
         max-width: none;
     }
-    
+
     .add-meals__form-row {
         flex-direction: column;
         gap: var(--gd-space-3);
         align-items: stretch;
     }
-    
+
     .add-meals__form-group--half {
         flex: none;
         width: 100%;
     }
-    
+
     .add-meals__form-input,
     .add-meals__form-select {
         height: 48px;
         padding: var(--gd-space-3) var(--gd-space-4);
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
+        /* Prevents zoom on iOS */
         border-radius: var(--gd-radius-lg);
         border-width: 2px;
     }
-    
+
     .add-meals__form-textarea {
         min-height: 100px;
         padding: var(--gd-space-3) var(--gd-space-4);
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
+        /* Prevents zoom on iOS */
         border-radius: var(--gd-radius-lg);
         border-width: 2px;
     }
-    
+
     .add-meals__form-label {
         font-size: var(--gd-font-size-base);
         margin-bottom: var(--gd-space-2);
     }
-    
+
     .add-meals__form-label-note {
         display: block;
         font-size: var(--gd-font-size-xs);
@@ -722,24 +786,24 @@
         color: var(--gd-text-tertiary);
         margin-top: var(--gd-space-1);
     }
-    
+
     .add-meals__form-actions {
         margin-top: var(--gd-space-6);
         padding-top: var(--gd-space-6);
     }
-    
+
     .add-meals__add-meal-btn--primary {
         width: 100%;
         padding: var(--gd-space-4) var(--gd-space-6);
         font-size: var(--gd-font-size-lg);
         height: 52px;
     }
-    
+
     /* Optimize specific input groupings for mobile */
     .add-meals__form-group {
         margin-bottom: var(--gd-space-1);
     }
-    
+
     /* Better spacing for nutrition inputs on mobile */
     .add-meals__nutrition-inputs {
         display: grid;
@@ -747,7 +811,7 @@
         gap: var(--gd-space-3);
         margin-bottom: var(--gd-space-4);
     }
-    
+
     .add-meals__nutrition-inputs .add-meals__form-group {
         margin-bottom: 0;
     }
@@ -758,39 +822,40 @@
         padding: var(--gd-card-padding-sm);
         margin: 0 var(--gd-space-1) var(--gd-space-6) var(--gd-space-1);
     }
-    
+
     .add-meals__custom-form {
         gap: var(--gd-space-3);
     }
-    
+
     .add-meals__form-input,
     .add-meals__form-select,
     .add-meals__form-textarea {
-        font-size: 16px; /* Keep at 16px to prevent zoom */
+        font-size: 16px;
+        /* Keep at 16px to prevent zoom */
         height: 44px;
         padding: var(--gd-space-2) var(--gd-space-3);
     }
-    
+
     .add-meals__form-textarea {
         min-height: 90px;
     }
-    
+
     .add-meals__form-checkbox-label {
         padding: var(--gd-space-2);
         flex-direction: row;
         gap: var(--gd-space-2);
     }
-    
+
     .add-meals__form-label {
         font-size: var(--gd-font-size-sm);
         margin-bottom: var(--gd-space-1);
     }
-    
+
     .add-meals__add-meal-btn--primary {
         height: 48px;
         font-size: var(--gd-font-size-base);
     }
-    
+
     /* Single column layout for very small screens */
     .add-meals__nutrition-inputs {
         grid-template-columns: 1fr;
@@ -946,12 +1011,12 @@
     .add-meals__foods-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
-    
+
     /* Tablet-friendly custom form */
     .add-meals__custom-form {
         max-width: 600px;
     }
-    
+
     .add-meals__nutrition-inputs {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--gd-space-3);
@@ -964,7 +1029,7 @@
         grid-template-columns: repeat(3, 1fr);
         gap: var(--gd-space-3);
     }
-    
+
     .add-meals__form-input,
     .add-meals__form-select {
         height: 46px;
@@ -975,6 +1040,26 @@
 @media (max-width: 768px) {
     .add-meals__container {
         padding: 0 var(--gd-space-4);
+    }
+
+    .add-meals__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--gd-space-3);
+        padding: var(--gd-space-3) var(--gd-space-4);
+    }
+
+    .add-meals__title {
+        font-size: var(--gd-font-size-xl);
+    }
+
+    .add-meals__title::before {
+        font-size: var(--gd-font-size-lg);
+    }
+
+    .add-meals__date {
+        font-size: var(--gd-font-size-xs);
+        padding: var(--gd-space-1) var(--gd-space-2);
     }
 
     .add-meals__quick-actions {
@@ -1051,7 +1136,21 @@
 
 @media (max-width: 480px) {
     .add-meals {
-        padding-top: calc(var(--gd-nav-height) + var(--gd-space-2));
+        padding-top: var(--gd-space-2);
+    }
+
+    .add-meals__header {
+        margin-bottom: var(--gd-space-4);
+        padding: var(--gd-space-2) var(--gd-space-3);
+    }
+
+    .add-meals__title {
+        font-size: var(--gd-font-size-lg);
+        gap: var(--gd-space-2);
+    }
+
+    .add-meals__title::before {
+        font-size: var(--gd-font-size-base);
     }
 
     .add-meals__nutrition-visual {
@@ -1131,7 +1230,8 @@
     .add-meals__remove-btn,
     .add-meals__add-meal-btn,
     .add-meals__quick-add-panel,
-    .add-meals__custom-entry-panel {
+    .add-meals__custom-entry-panel,
+    .add-meals__title {
         animation: none;
         transition: none;
     }

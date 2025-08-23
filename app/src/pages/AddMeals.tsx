@@ -1,54 +1,22 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useContentManager } from '../hooks/useContentManager';
 import { useCalorieTracker } from '../hooks/useCalorieTracker';
 import { useAuth } from '../hooks/useAuth';
 import SupabaseService from '../services/SupabaseService';
-import { calculateCaloriesFromMacros } from '../utils/nutritionCalculations';
 import { getLocalDateString, getLocalTimeString } from '../utils/dateUtils';
+import AutocompleteSearch from '../components/meals/AutocompleteSearch';
+import QuickAddPanel from '../components/meals/QuickAddPanel';
+import CustomMealForm from '../components/meals/CustomMealForm';
+import NutritionSummary from '../components/meals/NutritionSummary';
+import MealTypeSection from '../components/meals/MealTypeSection';
+import {
+    NutritionSummary as NutritionSummaryType,
+    QuickAddFood,
+    SearchResult,
+    CustomMealForm as CustomMealFormType,
+    MealType
+} from '../types/meal-types';
 import './AddMeals.css';
-
-interface MealEntry {
-    id: string;
-    name: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    time: string;
-}
-
-interface NutritionSummary {
-    totalCalories: number;
-    totalProtein: number;
-    totalCarbs: number;
-    totalFat: number;
-    goalCalories: number;
-    goalProtein: number;
-    goalCarbs: number;
-    goalFat: number;
-}
-
-interface QuickAddFood {
-    name: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-}
-
-interface SearchResult {
-    id: string;
-    name: string;
-    calories_per_100g: number;
-    protein_g: number;
-    carbohydrates_g: number;
-    fats_g: number;
-    fiber_g?: number;
-    free_sugar_g?: number;
-    sodium_mg?: number;
-    source: 'foods' | 'custom_meals';
-}
 
 const AddMeals: React.FC = () => {
     const pageRef = useRef<HTMLElement>(null);
@@ -57,27 +25,19 @@ const AddMeals: React.FC = () => {
     const { user } = useAuth();
 
     // State management
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedMealType, setSelectedMealType] = useState<MealEntry['mealType']>('breakfast');
+    const [selectedMealType, setSelectedMealType] = useState<MealType>('breakfast');
     const [showQuickAdd, setShowQuickAdd] = useState(false);
     const [showCustomEntry, setShowCustomEntry] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitMessage, setSubmitMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [quickAddFoods, setQuickAddFoods] = useState<QuickAddFood[]>([]);
     const [isLoadingQuickFoods, setIsLoadingQuickFoods] = useState(false);
-
-    // Autocomplete search state
-    const [autocompleteQuery, setAutocompleteQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-    const [showAutocomplete, setShowAutocomplete] = useState(false);
-    const [selectedMealTypeForSearch, setSelectedMealTypeForSearch] = useState<MealEntry['mealType']>('breakfast');
-    const [isSearching, setIsSearching] = useState(false);
-    const autocompleteRef = useRef<HTMLDivElement>(null);
+    const [selectedMealTypeForSearch, setSelectedMealTypeForSearch] = useState<MealType>('breakfast');
 
     // Custom entry form state
-    const [customMealForm, setCustomMealForm] = useState({
+    const [customMealForm, setCustomMealForm] = useState<CustomMealFormType>({
         mealName: '',
-        mealType: 'breakfast' as MealEntry['mealType'],
+        mealType: 'breakfast',
         calories: '',
         protein: '',
         carbs: '',
@@ -91,7 +51,7 @@ const AddMeals: React.FC = () => {
     });
 
     // Nutrition summary derived from calorieData
-    const nutritionSummary: NutritionSummary = {
+    const nutritionSummary: NutritionSummaryType = {
         totalCalories: calorieData.currentCalories,
         totalProtein: todaysMeals.reduce((sum, meal) => sum + meal.protein, 0),
         totalCarbs: todaysMeals.reduce((sum, meal) => sum + meal.carbs, 0),
@@ -145,79 +105,6 @@ const AddMeals: React.FC = () => {
     useEffect(() => {
         setCurrentSection('add-meals');
     }, [setCurrentSection]);
-
-    // Debounced search function
-    const debouncedSearch = useCallback(
-        async (query: string) => {
-            if (!query.trim() || !user) {
-                setSearchResults([]);
-                setShowAutocomplete(false);
-                return;
-            }
-
-            setIsSearching(true);
-            try {
-                const { data, error } = await SupabaseService.searchFoodsAndCustomMeals(user.id, query.trim(), 10);
-                
-                if (error) {
-                    console.error('Search error:', error);
-                    setSearchResults([]);
-                } else {
-                    setSearchResults(data);
-                    setShowAutocomplete(data.length > 0);
-                }
-            } catch (error) {
-                console.error('Search failed:', error);
-                setSearchResults([]);
-            } finally {
-                setIsSearching(false);
-            }
-        },
-        [user]
-    );
-
-    // Debounce effect for search
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (autocompleteQuery.length >= 2) {
-                debouncedSearch(autocompleteQuery);
-            } else {
-                setSearchResults([]);
-                setShowAutocomplete(false);
-            }
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [autocompleteQuery, debouncedSearch]);
-
-    // Handle click outside autocomplete
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
-                setShowAutocomplete(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // Auto-calculate calories when macronutrients change
-    useEffect(() => {
-        const protein = parseFloat(customMealForm.protein) || 0;
-        const carbs = parseFloat(customMealForm.carbs) || 0;
-        const fat = parseFloat(customMealForm.fat) || 0;
-        const sugar = parseFloat(customMealForm.sugar) || 0;
-
-        // Only auto-calculate if at least one macro has a value and calories field is empty or was auto-calculated
-        if ((protein > 0 || carbs > 0 || fat > 0 || sugar > 0)) {
-            const calculatedCalories = calculateCaloriesFromMacros(protein, carbs, fat, sugar);
-            setCustomMealForm(prev => ({
-                ...prev, 
-                calories: calculatedCalories.toString()
-            }));
-        }
-    }, [customMealForm.protein, customMealForm.carbs, customMealForm.fat, customMealForm.sugar]);
 
 
     // Add meal function
@@ -349,8 +236,6 @@ const AddMeals: React.FC = () => {
                 setSubmitMessage({ text: 'Failed to add meal. Please try again.', type: 'error' });
             } else {
                 setSubmitMessage({ text: `${searchResult.name} added successfully!`, type: 'success' });
-                setAutocompleteQuery('');
-                setShowAutocomplete(false);
                 await refreshData();
 
                 // Auto-hide success message after 3 seconds
@@ -373,19 +258,10 @@ const AddMeals: React.FC = () => {
         await refreshData();
     };
 
-    // Filter foods based on search
-    const filteredFoods = quickAddFoods.filter(food =>
-        food.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    // Get meals by type for today from database data
-    const getMealsByType = (type: MealEntry['mealType']) => {
-        return todaysMeals.filter(meal => meal.mealType === type);
-    };
-
-    // Calculate progress percentage
-    const getProgressPercentage = (current: number, goal: number) => {
-        return Math.min((current / goal) * 100, 100);
+    const handleMealTypeAdd = (mealType: MealType) => {
+        setSelectedMealType(mealType);
+        setShowQuickAdd(true);
+        setShowCustomEntry(false);
     };
 
     // Custom meal form submission
@@ -550,97 +426,24 @@ const AddMeals: React.FC = () => {
     return (
         <section ref={pageRef} id="add-meals" className="add-meals">
             <div className="add-meals__container">
-
-                {/* Autocomplete Search Bar */}
-                <div className="add-meals__search-section">
-                    <div className="add-meals__search-container" ref={autocompleteRef}>
-                        <div className="add-meals__search-input-row">
-                            <input
-                                type="text"
-                                placeholder="Search foods and meals..."
-                                value={autocompleteQuery}
-                                onChange={(e) => {
-                                    setAutocompleteQuery(e.target.value);
-                                    if (e.target.value.length >= 2) {
-                                        setShowAutocomplete(true);
-                                    }
-                                }}
-                                onFocus={() => {
-                                    if (autocompleteQuery.length >= 2 && searchResults.length > 0) {
-                                        setShowAutocomplete(true);
-                                    }
-                                }}
-                                className="add-meals__autocomplete-input"
-                            />
-                            <select
-                                value={selectedMealTypeForSearch}
-                                onChange={(e) => setSelectedMealTypeForSearch(e.target.value as MealEntry['mealType'])}
-                                className="add-meals__meal-type-select"
-                            >
-                                <option value="breakfast">🌅 Breakfast</option>
-                                <option value="lunch">☀️ Lunch</option>
-                                <option value="dinner">🌙 Dinner</option>
-                                <option value="snack">🍿 Snack</option>
-                            </select>
-                        </div>
-
-                        {/* Autocomplete Dropdown */}
-                        {showAutocomplete && (
-                            <div className="add-meals__autocomplete-dropdown">
-                                {isSearching ? (
-                                    <div className="add-meals__autocomplete-loading">
-                                        <span>Searching...</span>
-                                    </div>
-                                ) : searchResults.length > 0 ? (
-                                    <>
-                                        {searchResults.slice(0, 5).map((result) => (
-                                            <div
-                                                key={`${result.source}-${result.id}`}
-                                                className="add-meals__autocomplete-item"
-                                                onClick={() => addMealFromSearch(result)}
-                                            >
-                                                <div className="add-meals__autocomplete-item-content">
-                                                    <div className="add-meals__autocomplete-item-header">
-                                                        <span className="add-meals__autocomplete-item-name">{result.name}</span>
-                                                        <span className="add-meals__autocomplete-item-source">
-                                                            {result.source === 'custom_meals' ? '👤 Custom' : '🍎 Standard'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="add-meals__autocomplete-item-nutrition">
-                                                        <span>{Math.round(result.calories_per_100g)} cal</span>
-                                                        <span>{result.protein_g}g protein</span>
-                                                        <span>{result.carbohydrates_g}g carbs</span>
-                                                        <span>{result.fats_g}g fat</span>
-                                                    </div>
-                                                </div>
-                                                <button className="add-meals__autocomplete-add-btn">
-                                                    +
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {searchResults.length > 5 && (
-                                            <div className="add-meals__autocomplete-show-all">
-                                                <span>Show all results</span>
-                                                <span className="add-meals__autocomplete-arrow">▼</span>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : autocompleteQuery.length >= 2 ? (
-                                    <div className="add-meals__autocomplete-empty">
-                                        <span>No foods found for "{autocompleteQuery}"</span>
-                                    </div>
-                                ) : null}
-                            </div>
-                        )}
+                <div className="add-meals__header">
+                    <h1 className="add-meals__title">🍽️ Add Meals</h1>
+                    <div className="add-meals__date">
+                        {new Date().toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}
                     </div>
-
-                    {/* Display any messages */}
-                    {submitMessage && (
-                        <div className={`add-meals__message add-meals__message--${submitMessage.type}`}>
-                            {submitMessage.text}
-                        </div>
-                    )}
                 </div>
+
+                <AutocompleteSearch
+                    selectedMealType={selectedMealTypeForSearch}
+                    setSelectedMealType={setSelectedMealTypeForSearch}
+                    onMealAdd={addMealFromSearch}
+                    submitMessage={submitMessage}
+                />
 
                 {/* Quick Actions */}
                 <div className="add-meals__quick-actions">
@@ -664,441 +467,34 @@ const AddMeals: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Nutrition Summary */}
-                <div className="add-meals__nutrition-summary">
-                    <h2 className="add-meals__section-title">Today's Nutrition</h2>
-                    <div className="add-meals__nutrition-visual">
-                        {/* Calories Circle */}
-                        <div className="add-meals__macro-circle">
-                            <div className="add-meals__circle-container">
-                                <svg className="add-meals__circle-svg" width="100" height="100" viewBox="0 0 36 36">
-                                    <path className="add-meals__circle-bg"
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                    <path className="add-meals__circle-progress add-meals__circle-progress--calories"
-                                        strokeDasharray={`${getProgressPercentage(nutritionSummary.totalCalories, nutritionSummary.goalCalories)}, 100`}
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                </svg>
-                                <div className="add-meals__circle-content">
-                                    <div className="add-meals__circle-icon">🔥</div>
-                                    <div className="add-meals__circle-value">{Math.round(nutritionSummary.totalCalories)}</div>
-                                    <div className="add-meals__circle-label">Calories</div>
-                                </div>
-                            </div>
-                        </div>
+                <NutritionSummary nutritionSummary={nutritionSummary} />
 
-                        {/* Protein Circle */}
-                        <div className="add-meals__macro-circle">
-                            <div className="add-meals__circle-container">
-                                <svg className="add-meals__circle-svg" width="100" height="100" viewBox="0 0 36 36">
-                                    <path className="add-meals__circle-bg"
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                    <path className="add-meals__circle-progress add-meals__circle-progress--protein"
-                                        strokeDasharray={`${getProgressPercentage(nutritionSummary.totalProtein, nutritionSummary.goalProtein)}, 100`}
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                </svg>
-                                <div className="add-meals__circle-content">
-                                    <div className="add-meals__circle-icon">💪</div>
-                                    <div className="add-meals__circle-value">{Math.round(nutritionSummary.totalProtein)}g</div>
-                                    <div className="add-meals__circle-label">Protein</div>
-                                </div>
-                            </div>
-                        </div>
+                <QuickAddPanel
+                    showQuickAdd={showQuickAdd}
+                    setShowQuickAdd={setShowQuickAdd}
+                    selectedMealType={selectedMealType}
+                    setSelectedMealType={setSelectedMealType}
+                    quickAddFoods={quickAddFoods}
+                    isLoadingQuickFoods={isLoadingQuickFoods}
+                    onAddMeal={addMeal}
+                    isSubmitting={isSubmitting}
+                />
 
-                        {/* Carbs Circle */}
-                        <div className="add-meals__macro-circle">
-                            <div className="add-meals__circle-container">
-                                <svg className="add-meals__circle-svg" width="100" height="100" viewBox="0 0 36 36">
-                                    <path className="add-meals__circle-bg"
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                    <path className="add-meals__circle-progress add-meals__circle-progress--carbs"
-                                        strokeDasharray={`${getProgressPercentage(nutritionSummary.totalCarbs, nutritionSummary.goalCarbs)}, 100`}
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                </svg>
-                                <div className="add-meals__circle-content">
-                                    <div className="add-meals__circle-icon">🌾</div>
-                                    <div className="add-meals__circle-value">{Math.round(nutritionSummary.totalCarbs)}g</div>
-                                    <div className="add-meals__circle-label">Carbs</div>
-                                </div>
-                            </div>
-                        </div>
+                <CustomMealForm
+                    showCustomEntry={showCustomEntry}
+                    setShowCustomEntry={setShowCustomEntry}
+                    customMealForm={customMealForm}
+                    setCustomMealForm={setCustomMealForm}
+                    onSubmit={handleCustomMealSubmit}
+                    isSubmitting={isSubmitting}
+                    submitMessage={submitMessage}
+                />
 
-                        {/* Fat Circle */}
-                        <div className="add-meals__macro-circle">
-                            <div className="add-meals__circle-container">
-                                <svg className="add-meals__circle-svg" width="100" height="100" viewBox="0 0 36 36">
-                                    <path className="add-meals__circle-bg"
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                    <path className="add-meals__circle-progress add-meals__circle-progress--fat"
-                                        strokeDasharray={`${getProgressPercentage(nutritionSummary.totalFat, nutritionSummary.goalFat)}, 100`}
-                                        d="M18 2.0845
-                                           a 15.9155 15.9155 0 0 1 0 31.831
-                                           a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                </svg>
-                                <div className="add-meals__circle-content">
-                                    <div className="add-meals__circle-icon">🥑</div>
-                                    <div className="add-meals__circle-value">{Math.round(nutritionSummary.totalFat)}g</div>
-                                    <div className="add-meals__circle-label">Fat</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quick Add Panel */}
-                {showQuickAdd && (
-                    <div className="add-meals__quick-add-panel">
-                        <div className="add-meals__panel-header">
-                            <h3 className="add-meals__panel-title">
-                                {isLoadingQuickFoods ? 'Loading Foods...' : 'Quick Add Foods'}
-                                {!isLoadingQuickFoods && (
-                                    <span style={{fontSize: '0.8em', fontWeight: 'normal', opacity: 0.7}}>
-                                        {' • Based on your eating habits'}
-                                    </span>
-                                )}
-                            </h3>
-                            <button
-                                className="add-meals__close-btn"
-                                onClick={() => setShowQuickAdd(false)}
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <div className="add-meals__meal-type-selector">
-                            <label className="add-meals__meal-label">Meal Type:</label>
-                            <select
-                                value={selectedMealType}
-                                onChange={(e) => setSelectedMealType(e.target.value as MealEntry['mealType'])}
-                                className="add-meals__meal-select"
-                            >
-                                <option value="breakfast">🌅 Breakfast</option>
-                                <option value="lunch">☀️ Lunch</option>
-                                <option value="dinner">🌙 Dinner</option>
-                                <option value="snack">🍿 Snack</option>
-                            </select>
-                        </div>
-
-                        <div className="add-meals__search-box">
-                            <input
-                                type="text"
-                                placeholder="Search foods..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="add-meals__search-input"
-                            />
-                        </div>
-
-                        <div className="add-meals__foods-grid">
-                            {isLoadingQuickFoods ? (
-                                <div className="add-meals__loading-state">
-                                    <span>Loading personalized foods...</span>
-                                </div>
-                            ) : filteredFoods.length > 0 ? (
-                                filteredFoods.map((food, index) => (
-                                    <div key={index} className="add-meals__food-card">
-                                        <div className="add-meals__food-info">
-                                            <h4 className="add-meals__food-name">{food.name}</h4>
-                                            <div className="add-meals__food-nutrition">
-                                                <span>{food.calories} cal</span>
-                                                <span>{food.protein}g protein</span>
-                                            </div>
-                                        </div>
-                                        <button
-                                            className="add-meals__add-food-btn"
-                                            onClick={() => addMeal(food)}
-                                            disabled={isSubmitting}
-                                        >
-                                            {isSubmitting ? '...' : '+'}
-                                        </button>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="add-meals__empty-state">
-                                    <span>No foods available</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Custom Entry Panel */}
-                {showCustomEntry && (
-                    <div className="add-meals__custom-entry-panel">
-                        <div className="add-meals__panel-header">
-                            <h3 className="add-meals__panel-title">Custom Meal Entry</h3>
-                            <button
-                                className="add-meals__close-btn"
-                                onClick={() => setShowCustomEntry(false)}
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <form className="add-meals__custom-form" onSubmit={handleCustomMealSubmit}>
-                            {submitMessage && (
-                                <div className={`add-meals__message add-meals__message--${submitMessage.type}`}>
-                                    {submitMessage.text}
-                                </div>
-                            )}
-                            
-                            <div className="add-meals__form-group">
-                                <label className="add-meals__form-label">Meal Name *</label>
-                                <input
-                                    type="text"
-                                    className="add-meals__form-input"
-                                    value={customMealForm.mealName}
-                                    onChange={(e) => setCustomMealForm(prev => ({...prev, mealName: e.target.value}))}
-                                    placeholder="Enter meal name"
-                                    required
-                                />
-                            </div>
-
-                            <div className="add-meals__form-group">
-                                <label className="add-meals__form-label">Meal Type *</label>
-                                <select
-                                    className="add-meals__form-select"
-                                    value={customMealForm.mealType}
-                                    onChange={(e) => setCustomMealForm(prev => ({...prev, mealType: e.target.value as MealEntry['mealType']}))}
-                                >
-                                    <option value="breakfast">🌅 Breakfast</option>
-                                    <option value="lunch">☀️ Lunch</option>
-                                    <option value="dinner">🌙 Dinner</option>
-                                    <option value="snack">🍿 Snack</option>
-                                </select>
-                            </div>
-
-                            <div className="add-meals__form-group">
-                                <label className="add-meals__form-label">Time</label>
-                                <input
-                                    type="time"
-                                    className="add-meals__form-input"
-                                    value={customMealForm.time}
-                                    onChange={(e) => setCustomMealForm(prev => ({...prev, time: e.target.value}))}
-                                />
-                            </div>
-
-                            {/* Primary Nutrition - Calories */}
-                            <div className="add-meals__form-group">
-                                <label className="add-meals__form-label">
-                                    Calories *
-                                    <span className="add-meals__form-label-note">
-                                        (auto-calculated from macros)
-                                    </span>
-                                </label>
-                                <input
-                                    type="number"
-                                    className="add-meals__form-input add-meals__form-input--auto-calculated"
-                                    value={customMealForm.calories}
-                                    onChange={(e) => setCustomMealForm(prev => ({...prev, calories: e.target.value}))}
-                                    placeholder="Enter macros to auto-calculate"
-                                    min="0"
-                                    step="1"
-                                    required
-                                />
-                            </div>
-
-                            {/* Main Macronutrients - Mobile optimized grid */}
-                            <div className="add-meals__nutrition-inputs">
-                                <div className="add-meals__form-group">
-                                    <label className="add-meals__form-label">Protein (g)</label>
-                                    <input
-                                        type="number"
-                                        className="add-meals__form-input"
-                                        value={customMealForm.protein}
-                                        onChange={(e) => setCustomMealForm(prev => ({...prev, protein: e.target.value}))}
-                                        placeholder="0"
-                                        min="0"
-                                        step="0.1"
-                                    />
-                                </div>
-
-                                <div className="add-meals__form-group">
-                                    <label className="add-meals__form-label">Carbs (g)</label>
-                                    <input
-                                        type="number"
-                                        className="add-meals__form-input"
-                                        value={customMealForm.carbs}
-                                        onChange={(e) => setCustomMealForm(prev => ({...prev, carbs: e.target.value}))}
-                                        placeholder="0"
-                                        min="0"
-                                        step="0.1"
-                                    />
-                                </div>
-
-                                <div className="add-meals__form-group">
-                                    <label className="add-meals__form-label">Fat (g)</label>
-                                    <input
-                                        type="number"
-                                        className="add-meals__form-input"
-                                        value={customMealForm.fat}
-                                        onChange={(e) => setCustomMealForm(prev => ({...prev, fat: e.target.value}))}
-                                        placeholder="0"
-                                        min="0"
-                                        step="0.1"
-                                    />
-                                </div>
-
-                                <div className="add-meals__form-group">
-                                    <label className="add-meals__form-label">Fiber (g)</label>
-                                    <input
-                                        type="number"
-                                        className="add-meals__form-input"
-                                        value={customMealForm.fiber}
-                                        onChange={(e) => setCustomMealForm(prev => ({...prev, fiber: e.target.value}))}
-                                        placeholder="0"
-                                        min="0"
-                                        step="0.1"
-                                    />
-                                </div>
-
-                                <div className="add-meals__form-group">
-                                    <label className="add-meals__form-label">Sugar (g)</label>
-                                    <input
-                                        type="number"
-                                        className="add-meals__form-input"
-                                        value={customMealForm.sugar}
-                                        onChange={(e) => setCustomMealForm(prev => ({...prev, sugar: e.target.value}))}
-                                        placeholder="0"
-                                        min="0"
-                                        step="0.1"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="add-meals__form-group">
-                                <label className="add-meals__form-label">Sodium (mg)</label>
-                                <input
-                                    type="number"
-                                    className="add-meals__form-input"
-                                    value={customMealForm.sodium}
-                                    onChange={(e) => setCustomMealForm(prev => ({...prev, sodium: e.target.value}))}
-                                    placeholder="0"
-                                    min="0"
-                                    step="0.1"
-                                />
-                            </div>
-
-                            <div className="add-meals__form-group">
-                                <label className="add-meals__form-label">Notes</label>
-                                <textarea
-                                    className="add-meals__form-textarea"
-                                    value={customMealForm.notes}
-                                    onChange={(e) => setCustomMealForm(prev => ({...prev, notes: e.target.value}))}
-                                    placeholder="Additional notes about the meal..."
-                                    rows={3}
-                                />
-                            </div>
-
-                            <div className="add-meals__form-group">
-                                <label className="add-meals__form-checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        className="add-meals__form-checkbox"
-                                        checked={customMealForm.saveMeal}
-                                        onChange={(e) => setCustomMealForm(prev => ({...prev, saveMeal: e.target.checked}))}
-                                    />
-                                    <span className="add-meals__form-checkbox-text">
-                                        Save meal for future references
-                                    </span>
-                                </label>
-                            </div>
-
-                            <div className="add-meals__form-actions">
-                                <button
-                                    type="submit"
-                                    className="add-meals__add-meal-btn add-meals__add-meal-btn--primary"
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? 'Adding Meal...' : 'Add Meal'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                )}
-
-                {/* Meals by Type */}
-                <div className="add-meals__meals-section">
-                    <h2 className="add-meals__section-title">Today's Meals</h2>
-
-                    {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map(mealType => {
-                        const typeMeals = getMealsByType(mealType);
-                        const typeCalories = typeMeals.reduce((sum, meal) => sum + meal.calories, 0);
-
-                        return (
-                            <div key={mealType} className="add-meals__meal-type-section">
-                                <div className="add-meals__meal-type-header">
-                                    <h3 className="add-meals__meal-type-title">
-                                        {mealType === 'breakfast' && '🌅'}
-                                        {mealType === 'lunch' && '☀️'}
-                                        {mealType === 'dinner' && '🌙'}
-                                        {mealType === 'snack' && '🍿'}
-                                        {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-                                    </h3>
-                                    <span className="add-meals__meal-type-calories">
-                                        {Math.round(typeCalories)} calories
-                                    </span>
-                                </div>
-
-                                {typeMeals.length > 0 ? (
-                                    <div className="add-meals__meal-list">
-                                        {typeMeals.map(meal => (
-                                            <div key={meal.id} className="add-meals__meal-item">
-                                                <div className="add-meals__meal-info">
-                                                    <span className="add-meals__meal-name">{meal.name}</span>
-                                                    <span className="add-meals__meal-nutrition">
-                                                        {meal.calories} cal • {meal.protein}g protein • {meal.carbs}g carbs • {meal.fat}g fat
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    className="add-meals__remove-btn"
-                                                    onClick={() => removeMeal(meal.id)}
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="add-meals__empty-meal-type">
-                                        <p>No {mealType} entries yet</p>
-                                        <button
-                                            className="add-meals__add-meal-btn"
-                                            onClick={() => {
-                                                setSelectedMealType(mealType);
-                                                setShowQuickAdd(true);
-                                                setShowCustomEntry(false);
-                                            }}
-                                        >
-                                            + Add {mealType}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                <MealTypeSection
+                    todaysMeals={todaysMeals}
+                    onRemoveMeal={removeMeal}
+                    onAddMeal={handleMealTypeAdd}
+                />
             </div>
         </section>
     );
