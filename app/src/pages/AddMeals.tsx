@@ -17,6 +17,7 @@ import {
     MealType
 } from '../types/meal-types';
 import './AddMeals.css';
+import './Journal.css';
 
 const AddMeals: React.FC = () => {
     const pageRef = useRef<HTMLElement>(null);
@@ -426,9 +427,9 @@ const AddMeals: React.FC = () => {
     return (
         <section ref={pageRef} id="add-meals" className="add-meals">
             <div className="add-meals__container">
-                <div className="add-meals__header">
-                    <h1 className="add-meals__title">🍽️ Add Meals</h1>
-                    <div className="add-meals__date">
+                <div className="journal__header">
+                    <h1 className="journal__title">🍽️ Add Meals</h1>
+                    <div className="journal__date">
                         {new Date().toLocaleDateString('en-US', {
                             weekday: 'long',
                             year: 'numeric',

@@ -563,9 +563,7 @@ const Profile: React.FC = () => {
                                         <span className="profile__unit">years</span>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="profile__row">
                                 <div className="profile__field-group">
                                     <div className="profile__field-header">
                                         <h3>Gender</h3>
