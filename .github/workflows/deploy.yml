@@ -37,6 +37,9 @@ jobs:
         working-directory: ./app
         run: npm run build:prod
         
+      - name: 📋 Copy .htaccess to build directory
+        run: cp ./app/public/.htaccess ./app/builds/prod/.htaccess
+        
       - name: 🌐 Deploy to GoDaddy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -47,7 +50,6 @@ jobs:
           server-dir: ./
           dangerous-clean-slate: true
           exclude: |
-            .htaccess
             .well-known/**
             error_log
             
