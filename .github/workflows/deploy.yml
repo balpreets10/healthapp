@@ -38,15 +38,15 @@ jobs:
         run: npm run build:prod
         
       - name: 🌐 Deploy to GoDaddy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./app/builds/prod/
           server-dir: ./
-          clean: true
-          clean-exclude: |
+          dangerous-clean-slate: true
+          exclude: |
             .htaccess
             .well-known/**
             error_log
