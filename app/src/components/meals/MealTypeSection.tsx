@@ -58,7 +58,11 @@ const MealTypeSection: React.FC<MealTypeSectionProps> = ({
                                         </div>
                                         <button
                                             className="add-meals__remove-btn"
-                                            onClick={() => onRemoveMeal(meal.id)}
+                                            onClick={() => {
+                                                if (window.confirm(`Are you sure you want to delete "${meal.name}"? This action cannot be undone.`)) {
+                                                    onRemoveMeal(meal.id);
+                                                }
+                                            }}
                                         >
                                             🗑️
                                         </button>

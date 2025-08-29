@@ -250,13 +250,37 @@ const AddMeals: React.FC = () => {
         }
     };
 
-    // Remove meal function - TODO: Implement actual database deletion
+    // Remove meal function
     const removeMeal = async (mealId: string) => {
-        // TODO: Remove meal from database via SupabaseService
-        console.log('Removing meal from database:', mealId);
-        
-        // Refresh data after removing
-        await refreshData();
+        if (!user) {
+            setSubmitMessage({ text: 'Please log in to delete meals', type: 'error' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitMessage(null);
+
+        try {
+            const { error } = await SupabaseService.deleteMeal(mealId);
+            
+            if (error) {
+                console.error('Error deleting meal:', error);
+                setSubmitMessage({ text: 'Failed to delete meal. Please try again.', type: 'error' });
+            } else {
+                setSubmitMessage({ text: 'Meal deleted successfully!', type: 'success' });
+                await refreshData();
+
+                // Auto-hide success message after 3 seconds
+                setTimeout(() => {
+                    setSubmitMessage(null);
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error deleting meal:', error);
+            setSubmitMessage({ text: 'An unexpected error occurred. Please try again.', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleMealTypeAdd = (mealType: MealType) => {
