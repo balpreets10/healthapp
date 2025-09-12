@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import SupabaseService from '../services/SupabaseService';
 import CalorieCalculatorService, { CalorieCalculation, UserProfile } from '../services/CalorieCalculatorService';
+import { MealEntry } from '../types/meal-types';
 
 interface CalorieTrackerData {
     targetCalories: number;
@@ -18,17 +19,6 @@ interface CalorieTrackerData {
     isLoading: boolean;
 }
 
-interface MealData {
-    id: string;
-    name: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    fiber: number;
-    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    time: string;
-}
 
 interface DatabaseMeal {
     id: string;
@@ -53,7 +43,7 @@ interface DatabaseMeal {
 export const useCalorieTracker = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [todaysMeals, setTodaysMeals] = useState<MealData[]>([]);
+    const [todaysMeals, setTodaysMeals] = useState<MealEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const loadProfile = async () => {
@@ -105,22 +95,59 @@ export const useCalorieTracker = () => {
                 return;
             }
 
-            // Transform database meal data to match the MealData interface
-            const transformedMeals: MealData[] = data.map((meal: DatabaseMeal) => ({
-                id: meal.id,
-                name: meal.meal_name,
-                calories: meal.total_calories,
-                protein: meal.total_protein_g,
-                carbs: meal.total_carbs_g,
-                fat: meal.total_fat_g,
-                fiber: meal.total_fiber_g || 0,
-                mealType: meal.meal_type as 'breakfast' | 'lunch' | 'dinner' | 'snack',
-                time: meal.time ? new Date(`1970-01-01T${meal.time}`).toLocaleTimeString('en-US', { 
-                    hour: 'numeric', 
-                    minute: '2-digit',
-                    hour12: true 
-                }) : 'Not specified'
-            }));
+            // Transform database meal data to match the MealEntry interface
+            const transformedMeals: MealEntry[] = data.map((meal: DatabaseMeal) => {
+                // Extract serving size information from foods JSONB
+                let servingSize: number | undefined;
+                let servingUnit: string | undefined;
+                let originalCaloriesPer100g: number | undefined;
+                let originalProteinPer100g: number | undefined;
+                let originalCarbsPer100g: number | undefined;
+                let originalFatPer100g: number | undefined;
+
+                if (meal.foods) {
+                    // Check if it's from foods database (has per 100g data)
+                    if (meal.foods.foods) {
+                        const foodData = meal.foods.foods;
+                        servingSize = parseFloat(foodData.serving?.replace(/[^\d.]/g, '')) || 100;
+                        servingUnit = foodData.serving?.replace(/[\d.]/g, '') || 'g';
+                        originalCaloriesPer100g = foodData.calories || meal.total_calories;
+                        originalProteinPer100g = foodData.protein || meal.total_protein_g;
+                        originalCarbsPer100g = foodData.carbs || meal.total_carbs_g;
+                        originalFatPer100g = foodData.fat || meal.total_fat_g;
+                    } else if (meal.foods.custom_meals) {
+                        const foodData = meal.foods.custom_meals;
+                        servingSize = parseFloat(foodData.serving?.replace(/[^\d.]/g, '')) || 100;
+                        servingUnit = foodData.serving?.replace(/[\d.]/g, '') || 'g';
+                        originalCaloriesPer100g = foodData.calories || meal.total_calories;
+                        originalProteinPer100g = foodData.protein || meal.total_protein_g;
+                        originalCarbsPer100g = foodData.carbs || meal.total_carbs_g;
+                        originalFatPer100g = foodData.fat || meal.total_fat_g;
+                    }
+                }
+
+                return {
+                    id: meal.id,
+                    name: meal.meal_name,
+                    calories: meal.total_calories,
+                    protein: meal.total_protein_g,
+                    carbs: meal.total_carbs_g,
+                    fat: meal.total_fat_g,
+                    fiber: meal.total_fiber_g || 0,
+                    mealType: meal.meal_type as 'breakfast' | 'lunch' | 'dinner' | 'snack',
+                    time: meal.time ? new Date(`1970-01-01T${meal.time}`).toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                    }) : 'Not specified',
+                    servingSize,
+                    servingUnit,
+                    originalCaloriesPer100g,
+                    originalProteinPer100g,
+                    originalCarbsPer100g,
+                    originalFatPer100g
+                };
+            });
 
             setTodaysMeals(transformedMeals);
         } catch (error) {

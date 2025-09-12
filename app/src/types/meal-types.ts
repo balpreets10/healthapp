@@ -7,6 +7,12 @@ export interface MealEntry {
     fat: number;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     time: string;
+    servingSize?: number;
+    servingUnit?: string;
+    originalCaloriesPer100g?: number;
+    originalProteinPer100g?: number;
+    originalCarbsPer100g?: number;
+    originalFatPer100g?: number;
 }
 
 export interface NutritionSummary {

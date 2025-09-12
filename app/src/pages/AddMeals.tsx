@@ -289,6 +289,84 @@ const AddMeals: React.FC = () => {
         setShowCustomEntry(false);
     };
 
+    // Update meal serving size
+    const updateMealServing = async (mealId: string, newServingSize: number) => {
+        if (!user) {
+            setSubmitMessage({ text: 'Please log in to update meals', type: 'error' });
+            return;
+        }
+
+        // Find the meal to get its original data
+        const meal = todaysMeals.find(m => m.id === mealId);
+        if (!meal || !meal.originalCaloriesPer100g) {
+            setSubmitMessage({ text: 'Cannot update serving size for this meal', type: 'error' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitMessage(null);
+
+        try {
+            // Calculate new nutritional values based on serving size
+            const ratio = newServingSize / 100; // Since original values are per 100g
+            const newCalories = Math.round(meal.originalCaloriesPer100g * ratio);
+            const newProtein = Math.round((meal.originalProteinPer100g || 0) * ratio * 10) / 10;
+            const newCarbs = Math.round((meal.originalCarbsPer100g || 0) * ratio * 10) / 10;
+            const newFat = Math.round((meal.originalFatPer100g || 0) * ratio * 10) / 10;
+
+            // Get the current meal data from database to update the foods JSONB
+            const mealData = await SupabaseService.getMealById(mealId);
+            if (!mealData.data) {
+                throw new Error('Could not fetch meal data');
+            }
+
+            const currentFoods = mealData.data.foods;
+            let updatedFoods = { ...currentFoods };
+
+            // Update serving size in the foods JSONB structure
+            if (updatedFoods.foods) {
+                updatedFoods.foods.serving = `${newServingSize}${meal.servingUnit || 'g'}`;
+                updatedFoods.foods.calories = newCalories;
+                updatedFoods.foods.protein = newProtein;
+                updatedFoods.foods.carbs = newCarbs;
+                updatedFoods.foods.fat = newFat;
+            } else if (updatedFoods.custom_meals) {
+                updatedFoods.custom_meals.serving = `${newServingSize}${meal.servingUnit || 'g'}`;
+                updatedFoods.custom_meals.calories = newCalories;
+                updatedFoods.custom_meals.protein = newProtein;
+                updatedFoods.custom_meals.carbs = newCarbs;
+                updatedFoods.custom_meals.fat = newFat;
+            }
+
+            // Update the meal in database
+            const { error } = await SupabaseService.updateMeal(mealId, {
+                foods: updatedFoods,
+                total_calories: newCalories,
+                total_protein_g: newProtein,
+                total_carbs_g: newCarbs,
+                total_fat_g: newFat
+            });
+
+            if (error) {
+                console.error('Error updating meal serving size:', error);
+                setSubmitMessage({ text: 'Failed to update serving size. Please try again.', type: 'error' });
+            } else {
+                setSubmitMessage({ text: 'Serving size updated successfully!', type: 'success' });
+                await refreshData();
+
+                // Auto-hide success message after 3 seconds
+                setTimeout(() => {
+                    setSubmitMessage(null);
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error updating meal serving size:', error);
+            setSubmitMessage({ text: 'An unexpected error occurred. Please try again.', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     // Custom meal form submission
     const handleCustomMealSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -519,6 +597,7 @@ const AddMeals: React.FC = () => {
                     todaysMeals={todaysMeals}
                     onRemoveMeal={removeMeal}
                     onAddMeal={handleMealTypeAdd}
+                    onUpdateMealServing={updateMealServing}
                 />
             </div>
         </section>

@@ -682,6 +682,21 @@ class SupabaseService {
         }
     }
 
+    async getMealById(mealId: string): Promise<{ data?: any; error?: any }> {
+        try {
+            const { data, error } = await this.client
+                .from('meals')
+                .select('*')
+                .eq('id', mealId)
+                .single();
+
+            return { data, error };
+        } catch (err) {
+            console.error('Get meal by ID failed:', err);
+            return { data: null, error: err };
+        }
+    }
+
     async deleteMeal(mealId: string): Promise<{ error?: any }> {
         try {
             const { error } = await this.client
