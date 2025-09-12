@@ -1495,3 +1495,23 @@
 .add-meals__autocomplete-show-all:hover .add-meals__autocomplete-arrow {
     color: var(--gd-text-secondary);
 }
+
+/* ===== SEARCH RESULTS COUNT LABEL ===== */
+.add-meals__search-results-count {
+    padding: var(--gd-space-2) var(--gd-space-3);
+    background: var(--gd-color-primary-50);
+    color: var(--gd-text-secondary);
+    font-size: var(--gd-font-size-sm);
+    font-weight: var(--gd-font-weight-medium);
+    border-radius: var(--gd-radius-md);
+    text-align: center;
+    border: 1px solid var(--gd-color-primary-200);
+    margin-bottom: var(--gd-space-2);
+}
+
+@media (max-width: 480px) {
+    .add-meals__search-results-count {
+        font-size: var(--gd-font-size-xs);
+        padding: var(--gd-space-1) var(--gd-space-2);
+    }
+}

@@ -744,41 +744,70 @@ class SupabaseService {
     }
 
     // ===== FOOD SEARCH FUNCTIONALITY ===== //
-    async searchFoods(query: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+    async searchFoods(query: string, limit: number = 5): Promise<{ data: any[]; totalCount?: number; error?: any }> {
         try {
-            const { data, error } = await this.client
-                .from('foods')
-                .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
-                .ilike('name', `%${query}%`)
-                .limit(limit)
-                .order('name', { ascending: true });
+            // Get total count and limited results concurrently
+            const [countResult, dataResult] = await Promise.all([
+                this.client
+                    .from('foods')
+                    .select('*', { count: 'exact', head: true })
+                    .ilike('name', `%${query}%`),
+                this.client
+                    .from('foods')
+                    .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
+                    .ilike('name', `%${query}%`)
+                    .limit(limit)
+                    .order('name', { ascending: true })
+            ]);
 
-            return { data: data || [], error };
+            if (dataResult.error) {
+                return { data: [], error: dataResult.error };
+            }
+
+            return { 
+                data: dataResult.data || [], 
+                totalCount: countResult.count || 0,
+                error: null 
+            };
         } catch (err) {
             console.error('Search foods failed:', err);
-            return { data: [], error: err };
+            return { data: [], totalCount: 0, error: err };
         }
     }
 
-    async searchCustomMeals(userId: string, query: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+    async searchCustomMeals(userId: string, query: string, limit: number = 5): Promise<{ data: any[]; totalCount?: number; error?: any }> {
         try {
-            const { data, error } = await this.client
+            // Get total count and limited results concurrently
+            const baseQuery = this.client
                 .from('custom_meals')
-                .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
                 .eq('submitted_by', userId)
                 .or('status.eq.approved,status.eq.pending')
-                .ilike('name', `%${query}%`)
-                .limit(limit)
-                .order('name', { ascending: true });
+                .ilike('name', `%${query}%`);
 
-            return { data: data || [], error };
+            const [countResult, dataResult] = await Promise.all([
+                baseQuery.select('*', { count: 'exact', head: true }),
+                baseQuery
+                    .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
+                    .limit(limit)
+                    .order('name', { ascending: true })
+            ]);
+
+            if (dataResult.error) {
+                return { data: [], error: dataResult.error };
+            }
+
+            return { 
+                data: dataResult.data || [], 
+                totalCount: countResult.count || 0,
+                error: null 
+            };
         } catch (err) {
             console.error('Search custom meals failed:', err);
-            return { data: [], error: err };
+            return { data: [], totalCount: 0, error: err };
         }
     }
 
-    async searchFoodsAndCustomMeals(userId: string, query: string, limit: number = 5): Promise<{ data: any[]; error?: any }> {
+    async searchFoodsAndCustomMeals(userId: string, query: string, limit: number = 5): Promise<{ data: any[]; totalCount?: number; error?: any }> {
         try {
             // Search both tables concurrently
             const [foodsResult, customMealsResult] = await Promise.all([
@@ -787,7 +816,7 @@ class SupabaseService {
             ]);
 
             if (foodsResult.error && customMealsResult.error) {
-                return { data: [], error: foodsResult.error };
+                return { data: [], totalCount: 0, error: foodsResult.error };
             }
 
             // Combine results, marking source for UI purposes
@@ -801,9 +830,50 @@ class SupabaseService {
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .slice(0, limit);
 
-            return { data: sortedResults, error: null };
+            // Calculate total count from both searches
+            const totalCount = (foodsResult.totalCount || 0) + (customMealsResult.totalCount || 0);
+
+            return { data: sortedResults, totalCount, error: null };
         } catch (err) {
             console.error('Search foods and custom meals failed:', err);
+            return { data: [], totalCount: 0, error: err };
+        }
+    }
+
+    async searchAllFoodsAndCustomMeals(userId: string, query: string): Promise<{ data: any[]; error?: any }> {
+        try {
+            // Search both tables concurrently with no limit
+            const [foodsResult, customMealsResult] = await Promise.all([
+                this.client
+                    .from('foods')
+                    .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
+                    .ilike('name', `%${query}%`)
+                    .order('name', { ascending: true }),
+                this.client
+                    .from('custom_meals')
+                    .select('id, name, calories_per_100g, protein_g, carbohydrates_g, fats_g, fiber_g, free_sugar_g, sodium_mg')
+                    .eq('submitted_by', userId)
+                    .or('status.eq.approved,status.eq.pending')
+                    .ilike('name', `%${query}%`)
+                    .order('name', { ascending: true })
+            ]);
+
+            if (foodsResult.error && customMealsResult.error) {
+                return { data: [], error: foodsResult.error };
+            }
+
+            // Combine results, marking source for UI purposes
+            const combinedResults = [
+                ...(foodsResult.data || []).map(food => ({ ...food, source: 'foods' })),
+                ...(customMealsResult.data || []).map(meal => ({ ...meal, source: 'custom_meals' }))
+            ];
+
+            // Sort by name
+            const sortedResults = combinedResults.sort((a, b) => a.name.localeCompare(b.name));
+
+            return { data: sortedResults, error: null };
+        } catch (err) {
+            console.error('Search all foods and custom meals failed:', err);
             return { data: [], error: err };
         }
     }

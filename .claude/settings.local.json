@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.nutritionix.com)",
+      "WebFetch(domain:fdc.nal.usda.gov)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

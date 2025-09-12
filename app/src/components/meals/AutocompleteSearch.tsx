@@ -19,32 +19,40 @@ const AutocompleteSearch: React.FC<AutocompleteSearchProps> = ({
     const { user } = useAuth();
     const [autocompleteQuery, setAutocompleteQuery] = useState('');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [totalSearchResults, setTotalSearchResults] = useState<number>(0);
     const [showAutocomplete, setShowAutocomplete] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [showingAllResults, setShowingAllResults] = useState(false);
     const autocompleteRef = useRef<HTMLDivElement>(null);
 
     const debouncedSearch = useCallback(
         async (query: string) => {
             if (!query.trim() || !user) {
                 setSearchResults([]);
+                setTotalSearchResults(0);
                 setShowAutocomplete(false);
+                setShowingAllResults(false);
                 return;
             }
 
             setIsSearching(true);
+            setShowingAllResults(false);
             try {
-                const { data, error } = await SupabaseService.searchFoodsAndCustomMeals(user.id, query.trim(), 10);
+                const { data, totalCount, error } = await SupabaseService.searchFoodsAndCustomMeals(user.id, query.trim(), 5);
                 
                 if (error) {
                     console.error('Search error:', error);
                     setSearchResults([]);
+                    setTotalSearchResults(0);
                 } else {
                     setSearchResults(data);
+                    setTotalSearchResults(totalCount || 0);
                     setShowAutocomplete(data.length > 0);
                 }
             } catch (error) {
                 console.error('Search failed:', error);
                 setSearchResults([]);
+                setTotalSearchResults(0);
             } finally {
                 setIsSearching(false);
             }
@@ -76,10 +84,32 @@ const AutocompleteSearch: React.FC<AutocompleteSearchProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const handleShowAllResults = async () => {
+        if (!user || !autocompleteQuery.trim()) return;
+
+        setIsSearching(true);
+        try {
+            const { data, error } = await SupabaseService.searchAllFoodsAndCustomMeals(user.id, autocompleteQuery.trim());
+            
+            if (error) {
+                console.error('Show all search error:', error);
+            } else {
+                setSearchResults(data);
+                setShowingAllResults(true);
+            }
+        } catch (error) {
+            console.error('Show all search failed:', error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
     const handleMealAdd = (searchResult: SearchResult) => {
         onMealAdd(searchResult);
         setAutocompleteQuery('');
         setShowAutocomplete(false);
+        setShowingAllResults(false);
+        setTotalSearchResults(0);
     };
 
     return (
@@ -115,6 +145,17 @@ const AutocompleteSearch: React.FC<AutocompleteSearchProps> = ({
                     </select>
                 </div>
 
+                {autocompleteQuery.length >= 2 && !isSearching && (
+                    <div className="add-meals__search-results-count">
+                        {totalSearchResults === 0 
+                            ? `No foods found for "${autocompleteQuery}"` 
+                            : showingAllResults 
+                                ? `Showing all ${totalSearchResults} food${totalSearchResults === 1 ? '' : 's'} for "${autocompleteQuery}"`
+                                : `Found ${totalSearchResults} food${totalSearchResults === 1 ? '' : 's'} for "${autocompleteQuery}"`
+                        }
+                    </div>
+                )}
+
                 {showAutocomplete && (
                     <div className="add-meals__autocomplete-dropdown">
                         {isSearching ? (
@@ -123,7 +164,7 @@ const AutocompleteSearch: React.FC<AutocompleteSearchProps> = ({
                             </div>
                         ) : searchResults.length > 0 ? (
                             <>
-                                {searchResults.slice(0, 5).map((result) => (
+                                {(showingAllResults ? searchResults : searchResults.slice(0, 5)).map((result) => (
                                     <div
                                         key={`${result.source}-${result.id}`}
                                         className="add-meals__autocomplete-item"
@@ -148,9 +189,9 @@ const AutocompleteSearch: React.FC<AutocompleteSearchProps> = ({
                                         </button>
                                     </div>
                                 ))}
-                                {searchResults.length > 5 && (
-                                    <div className="add-meals__autocomplete-show-all">
-                                        <span>Show all results</span>
+                                {!showingAllResults && totalSearchResults > 5 && (
+                                    <div className="add-meals__autocomplete-show-all" onClick={handleShowAllResults}>
+                                        <span>Show all {totalSearchResults} results</span>
                                         <span className="add-meals__autocomplete-arrow">▼</span>
                                     </div>
                                 )}
