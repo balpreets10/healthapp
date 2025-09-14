@@ -327,16 +327,16 @@ const Hero: React.FC<HeroProps> = ({
                                         {/* Protein Circle - Top Left */}
                                         <div className="hero__macro-circle hero__macro-circle--protein">
                                             <div className="hero__macro-name">💪 Protein</div>
-                                            <div className="hero__macro-title">{Math.round(nutritionSummary.protein)}</div>
+                                            <div className="hero__macro-title">{Math.round(nutritionSummary.protein)} / {nutritionSummary.goalProtein}g</div>
                                             <CircularProgress
                                                 value={nutritionSummary.protein}
                                                 max={nutritionSummary.goalProtein}
                                                 size="medium"
                                                 color="#22c55e"
+                                                className={nutritionSummary.protein >= nutritionSummary.goalProtein ? "hero__circular-progress--target-reached" : ""}
                                             >
                                                 <div className="hero__macro-content">
                                                     <div className="hero__macro-current">{Math.round(nutritionSummary.protein)}</div>
-                                                    <div className="hero__macro-total">{nutritionSummary.goalProtein}</div>
                                                 </div>
                                             </CircularProgress>
                                         </div>
@@ -344,16 +344,16 @@ const Hero: React.FC<HeroProps> = ({
                                         {/* Carbs Circle - Top Right */}
                                         <div className="hero__macro-circle hero__macro-circle--carbs">
                                             <div className="hero__macro-name">🍞 Carbs</div>
-                                            <div className="hero__macro-title">{Math.round(nutritionSummary.carbs)}</div>
+                                            <div className="hero__macro-title">{Math.round(nutritionSummary.carbs)} / {nutritionSummary.goalCarbs}g</div>
                                             <CircularProgress
                                                 value={nutritionSummary.carbs}
                                                 max={nutritionSummary.goalCarbs}
                                                 size="medium"
                                                 color="#eab308"
+                                                className={nutritionSummary.carbs >= nutritionSummary.goalCarbs ? "hero__circular-progress--target-reached" : ""}
                                             >
                                                 <div className="hero__macro-content">
                                                     <div className="hero__macro-current">{Math.round(nutritionSummary.carbs)}</div>
-                                                    <div className="hero__macro-total">{nutritionSummary.goalCarbs}</div>
                                                 </div>
                                             </CircularProgress>
                                         </div>
@@ -365,13 +365,13 @@ const Hero: React.FC<HeroProps> = ({
                                                 max={nutritionSummary.goalFat}
                                                 size="medium"
                                                 color="#f97316"
+                                                className={nutritionSummary.fat >= nutritionSummary.goalFat ? "hero__circular-progress--target-reached" : ""}
                                             >
                                                 <div className="hero__macro-content">
                                                     <div className="hero__macro-current">{Math.round(nutritionSummary.fat)}</div>
-                                                    <div className="hero__macro-total">{nutritionSummary.goalFat}</div>
                                                 </div>
                                             </CircularProgress>
-                                            <div className="hero__macro-title">{Math.round(nutritionSummary.fat)}</div>
+                                            <div className="hero__macro-title">{Math.round(nutritionSummary.fat)} / {nutritionSummary.goalFat}g</div>
                                             <div className="hero__macro-name">🥑 Fat</div>
                                         </div>
 
@@ -382,13 +382,13 @@ const Hero: React.FC<HeroProps> = ({
                                                 max={nutritionSummary.goalFiber}
                                                 size="medium"
                                                 color="#ec4899"
+                                                className={nutritionSummary.fiber >= nutritionSummary.goalFiber ? "hero__circular-progress--target-reached" : ""}
                                             >
                                                 <div className="hero__macro-content">
                                                     <div className="hero__macro-current">{Math.round(nutritionSummary.fiber)}</div>
-                                                    <div className="hero__macro-total">{nutritionSummary.goalFiber}</div>
                                                 </div>
                                             </CircularProgress>
-                                            <div className="hero__macro-title">{Math.round(nutritionSummary.fiber)}</div>
+                                            <div className="hero__macro-title">{Math.round(nutritionSummary.fiber)} / {nutritionSummary.goalFiber}g</div>
                                             <div className="hero__macro-name">🌾 Fiber</div>
                                         </div>
                                     </div>

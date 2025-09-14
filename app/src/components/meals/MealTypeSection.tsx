@@ -92,54 +92,61 @@ const MealTypeSection: React.FC<MealTypeSectionProps> = ({
                                                     <span className="add-meals__macro-value">{meal.fat.toFixed(1)}g</span>
                                                 </div>
                                             </div>
-                                            {meal.originalCaloriesPer100g && (
-                                                <div className="add-meals__serving-info">
-                                                    <span className="add-meals__serving-label">Serving: </span>
-                                                    {editingMealId === meal.id ? (
-                                                        <div className="add-meals__serving-editor">
-                                                            <input
-                                                                type="number"
-                                                                value={editingValue}
-                                                                onChange={(e) => setEditingValue(e.target.value)}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === 'Enter') {
-                                                                        handleServingUpdate(meal.id);
-                                                                    } else if (e.key === 'Escape') {
-                                                                        cancelEditing();
-                                                                    }
-                                                                }}
-                                                                className="add-meals__serving-input"
-                                                                step="0.1"
-                                                                min="0.1"
-                                                                autoFocus
-                                                            />
-                                                            <span>{meal.servingUnit || 'g'}</span>
-                                                            <button 
-                                                                onClick={() => handleServingUpdate(meal.id)}
-                                                                className="add-meals__serving-save-btn"
-                                                                title="Save serving size"
-                                                            >
-                                                                ✓
-                                                            </button>
-                                                            <button 
-                                                                onClick={cancelEditing}
-                                                                className="add-meals__serving-cancel-btn"
-                                                                title="Cancel editing"
-                                                            >
-                                                                ✗
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => startEditingServing(meal)}
-                                                            className="add-meals__serving-display"
-                                                            title="Click to edit serving size"
+                                            <div className="add-meals__serving-info">
+                                                <span className="add-meals__serving-label">Serving: </span>
+                                                {meal.originalCaloriesPer100g && editingMealId === meal.id ? (
+                                                    <div className="add-meals__serving-editor">
+                                                        <input
+                                                            type="number"
+                                                            value={editingValue}
+                                                            onChange={(e) => setEditingValue(e.target.value)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    handleServingUpdate(meal.id);
+                                                                } else if (e.key === 'Escape') {
+                                                                    cancelEditing();
+                                                                }
+                                                            }}
+                                                            className="add-meals__serving-input"
+                                                            step="0.1"
+                                                            min="0.1"
+                                                            autoFocus
+                                                        />
+                                                        <span>{meal.servingUnit || 'g'}</span>
+                                                        <button 
+                                                            onClick={() => handleServingUpdate(meal.id)}
+                                                            className="add-meals__serving-save-btn"
+                                                            title="Save serving size"
                                                         >
-                                                            {meal.servingSize || 100}{meal.servingUnit || 'g'} ✏️
+                                                            ✓
                                                         </button>
-                                                    )}
-                                                </div>
-                                            )}
+                                                        <button 
+                                                            onClick={cancelEditing}
+                                                            className="add-meals__serving-cancel-btn"
+                                                            title="Cancel editing"
+                                                        >
+                                                            ✗
+                                                        </button>
+                                                    </div>
+                                                ) : meal.originalCaloriesPer100g ? (
+                                                    <button
+                                                        onClick={() => startEditingServing(meal)}
+                                                        className="add-meals__serving-display"
+                                                        title="Click to edit serving size"
+                                                    >
+                                                        {meal.servingSize || 100}{meal.servingUnit || 'g'} ✏️
+                                                    </button>
+                                                ) : (
+                                                    <span className="add-meals__serving-default">
+                                                        {meal.servingSize || 100}{meal.servingUnit || 'g'} (default)
+                                                    </span>
+                                                )}
+                                                {meal.originalCaloriesPer100g && (
+                                                    <span className="add-meals__per-100g-info">
+                                                        ({Math.round(meal.originalCaloriesPer100g)} cal per 100g)
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         <button
                                             className="add-meals__remove-btn"

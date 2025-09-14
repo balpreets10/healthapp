@@ -860,6 +860,107 @@
     }
 }
 
+/* ===== TARGET REACHED ANIMATIONS ===== */
+.hero__circular-progress--target-reached {
+    position: relative;
+    overflow: visible;
+}
+
+.hero__circular-progress--target-reached::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(34, 197, 94, 0.3) 90deg,
+        rgba(34, 197, 94, 0.6) 180deg,
+        rgba(34, 197, 94, 0.3) 270deg,
+        transparent 360deg
+    );
+    animation: spinnerRotate 3s linear infinite;
+    z-index: -1;
+}
+
+@keyframes spinnerRotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Specific macro target spinner colors */
+.hero__macro-circle--protein .hero__circular-progress--target-reached::before {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(34, 197, 94, 0.2) 60deg,
+        rgba(34, 197, 94, 0.5) 120deg,
+        rgba(34, 197, 94, 0.7) 180deg,
+        rgba(34, 197, 94, 0.5) 240deg,
+        rgba(34, 197, 94, 0.2) 300deg,
+        transparent 360deg
+    );
+}
+
+.hero__macro-circle--carbs .hero__circular-progress--target-reached::before {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(234, 179, 8, 0.2) 60deg,
+        rgba(234, 179, 8, 0.5) 120deg,
+        rgba(234, 179, 8, 0.7) 180deg,
+        rgba(234, 179, 8, 0.5) 240deg,
+        rgba(234, 179, 8, 0.2) 300deg,
+        transparent 360deg
+    );
+}
+
+.hero__macro-circle--fat .hero__circular-progress--target-reached::before {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(249, 115, 22, 0.2) 60deg,
+        rgba(249, 115, 22, 0.5) 120deg,
+        rgba(249, 115, 22, 0.7) 180deg,
+        rgba(249, 115, 22, 0.5) 240deg,
+        rgba(249, 115, 22, 0.2) 300deg,
+        transparent 360deg
+    );
+}
+
+.hero__macro-circle--fiber .hero__circular-progress--target-reached::before {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(236, 72, 153, 0.2) 60deg,
+        rgba(236, 72, 153, 0.5) 120deg,
+        rgba(236, 72, 153, 0.7) 180deg,
+        rgba(236, 72, 153, 0.5) 240deg,
+        rgba(236, 72, 153, 0.2) 300deg,
+        transparent 360deg
+    );
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .hero__circular-progress--target-reached::before,
+    .hero__macro-circle--protein .hero__circular-progress--target-reached::before,
+    .hero__macro-circle--carbs .hero__circular-progress--target-reached::before,
+    .hero__macro-circle--fat .hero__circular-progress--target-reached::before,
+    .hero__macro-circle--fiber .hero__circular-progress--target-reached::before {
+        animation: none;
+        opacity: 0.3;
+        background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, transparent 70%);
+    }
+}
+
 /* ===== HIGH CONTRAST SUPPORT ===== */
 @media (prefers-contrast: high) {
 

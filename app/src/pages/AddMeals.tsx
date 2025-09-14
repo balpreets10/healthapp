@@ -211,13 +211,13 @@ const AddMeals: React.FC = () => {
                     [searchResult.source]: {
                         id: searchResult.id,
                         name: searchResult.name,
-                        calories: calories,
-                        protein: protein,
-                        carbs: carbs,
-                        fat: fat,
-                        fiber: fiber,
-                        sugar: sugar,
-                        sodium: sodium,
+                        calories: searchResult.calories_per_100g, // Store original per-100g values
+                        protein: searchResult.protein_g,
+                        carbs: searchResult.carbohydrates_g,
+                        fat: searchResult.fats_g,
+                        fiber: searchResult.fiber_g || 0,
+                        sugar: searchResult.free_sugar_g || 0,
+                        sodium: searchResult.sodium_mg || 0,
                         serving: '100g'
                     }
                 },
@@ -323,19 +323,22 @@ const AddMeals: React.FC = () => {
             const currentFoods = mealData.data.foods;
             let updatedFoods = { ...currentFoods };
 
-            // Update serving size in the foods JSONB structure
+            // Update serving size in the foods JSONB structure - handle all food source types
+            let foodDataKey = null;
             if (updatedFoods.foods) {
-                updatedFoods.foods.serving = `${newServingSize}${meal.servingUnit || 'g'}`;
-                updatedFoods.foods.calories = newCalories;
-                updatedFoods.foods.protein = newProtein;
-                updatedFoods.foods.carbs = newCarbs;
-                updatedFoods.foods.fat = newFat;
+                foodDataKey = 'foods';
             } else if (updatedFoods.custom_meals) {
-                updatedFoods.custom_meals.serving = `${newServingSize}${meal.servingUnit || 'g'}`;
-                updatedFoods.custom_meals.calories = newCalories;
-                updatedFoods.custom_meals.protein = newProtein;
-                updatedFoods.custom_meals.carbs = newCarbs;
-                updatedFoods.custom_meals.fat = newFat;
+                foodDataKey = 'custom_meals';
+            } else if (updatedFoods.quick_add) {
+                foodDataKey = 'quick_add';
+            } else if (updatedFoods.custom) {
+                foodDataKey = 'custom';
+            }
+
+            if (foodDataKey && updatedFoods[foodDataKey]) {
+                updatedFoods[foodDataKey].serving = `${newServingSize}${meal.servingUnit || 'g'}`;
+                // Note: We don't update the stored nutritional values as they represent the per-100g values
+                // The displayed values are calculated dynamically based on serving size
             }
 
             // Update the meal in database

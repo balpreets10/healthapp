@@ -178,7 +178,7 @@ const AutocompleteSearch: React.FC<AutocompleteSearchProps> = ({
                                                 </span>
                                             </div>
                                             <div className="add-meals__autocomplete-item-nutrition">
-                                                <span>{Math.round(result.calories_per_100g)} cal</span>
+                                                <span>{Math.round(result.calories_per_100g)} cal (per 100g)</span>
                                                 <span>{result.protein_g}g protein</span>
                                                 <span>{result.carbohydrates_g}g carbs</span>
                                                 <span>{result.fats_g}g fat</span>

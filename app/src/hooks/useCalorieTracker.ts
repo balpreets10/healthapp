@@ -106,19 +106,28 @@ export const useCalorieTracker = () => {
                 let originalFatPer100g: number | undefined;
 
                 if (meal.foods) {
-                    // Check if it's from foods database (has per 100g data)
+                    // Check different food source structures
+                    let foodData = null;
+                    
+                    // Handle meals from search results with source keys
                     if (meal.foods.foods) {
-                        const foodData = meal.foods.foods;
-                        servingSize = parseFloat(foodData.serving?.replace(/[^\d.]/g, '')) || 100;
-                        servingUnit = foodData.serving?.replace(/[\d.]/g, '') || 'g';
-                        originalCaloriesPer100g = foodData.calories || meal.total_calories;
-                        originalProteinPer100g = foodData.protein || meal.total_protein_g;
-                        originalCarbsPer100g = foodData.carbs || meal.total_carbs_g;
-                        originalFatPer100g = foodData.fat || meal.total_fat_g;
+                        foodData = meal.foods.foods;
                     } else if (meal.foods.custom_meals) {
-                        const foodData = meal.foods.custom_meals;
+                        foodData = meal.foods.custom_meals;
+                    } else if (meal.foods.quick_add) {
+                        // Quick add meals - treat as per 100g for serving size editing
+                        foodData = meal.foods.quick_add;
+                    } else if (meal.foods.custom) {
+                        // Custom meals - treat as per 100g for serving size editing
+                        foodData = meal.foods.custom;
+                    }
+                    
+                    if (foodData) {
                         servingSize = parseFloat(foodData.serving?.replace(/[^\d.]/g, '')) || 100;
                         servingUnit = foodData.serving?.replace(/[\d.]/g, '') || 'g';
+                        
+                        // For search results and database foods, use the stored per-100g values
+                        // For quick_add and custom, the stored values ARE the per-100g values
                         originalCaloriesPer100g = foodData.calories || meal.total_calories;
                         originalProteinPer100g = foodData.protein || meal.total_protein_g;
                         originalCarbsPer100g = foodData.carbs || meal.total_carbs_g;

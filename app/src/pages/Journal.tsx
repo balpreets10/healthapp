@@ -1,29 +1,30 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useContentManager } from '../hooks/useContentManager';
 import { useCalorieTracker } from '../hooks/useCalorieTracker';
+import { useAuth } from '../hooks/useAuth';
+import { JournalSkeleton } from '../components/ui/SkeletonLoader';
+import SupabaseService from '../services/SupabaseService';
 import { 
     getProgressPercentage,
     calculateAverageCaloriesPerMeal,
     calculateMacroRatio
 } from '../utils/nutritionCalculations';
 import { NUTRITION_CONSTANTS } from '../config/constants';
+import { MealEntry } from '../types/meal-types';
 import './Journal.css';
-
-interface MealEntry {
-    id: string;
-    name: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    time: string;
-}
 
 const Journal: React.FC = () => {
     const pageRef = useRef<HTMLElement>(null);
     const { setCurrentSection } = useContentManager();
-    const { todaysMeals, calorieData } = useCalorieTracker();
+    const { todaysMeals, calorieData, refreshData } = useCalorieTracker();
+    const { user } = useAuth();
+    
+    // Loading and editing states
+    const [isLoading, setIsLoading] = useState(true);
+    const [editingMealId, setEditingMealId] = useState<string | null>(null);
+    const [editingValue, setEditingValue] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitMessage, setSubmitMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
 
     // Calculate nutrition goals from calorieData
     const nutritionGoals = {
@@ -44,7 +45,149 @@ const Journal: React.FC = () => {
 
     useEffect(() => {
         setCurrentSection('journal');
+        
+        // Simulate loading delay to show skeleton
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1000);
+        
+        return () => clearTimeout(timer);
     }, [setCurrentSection]);
+
+    // Remove meal function
+    const removeMeal = async (mealId: string, mealName: string) => {
+        if (!user) {
+            setSubmitMessage({ text: 'Please log in to delete meals', type: 'error' });
+            return;
+        }
+
+        if (!window.confirm(`Are you sure you want to delete "${mealName}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitMessage(null);
+
+        try {
+            const { error } = await SupabaseService.deleteMeal(mealId);
+            
+            if (error) {
+                console.error('Error deleting meal:', error);
+                setSubmitMessage({ text: 'Failed to delete meal. Please try again.', type: 'error' });
+            } else {
+                setSubmitMessage({ text: 'Meal deleted successfully!', type: 'success' });
+                await refreshData();
+
+                // Auto-hide success message after 3 seconds
+                setTimeout(() => {
+                    setSubmitMessage(null);
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error deleting meal:', error);
+            setSubmitMessage({ text: 'An unexpected error occurred. Please try again.', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Update meal serving size
+    const updateMealServing = async (mealId: string, newServingSize: number) => {
+        if (!user) {
+            setSubmitMessage({ text: 'Please log in to update meals', type: 'error' });
+            return;
+        }
+
+        // Find the meal to get its original data
+        const meal = todaysMeals.find(m => m.id === mealId);
+        if (!meal || !meal.originalCaloriesPer100g) {
+            setSubmitMessage({ text: 'Cannot update serving size for this meal', type: 'error' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitMessage(null);
+
+        try {
+            // Calculate new nutritional values based on serving size
+            const ratio = newServingSize / 100; // Since original values are per 100g
+            const newCalories = Math.round(meal.originalCaloriesPer100g * ratio);
+            const newProtein = Math.round((meal.originalProteinPer100g || 0) * ratio * 10) / 10;
+            const newCarbs = Math.round((meal.originalCarbsPer100g || 0) * ratio * 10) / 10;
+            const newFat = Math.round((meal.originalFatPer100g || 0) * ratio * 10) / 10;
+
+            // Get the current meal data from database to update the foods JSONB
+            const mealData = await SupabaseService.getMealById(mealId);
+            if (!mealData.data) {
+                throw new Error('Could not fetch meal data');
+            }
+
+            const currentFoods = mealData.data.foods;
+            let updatedFoods = { ...currentFoods };
+
+            // Update serving size in the foods JSONB structure - handle all food source types
+            let foodDataKey = null;
+            if (updatedFoods.foods) {
+                foodDataKey = 'foods';
+            } else if (updatedFoods.custom_meals) {
+                foodDataKey = 'custom_meals';
+            } else if (updatedFoods.quick_add) {
+                foodDataKey = 'quick_add';
+            } else if (updatedFoods.custom) {
+                foodDataKey = 'custom';
+            }
+
+            if (foodDataKey && updatedFoods[foodDataKey]) {
+                updatedFoods[foodDataKey].serving = `${newServingSize}${meal.servingUnit || 'g'}`;
+            }
+
+            // Update the meal in database
+            const { error } = await SupabaseService.updateMeal(mealId, {
+                foods: updatedFoods,
+                total_calories: newCalories,
+                total_protein_g: newProtein,
+                total_carbs_g: newCarbs,
+                total_fat_g: newFat
+            });
+
+            if (error) {
+                console.error('Error updating meal serving size:', error);
+                setSubmitMessage({ text: 'Failed to update serving size. Please try again.', type: 'error' });
+            } else {
+                setSubmitMessage({ text: 'Serving size updated successfully!', type: 'success' });
+                await refreshData();
+
+                // Auto-hide success message after 3 seconds
+                setTimeout(() => {
+                    setSubmitMessage(null);
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error updating meal serving size:', error);
+            setSubmitMessage({ text: 'An unexpected error occurred. Please try again.', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const startEditingServing = (meal: MealEntry) => {
+        setEditingMealId(meal.id);
+        setEditingValue((meal.servingSize || 100).toString());
+    };
+
+    const handleServingUpdate = (mealId: string) => {
+        const newServingSize = parseFloat(editingValue);
+        if (!isNaN(newServingSize) && newServingSize > 0) {
+            updateMealServing(mealId, newServingSize);
+        }
+        setEditingMealId(null);
+        setEditingValue('');
+    };
+
+    const cancelEditing = () => {
+        setEditingMealId(null);
+        setEditingValue('');
+    };
 
     const getMealsByType = (type: MealEntry['mealType']) => {
         return todaysMeals.filter(meal => meal.mealType === type);
@@ -56,9 +199,26 @@ const Journal: React.FC = () => {
         return typeMeals.reduce((sum, meal) => sum + meal.calories, 0);
     };
 
+    // Show skeleton loader while loading
+    if (isLoading) {
+        return (
+            <section ref={pageRef} id="journal" className="journal">
+                <div className="journal__container">
+                    <JournalSkeleton />
+                </div>
+            </section>
+        );
+    }
+
     return (
         <section ref={pageRef} id="journal" className="journal">
             <div className="journal__container">
+                {/* Submit Message */}
+                {submitMessage && (
+                    <div className={`add-meals__message add-meals__message--${submitMessage.type}`}>
+                        {submitMessage.text}
+                    </div>
+                )}
                 <div className="journal__header">
                     <h1 className="journal__title">📝 Today's Health Journal</h1>
                     <div className="journal__date">
@@ -182,18 +342,89 @@ const Journal: React.FC = () => {
                                                 <div className="journal__meal-name">{meal.name}</div>
                                                 <div className="journal__meal-nutrition">
                                                     <span className="journal__nutrition-item">
-                                                        {NUTRITION_CONSTANTS.nutritionIcons.calories} {meal.calories} cal
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.calories} {Math.round(meal.calories)} cal
                                                     </span>
                                                     <span className="journal__nutrition-item">
-                                                        {NUTRITION_CONSTANTS.nutritionIcons.protein} {meal.protein}g protein
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.protein} {meal.protein.toFixed(1)}g protein
                                                     </span>
                                                     <span className="journal__nutrition-item">
-                                                        {NUTRITION_CONSTANTS.nutritionIcons.carbs} {meal.carbs}g carbs
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.carbs} {meal.carbs.toFixed(1)}g carbs
                                                     </span>
                                                     <span className="journal__nutrition-item">
-                                                        {NUTRITION_CONSTANTS.nutritionIcons.fat} {meal.fat}g fat
+                                                        {NUTRITION_CONSTANTS.nutritionIcons.fat} {meal.fat.toFixed(1)}g fat
                                                     </span>
                                                 </div>
+                                                {/* Serving Size Info and Edit Controls */}
+                                                <div className="journal__serving-info">
+                                                    <span className="journal__serving-label">Serving: </span>
+                                                    {meal.originalCaloriesPer100g && editingMealId === meal.id ? (
+                                                        <div className="journal__serving-editor">
+                                                            <input
+                                                                type="number"
+                                                                value={editingValue}
+                                                                onChange={(e) => setEditingValue(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        handleServingUpdate(meal.id);
+                                                                    } else if (e.key === 'Escape') {
+                                                                        cancelEditing();
+                                                                    }
+                                                                }}
+                                                                className="journal__serving-input"
+                                                                step="0.1"
+                                                                min="0.1"
+                                                                autoFocus
+                                                                disabled={isSubmitting}
+                                                            />
+                                                            <span>{meal.servingUnit || 'g'}</span>
+                                                            <button 
+                                                                onClick={() => handleServingUpdate(meal.id)}
+                                                                className="journal__serving-save-btn"
+                                                                title="Save serving size"
+                                                                disabled={isSubmitting}
+                                                            >
+                                                                ✓
+                                                            </button>
+                                                            <button 
+                                                                onClick={cancelEditing}
+                                                                className="journal__serving-cancel-btn"
+                                                                title="Cancel editing"
+                                                                disabled={isSubmitting}
+                                                            >
+                                                                ✗
+                                                            </button>
+                                                        </div>
+                                                    ) : meal.originalCaloriesPer100g ? (
+                                                        <button
+                                                            onClick={() => startEditingServing(meal)}
+                                                            className="journal__serving-display"
+                                                            title="Click to edit serving size"
+                                                            disabled={isSubmitting}
+                                                        >
+                                                            {meal.servingSize || 100}{meal.servingUnit || 'g'} ✏️
+                                                        </button>
+                                                    ) : (
+                                                        <span className="journal__serving-default">
+                                                            {meal.servingSize || 100}{meal.servingUnit || 'g'} (default)
+                                                        </span>
+                                                    )}
+                                                    {meal.originalCaloriesPer100g && (
+                                                        <span className="journal__per-100g-info">
+                                                            ({Math.round(meal.originalCaloriesPer100g)} cal per 100g)
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {/* Meal Actions */}
+                                            <div className="journal__meal-actions">
+                                                <button
+                                                    className="journal__remove-btn"
+                                                    onClick={() => removeMeal(meal.id, meal.name)}
+                                                    title="Delete meal"
+                                                    disabled={isSubmitting}
+                                                >
+                                                    🗑️
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
