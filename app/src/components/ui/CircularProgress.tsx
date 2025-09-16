@@ -21,7 +21,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
     children
 }) => {
     const percentage = Math.min((value / max) * 100, 100);
-    const radius = size === 'large' ? 90 : size === 'medium' ? 60 : 45;
+    const radius = size === 'large' ? 110 : size === 'medium' ? 75 : 45;
     const strokeWidth = size === 'large' ? 12 : size === 'medium' ? 10 : 8;
     const normalizedRadius = radius - strokeWidth * 2;
     const circumference = normalizedRadius * 2 * Math.PI;

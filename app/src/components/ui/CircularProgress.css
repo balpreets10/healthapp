@@ -10,7 +10,7 @@
 }
 
 .circular-progress__background {
-    opacity: 0.3;
+    opacity: 0.1;
 }
 
 .circular-progress__progress {
@@ -86,4 +86,33 @@
 
 .circular-progress--large .circular-progress__max {
     font-size: 0.9em;
+}
+
+/* Responsive sizing for circular progress */
+@media (max-width: 768px) {
+    .circular-progress--large {
+        /* Scale down large to medium size */
+        transform: scale(0.68);
+        transform-origin: center;
+    }
+
+    .circular-progress--medium {
+        /* Scale down medium to small size */
+        transform: scale(0.6);
+        transform-origin: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .circular-progress--large {
+        /* Scale down large to small size */
+        transform: scale(0.41);
+        transform-origin: center;
+    }
+
+    .circular-progress--medium {
+        /* Scale down medium to smaller */
+        transform: scale(0.45);
+        transform-origin: center;
+    }
 }

@@ -4,6 +4,7 @@ export interface MealEntry {
     calories: number;
     protein: number;
     carbs: number;
+    fiber: number
     fat: number;
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
     time: string;

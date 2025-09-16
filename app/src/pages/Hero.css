@@ -263,7 +263,7 @@
 .hero__nutrition-dashboard {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-radius: var(--gd-radius-xl);
-    padding: var(--gd-space-8);
+    padding: var(--gd-space-10);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
     border: 1px solid #e2e8f0;
     margin-bottom: var(--gd-space-6);
@@ -874,14 +874,12 @@
     right: -10px;
     bottom: -10px;
     border-radius: 50%;
-    background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        rgba(34, 197, 94, 0.3) 90deg,
-        rgba(34, 197, 94, 0.6) 180deg,
-        rgba(34, 197, 94, 0.3) 270deg,
-        transparent 360deg
-    );
+    background: conic-gradient(from 0deg,
+            transparent 0deg,
+            rgba(34, 197, 94, 0.3) 90deg,
+            rgba(34, 197, 94, 0.6) 180deg,
+            rgba(34, 197, 94, 0.3) 270deg,
+            transparent 360deg);
     animation: spinnerRotate 3s linear infinite;
     z-index: -1;
 }
@@ -890,6 +888,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -897,7 +896,7 @@
 
 /* Specific macro target spinner colors */
 .hero__macro-circle--protein .hero__circular-progress--target-reached::before {
-    background: conic-gradient(
+    /* background: conic-gradient(
         from 0deg,
         transparent 0deg,
         rgba(34, 197, 94, 0.2) 60deg,
@@ -906,11 +905,11 @@
         rgba(34, 197, 94, 0.5) 240deg,
         rgba(34, 197, 94, 0.2) 300deg,
         transparent 360deg
-    );
+    ); */
 }
 
 .hero__macro-circle--carbs .hero__circular-progress--target-reached::before {
-    background: conic-gradient(
+    /* background: conic-gradient(
         from 0deg,
         transparent 0deg,
         rgba(234, 179, 8, 0.2) 60deg,
@@ -919,11 +918,11 @@
         rgba(234, 179, 8, 0.5) 240deg,
         rgba(234, 179, 8, 0.2) 300deg,
         transparent 360deg
-    );
+    ); */
 }
 
 .hero__macro-circle--fat .hero__circular-progress--target-reached::before {
-    background: conic-gradient(
+    /* background: conic-gradient(
         from 0deg,
         transparent 0deg,
         rgba(249, 115, 22, 0.2) 60deg,
@@ -932,11 +931,11 @@
         rgba(249, 115, 22, 0.5) 240deg,
         rgba(249, 115, 22, 0.2) 300deg,
         transparent 360deg
-    );
+    ); */
 }
 
 .hero__macro-circle--fiber .hero__circular-progress--target-reached::before {
-    background: conic-gradient(
+    /* background: conic-gradient(
         from 0deg,
         transparent 0deg,
         rgba(236, 72, 153, 0.2) 60deg,
@@ -945,11 +944,12 @@
         rgba(236, 72, 153, 0.5) 240deg,
         rgba(236, 72, 153, 0.2) 300deg,
         transparent 360deg
-    );
+    ); */
 }
 
 /* Disable animations for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
     .hero__circular-progress--target-reached::before,
     .hero__macro-circle--protein .hero__circular-progress--target-reached::before,
     .hero__macro-circle--carbs .hero__circular-progress--target-reached::before,
@@ -1383,8 +1383,12 @@
     justify-content: center;
     width: 100%;
     max-width: 500px;
-    height: 400px;
+    height: 460px;
     margin: 0 auto;
+    background-image: url('../../assets/spinners.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .hero__calorie-circle {
@@ -1435,9 +1439,14 @@
 }
 
 .hero__macro-circles {
-    position: relative;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gd-space-2);
 }
 
 .hero__macro-circle {
@@ -1449,27 +1458,27 @@
 }
 
 .hero__macro-circle--protein {
-    top: 10%;
-    left: 10%;
-    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-215px, -302px);
 }
 
 .hero__macro-circle--carbs {
-    top: 10%;
-    right: 10%;
-    transform: translate(50%, -50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(65px, -302px);
 }
 
 .hero__macro-circle--fat {
-    bottom: 10%;
-    left: 10%;
-    transform: translate(-50%, 50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-216px, 46px);
 }
 
 .hero__macro-circle--fiber {
-    bottom: 10%;
-    right: 10%;
-    transform: translate(50%, 50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(65px, 47px);
 }
 
 .hero__macro-content {
@@ -1478,7 +1487,7 @@
     align-items: center;
     text-align: center;
     color: var(--gd-text-primary, #1e293b);
-    font-size: 0.8rem;
+    font-size: 1.5rem;
     line-height: 1.2;
 }
 
@@ -1538,6 +1547,7 @@
     .hero__macro-name {
         font-size: 0.8rem;
     }
+
 }
 
 @media (max-width: 480px) {
@@ -1573,4 +1583,5 @@
     .hero__macro-content {
         font-size: 0.7rem;
     }
+
 }
